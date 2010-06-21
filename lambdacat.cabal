@@ -1,0 +1,35 @@
+Name:          lambdacat
+Version:       0.0
+Stability:     Alpha
+Synopsis:      Webkit Browser 
+Description:   A Browser based on WebKit, concepted to be easy to use and
+               extendable
+License:       BSD3
+License-File:  LICENSE
+Build-Type:    Simple
+Author:        Andreas Baldeau, Daniel Ehlers
+Maintainer:    Andreas Baldeau, Daniel Ehlers
+Category:      User Interfaces
+Tested-With:   GHC == 6.12.1
+Cabal-Version: >= 1.2.3
+
+Extra-Source-Files:
+    README
+
+Library
+    Build-Depends:
+        base >= 4 && < 5,
+        mtl >= 1.1 && < 1.2
+
+    Ghc-Options:
+        -Wall -threaded
+
+    Exposed-Modules:
+        LambdaCat.Browser
+        LambdaCat.Loadable
+        LambdaCat.Page
+        LambdaCat.UI
+        LambdaCat.Uri
+
+    Extensions:
+        MultiParamTypeClasses
