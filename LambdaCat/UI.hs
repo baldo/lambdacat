@@ -10,7 +10,7 @@ import LambdaCat.Page
 
 import Control.Monad.Trans
 
-class (Browser browser m, Page page m, MonadIO m) => UI ui browser page m where
+class (Browser browser m, Page page m, MonadIO m) => UI (ui browser page) browser page m where
     -- | Initializes the UI and returns an UI handle.
     init :: m ui
 
