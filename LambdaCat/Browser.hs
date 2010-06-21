@@ -7,5 +7,5 @@ where
 
 import Control.Monad.Trans
 
-class MonadIO m => Browser m browser
+class MonadIO m => Browser browser m
 

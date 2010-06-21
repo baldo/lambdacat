@@ -9,6 +9,6 @@ import LambdaCat.Page
 
 import Control.Monad.Trans
 
-class MonadIO m => Loadable m l where
-    load :: Page m page => page -> l -> m ()
+class MonadIO m => Loadable l m where
+    load :: Page page m => page -> l -> m ()
 
