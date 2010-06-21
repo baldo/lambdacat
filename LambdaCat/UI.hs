@@ -15,10 +15,10 @@ class (Browser browser m, Page page m, MonadIO m) => UI ui browser page m where
     init :: m ui
 
     -- | Creates the main UI widget for the browser (e.g. a window).
-    newBrowser :: m browser
+    newBrowser :: ui -> m browser
 
     -- | Embed the page into the given browser.
-    embedPage :: browser -> page -> m ()
+    embedPage :: ui -> browser -> page -> m ()
 
     -- | The main loop for the UI.
     mainLoop :: ui -> m ()
