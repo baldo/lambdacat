@@ -2,9 +2,9 @@
 <glade-interface>
   <!-- interface-requires gtk+ 2.16 -->
   <!-- interface-naming-policy project-wide -->
-  <widget class="GtkWindow" id="window1">
+  <widget class="GtkWindow" id="browserWindow">
     <child>
-      <widget class="GtkVBox" id="vbox1">
+      <widget class="GtkVBox" id="pageContainer">
         <property name="visible">True</property>
         <property name="orientation">vertical</property>
         <child>
