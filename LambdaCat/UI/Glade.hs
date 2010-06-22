@@ -10,7 +10,7 @@ import Graphics.UI.Gtk
 import Graphics.UI.Gtk.Glade
 import Graphics.UI.Gtk.WebKit.WebView
 
-data GladeUI b p = GladeUI { browser :: b, page :: p }
+data GladeUI = GladeUI {}
 
 data GladeBrowser = GladeBrowser 
     { window :: Window
@@ -21,7 +21,7 @@ instance Browser GladeBrowser IO
 
 instance Page WebView IO where 
 
-instance UI (GladeUI GladeBrowser WebView) IO where
+instance UI GladeUI GladeBrowser WebView IO where
     init = do
      _ <- initGUI  
      return GladeUI {} 

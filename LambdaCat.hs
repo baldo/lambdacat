@@ -1,5 +1,5 @@
 {-# LANGUAGE FlexibleContexts #-}
-module LambdaCat
+module Main
     ( main )
 where
 
@@ -11,6 +11,6 @@ import Graphics.UI.Gtk.WebKit.WebView
 
 main :: IO ()
 main = do
-    ui <- UI.init :: IO (GladeUI GladeBrowser WebView)
+    ui <- UI.init :: IO GladeUI 
     browser <- UI.newBrowser ui :: IO GladeBrowser
     UI.mainLoop ui
