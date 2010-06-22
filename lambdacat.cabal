@@ -39,4 +39,6 @@ Library
         LambdaCat.UI.Glade
 
     Extensions:
+        FunctionalDependencies,
         MultiParamTypeClasses
+
