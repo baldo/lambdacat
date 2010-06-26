@@ -20,6 +20,7 @@ data GladeBrowser = GladeBrowser
 instance Browser GladeBrowser IO
 
 instance Page WebView IO where 
+    new = webViewNew
 
 instance UI GladeUI GladeBrowser WebView IO where
     init = do
