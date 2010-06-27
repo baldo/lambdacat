@@ -21,7 +21,10 @@ data GladeBrowser = GladeBrowser
 instance Browser GladeBrowser IO
 
 instance Page WebView IO where 
-    new = webViewNew
+    new = do 
+        webView <- webViewNew
+        webViewLoadUri webView "http://www.haskell.org/"
+        return webView
 
 instance UI GladeUI GladeBrowser WebView IO where
     init = do
