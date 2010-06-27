@@ -176,7 +176,18 @@
           </packing>
         </child>
         <child>
-          <placeholder/>
+          <widget class="GtkScrolledWindow" id="pageScrolledWindow">
+            <property name="visible">True</property>
+            <property name="can_focus">True</property>
+            <property name="hscrollbar_policy">automatic</property>
+            <property name="vscrollbar_policy">automatic</property>
+            <child>
+              <placeholder/>
+            </child>
+          </widget>
+          <packing>
+            <property name="position">2</property>
+          </packing>
         </child>
         <child>
           <widget class="GtkStatusbar" id="browserStatus">
