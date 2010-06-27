@@ -13,7 +13,8 @@ import Graphics.UI.Gtk.WebKit.WebView
 data GladeUI = GladeUI {}
 
 data GladeBrowser = GladeBrowser 
-    { window :: Window
+    { xml :: GladeXML
+    , window :: Window
     , pageContainer :: Container 
     }
 
@@ -31,11 +32,17 @@ instance UI GladeUI GladeBrowser WebView IO where
         Just xml <- xmlNew "lambdacat.glade"
         window <- xmlGetWidget xml castToWindow "browserWindow"
         container <- xmlGetWidget xml castToContainer "pageContainer"
-        widgetShowAll window
-        return GladeBrowser { window = window, pageContainer = container }
 
-    embedPage _ GladeBrowser { pageContainer = container }  webView = do
-        containerAdd container webView
+        -- Events -------------------------------------------------------------
+        onDestroy window mainQuit
+
+        widgetShowAll window
+        return GladeBrowser { xml = xml, window = window, pageContainer = container }
+
+    embedPage _ GladeBrowser { xml = xml }  webView = do
+        scrolledWindow <- xmlGetWidget xml castToScrolledWindow "pageScrolledWindow"
+        containerAdd scrolledWindow webView
+        widgetShowAll webView
         return ()
 
     mainLoop _ = do
