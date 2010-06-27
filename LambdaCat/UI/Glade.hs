@@ -26,6 +26,11 @@ instance Page WebView IO where
         webViewLoadUri webView "http://www.haskell.org/"
         return webView
 
+    back    = webViewGoBack
+    forward = webViewGoForward
+    stop    = webViewStopLoading
+    reload  = webViewReload
+
 instance UI GladeUI GladeBrowser WebView IO where
     init = do
      _ <- initGUI  
