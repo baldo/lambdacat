@@ -79,6 +79,7 @@ instance UI GladeUI GladeBrowser WebView GladeIO where
         scrolledWindow <- io $ xmlGetWidget xml castToScrolledWindow "pageScrolledWindow"
         io $ containerAdd scrolledWindow webView
         io $ widgetShowAll webView
+        withGladeUIState (\ s -> s { pages = webView : (pages s) } )
         return ()
 
     mainLoop _ = do
