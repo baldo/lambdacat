@@ -129,7 +129,7 @@
               </packing>
             </child>
             <child>
-              <widget class="GtkToolButton" id="pageRefresh">
+              <widget class="GtkToolButton" id="pageReload">
                 <property name="visible">True</property>
                 <property name="label" translatable="yes">toolbutton1</property>
                 <property name="use_underline">True</property>
