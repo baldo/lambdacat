@@ -85,6 +85,10 @@ instance UI GladeUI GladeBrowser WebView GladeIO where
         onTBC pageForward (pageAction forward)
         pageReload <- xmlGetToolButton xml "pageReload"
         onTBC pageReload (pageAction reload)
+        pageURI <- io $ xmlGetWidget xml castToEntry "pageURI"
+        gtkOn onEntryActivate pageURI $ do
+            text <- io $ entryGetText pageURI 
+            pageAction (\ w -> io $ webViewLoadUri w text)
         
         io $ widgetShowAll window
         return GladeBrowser { xml = xml, window = window, pageContainer = container }
