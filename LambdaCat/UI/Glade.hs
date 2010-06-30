@@ -35,7 +35,7 @@ runGladeIO f = do
 withGladeUIState :: (GladeUIState -> GladeUIState) -> GladeIO ()
 withGladeUIState f = do
     state <- ask 
-    gladeUI <- liftIO $ readMVar state 
+    gladeUI <- liftIO $ takeMVar state 
     liftIO $ putMVar state $ f gladeUI 
 
 askGladeUIState :: GladeIO GladeUIState
