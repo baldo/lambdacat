@@ -10,9 +10,9 @@ import qualified LambdaCat.Page as Page
 import Graphics.UI.Gtk.WebKit.WebView
 
 main :: IO ()
-main = do
-    ui <- UI.init :: IO GladeUI 
-    browser <- UI.newBrowser ui :: IO GladeBrowser
-    page <- Page.new :: IO WebView
+main = runGladeIO $ do
+    ui <- UI.init :: GladeIO GladeUI 
+    browser <- UI.newBrowser ui :: GladeIO GladeBrowser
+    page <- Page.new :: GladeIO WebView
     UI.embedPage ui browser page 
     UI.mainLoop ui

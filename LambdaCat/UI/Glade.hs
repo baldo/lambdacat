@@ -1,4 +1,4 @@
-{-# LANGUAGE MultiParamTypeClasses, FlexibleInstances #-}
+{-# LANGUAGE MultiParamTypeClasses, FlexibleInstances, TypeSynonymInstances, RankNTypes  #-}
 
 module LambdaCat.UI.Glade where
 
@@ -10,6 +10,9 @@ import Graphics.UI.Gtk
 import Graphics.UI.Gtk.Glade
 import Graphics.UI.Gtk.WebKit.WebView
 
+import Control.Concurrent.MVar
+import Control.Monad.Reader
+
 data GladeUI = GladeUI {}
 
 data GladeBrowser = GladeBrowser 
@@ -18,42 +21,67 @@ data GladeBrowser = GladeBrowser
     , pageContainer :: Container 
     }
 
-instance Browser GladeBrowser IO
+type GladeIO = ReaderT (MVar GladeUIState) IO 
 
-instance Page WebView IO where 
-    new = do 
+data GladeUIState = GladeUIState {
+        pages :: [WebView]
+    }
+
+runGladeIO :: GladeIO a -> IO a
+runGladeIO f = do 
+    state <- newMVar GladeUIState { pages = [] }
+    runReaderT f state
+
+withGladeUIState :: (GladeUIState -> GladeUIState) -> GladeIO ()
+withGladeUIState f = do
+    state <- ask 
+    gladeUI <- liftIO $ readMVar state 
+    liftIO $ putMVar state $ f gladeUI 
+
+askGladeUIState :: GladeIO GladeUIState
+askGladeUIState = do 
+    state <- ask 
+    liftIO $ readMVar state
+
+io :: forall a. IO a -> GladeIO a
+io = liftIO
+
+instance Browser GladeBrowser GladeIO
+
+instance Page WebView GladeIO where 
+    new = io $ do 
         webView <- webViewNew
         webViewLoadUri webView "http://www.haskell.org/"
         return webView
 
-    back    = webViewGoBack
-    forward = webViewGoForward
-    stop    = webViewStopLoading
-    reload  = webViewReload
+    back    = io . webViewGoBack
+    forward = io . webViewGoForward
+    stop    = io . webViewStopLoading
+    reload  = io . webViewReload
 
-instance UI GladeUI GladeBrowser WebView IO where
+instance UI GladeUI GladeBrowser WebView GladeIO where
     init = do
-     _ <- initGUI  
+     _ <- io initGUI  
      return GladeUI {} 
 
     newBrowser _ = do 
-        Just xml <- xmlNew "lambdacat.glade"
-        window <- xmlGetWidget xml castToWindow "browserWindow"
-        container <- xmlGetWidget xml castToContainer "pageContainer"
+        Just xml <- io $ xmlNew "lambdacat.glade"
+        window <- io $ xmlGetWidget xml castToWindow "browserWindow"
+        container <- io $ xmlGetWidget xml castToContainer "pageContainer"
 
         -- Events -------------------------------------------------------------
-        onDestroy window mainQuit
+        io $ onDestroy window mainQuit
 
-        widgetShowAll window
+        io $ widgetShowAll window
         return GladeBrowser { xml = xml, window = window, pageContainer = container }
 
-    embedPage _ GladeBrowser { xml = xml }  webView = do
-        scrolledWindow <- xmlGetWidget xml castToScrolledWindow "pageScrolledWindow"
-        containerAdd scrolledWindow webView
-        widgetShowAll webView
+    embedPage _ GladeBrowser { xml = xml } webView = do
+        scrolledWindow <- io $ xmlGetWidget xml castToScrolledWindow "pageScrolledWindow"
+        io $ containerAdd scrolledWindow webView
+        io $ widgetShowAll webView
         return ()
 
     mainLoop _ = do
-        mainGUI
+        io mainGUI
         return ()
   
