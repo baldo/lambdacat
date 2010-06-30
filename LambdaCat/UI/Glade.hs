@@ -46,6 +46,11 @@ askGladeUIState = do
 io :: forall a. IO a -> GladeIO a
 io = liftIO
 
+gtkOn :: GObjectClass self => (self -> IO () -> IO (ConnectId self)) -> self -> GladeIO () -> GladeIO (ConnectId self) 
+gtkOn onFunc widget func = do 
+    state <- ask 
+    io $ onFunc widget (runReaderT func state) 
+
 instance Browser GladeBrowser GladeIO
 
 instance Page WebView GladeIO where 
@@ -69,11 +74,31 @@ instance UI GladeUI GladeBrowser WebView GladeIO where
         window <- io $ xmlGetWidget xml castToWindow "browserWindow"
         container <- io $ xmlGetWidget xml castToContainer "pageContainer"
 
-        -- Events -------------------------------------------------------------
+        -- General / Events ---------------------------------------------------
         io $ onDestroy window mainQuit
 
+        -- Toolbar / Events ---------------------------------------------------
+        let onTBC = gtkOn onToolButtonClicked
+        pageBack <- xmlGetToolButton xml "pageBack"
+        onTBC pageBack (pageAction back)
+        pageForward <- xmlGetToolButton xml "pageForward"
+        onTBC pageForward (pageAction forward)
+        pageReload <- xmlGetToolButton xml "pageReload"
+        onTBC pageReload (pageAction reload)
+        
         io $ widgetShowAll window
         return GladeBrowser { xml = xml, window = window, pageContainer = container }
+
+     where 
+        pageAction :: (WebView -> GladeIO a) -> GladeIO ()
+        pageAction f = do
+            uiState <- askGladeUIState
+            let (page:_) = pages uiState
+            f page
+            return ()
+
+        xmlGetToolButton :: GladeXML -> String -> GladeIO ToolButton
+        xmlGetToolButton xml name = io $ xmlGetWidget xml castToToolButton name  
 
     embedPage _ GladeBrowser { xml = xml } webView = do
         scrolledWindow <- io $ xmlGetWidget xml castToScrolledWindow "pageScrolledWindow"
