@@ -1,4 +1,4 @@
-{-# LANGUAGE MultiParamTypeClasses, ExistentialQuantification #-}
+{-# LANGUAGE MultiParamTypeClasses, ExistentialQuantification, FlexibleInstances #-}
 
 module LambdaCat.Page
     ( Page (..)
@@ -9,8 +9,6 @@ where
 import LambdaCat.Uri
 
 import Control.Monad.Trans
-
-data Page m = forall a . (PageClass a m) => Page a 
 
 class MonadIO m => PageClass page m where
     -- | Creates a new page.
@@ -28,3 +26,15 @@ class MonadIO m => PageClass page m where
     getBackHistory _ = return []
     getForwardHistory _ = return []
 
+data Page m = forall a . (PageClass a m) => Page a 
+
+instance MonadIO m => PageClass (Page m) m where
+   new = return (error "Can't create existential quantificated datatype")  
+   
+   back (Page p) = back p
+   forward (Page p) = forward p
+   stop (Page p) = stop p
+   reload (Page p) = reload p
+   
+   getBackHistory (Page p) = getBackHistory p
+   getForwardHistory (Page p) = getForwardHistory p
