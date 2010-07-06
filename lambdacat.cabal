@@ -25,7 +25,8 @@ Library
         mtl >= 1.1 && < 1.2,
         gtk >= 0.11 && < 0.12,
         glade >= 0.11 && < 0.12, 
-        webkit >= 0.11 && < 0.12
+        webkit >= 0.11 && < 0.12,
+        network == 2.2.*
 
     Ghc-Options:
         -Wall -threaded
@@ -35,7 +36,6 @@ Library
         LambdaCat.Loadable
         LambdaCat.Page
         LambdaCat.UI
-        LambdaCat.Uri
         LambdaCat.UI.Glade
 
     Extensions:

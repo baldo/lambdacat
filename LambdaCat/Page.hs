@@ -6,9 +6,10 @@ module LambdaCat.Page
     )
 where
 
-import LambdaCat.Uri
+import LambdaCat.Protocol
 
 import Control.Monad.Trans
+import Network.URI
 
 class MonadIO m => PageClass page m where
     -- | Creates a new page.
@@ -22,7 +23,7 @@ class MonadIO m => PageClass page m where
     reload _ = return ()
 
     -- |
-    getBackHistory, getForwardHistory :: Uri u m => page -> m [u]
+    getBackHistory, getForwardHistory :: page -> m [URI]
     getBackHistory _ = return []
     getForwardHistory _ = return []
 
