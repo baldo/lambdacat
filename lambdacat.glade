@@ -157,18 +157,6 @@
                 <property name="homogeneous">True</property>
               </packing>
             </child>
-            <child>
-              <widget class="GtkToolButton" id="pageLoad">
-                <property name="visible">True</property>
-                <property name="label" translatable="yes">load</property>
-                <property name="use_underline">True</property>
-                <property name="stock_id">gtk-media-play</property>
-              </widget>
-              <packing>
-                <property name="expand">False</property>
-                <property name="homogeneous">True</property>
-              </packing>
-            </child>
           </widget>
           <packing>
             <property name="expand">False</property>
