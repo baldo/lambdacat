@@ -29,12 +29,8 @@ data UI b p m = forall u . (UIClass u b p m) => UI u
 instance (BrowserClass browser m, PageClass page m, MonadIO m) => UIClass (UI browser page m) browser page m where
     init = return (error "Can't initialize existential quantificated datatype")
 
-    newBrowser (UI u) = do
-        b <- newBrowser u
-        return b 
+    newBrowser (UI u) = newBrowser u
 
-    embedPage (UI u) b p = do
-        embedPage u b p 
-        return ()
+    embedPage (UI u) b p = embedPage u b p 
 
     mainLoop (UI u) = mainLoop u 
