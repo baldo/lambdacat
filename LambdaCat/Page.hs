@@ -3,6 +3,7 @@
 module LambdaCat.Page
     ( Page (..)
     , PageClass (..)
+    , pageFromURI 
     )
 where
 
@@ -39,3 +40,16 @@ instance MonadIO m => PageClass (Page m) m where
    
    getBackHistory (Page p) = getBackHistory p
    getForwardHistory (Page p) = getForwardHistory p
+
+pageFromURI :: (PageClass page m,MonadIO m) => [((m page),[Protocol])] -> (Maybe URI) -> m (Maybe page)
+pageFromURI _ Nothing = return Nothing
+pageFromURI pList (Just uri) = do
+    let schema = uriScheme uri
+        pages  = map (\ (f,_) -> f) $ filter (\ (_,protos) -> hasProtocol schema protos) pList 
+    liftIO $ putStrLn schema
+    if null pages 
+     then do liftIO $ putStrLn "Nothing"
+             return Nothing
+     else do page <- (head pages)
+             return (Just page)
+ where hasProtocol prot = not . null . filter (== prot) 
