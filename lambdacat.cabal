@@ -37,6 +37,7 @@ Library
         LambdaCat.Page
         LambdaCat.UI
         LambdaCat.UI.Glade
+        LambdaCat.Protocol
 
     Extensions:
         FunctionalDependencies,
