@@ -1,11 +1,14 @@
-{-# LANGUAGE MultiParamTypeClasses #-}
+{-# LANGUAGE MultiParamTypeClasses, ExistentialQuantification #-}
 
 module LambdaCat.Browser
     ( Browser (..)
+    , BrowserClass (..)
     )
 where
 
 import Control.Monad.Trans
 
-class MonadIO m => Browser browser m
+data Browser m = forall b . BrowserClass b m => Browser b
+
+class MonadIO m => BrowserClass browser m
 

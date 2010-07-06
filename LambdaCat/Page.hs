@@ -1,7 +1,8 @@
-{-# LANGUAGE MultiParamTypeClasses #-}
+{-# LANGUAGE MultiParamTypeClasses, ExistentialQuantification #-}
 
 module LambdaCat.Page
     ( Page (..)
+    , PageClass (..)
     )
 where
 
@@ -9,7 +10,9 @@ import LambdaCat.Uri
 
 import Control.Monad.Trans
 
-class MonadIO m => Page page m where
+data Page m = forall a . (PageClass a m) => Page a 
+
+class MonadIO m => PageClass page m where
     -- | Creates a new page.
     new :: m page
 

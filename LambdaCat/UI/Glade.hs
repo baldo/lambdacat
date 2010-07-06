@@ -51,9 +51,9 @@ gtkOn onFunc widget func = do
     state <- ask 
     io $ onFunc widget (runReaderT func state) 
 
-instance Browser GladeBrowser GladeIO
+instance BrowserClass GladeBrowser GladeIO
 
-instance Page WebView GladeIO where 
+instance PageClass WebView GladeIO where 
     new = io $ do 
         webView <- webViewNew
         webViewLoadUri webView "http://www.haskell.org/"
@@ -64,7 +64,7 @@ instance Page WebView GladeIO where
     stop    = io . webViewStopLoading
     reload  = io . webViewReload
 
-instance UI GladeUI GladeBrowser WebView GladeIO where
+instance UIClass GladeUI GladeBrowser WebView GladeIO where
     init = do
      _ <- io initGUI  
      return GladeUI {} 
@@ -88,7 +88,7 @@ instance UI GladeUI GladeBrowser WebView GladeIO where
         pageURI <- io $ xmlGetWidget xml castToEntry "pageURI"
         gtkOn onEntryActivate pageURI $ do
             text <- io $ entryGetText pageURI 
-            pageAction (\ w -> io $ webViewLoadUri w text)
+            pageAction (\ w -> io $ webViewLoadUri w text)            
         
         io $ widgetShowAll window
         return GladeBrowser { xml = xml, window = window, pageContainer = container }

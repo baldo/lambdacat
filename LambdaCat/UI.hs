@@ -1,7 +1,8 @@
-{-# LANGUAGE MultiParamTypeClasses, FunctionalDependencies #-}
+{-# LANGUAGE MultiParamTypeClasses, FunctionalDependencies, ExistentialQuantification #-}
 
 module LambdaCat.UI
     ( UI (..)
+    , UIClass (..)
     )
 where
 
@@ -10,7 +11,9 @@ import LambdaCat.Page
 
 import Control.Monad.Trans
 
-class (Browser browser m, Page page m, MonadIO m) => UI ui browser page m | ui -> browser page where
+data UI m = forall u b p . UIClass u b p m => UI u
+
+class (BrowserClass browser m, PageClass page m, MonadIO m) => UIClass ui browser page m | ui -> browser page where
     -- | Initializes the UI and returns an UI handle.
     init :: m ui
 
