@@ -13,6 +13,8 @@ import Graphics.UI.Gtk.WebKit.WebView
 import Control.Concurrent.MVar
 import Control.Monad.Reader
 
+import Network.URI
+
 data GladeUI = GladeUI {}
 
 data GladeBrowser = GladeBrowser 
@@ -58,6 +60,9 @@ instance PageClass WebView GladeIO where
         webView <- webViewNew
         webViewLoadUri webView "http://www.haskell.org/"
         return webView
+
+    load page uri = io $ webViewLoadUri page uriString
+        where uriString = uriToString id uri ""
 
     back    = io . webViewGoBack
     forward = io . webViewGoForward

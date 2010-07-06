@@ -16,6 +16,9 @@ class MonadIO m => PageClass page m where
     -- | Creates a new page.
     new :: m page
 
+    -- | Some uri functions
+    load :: page -> URI -> m ()
+
     -- | 
     back, forward, stop, reload :: page -> m ()
     back _ = return ()
@@ -46,10 +49,9 @@ pageFromURI _ Nothing = return Nothing
 pageFromURI pList (Just uri) = do
     let schema = uriScheme uri
         pages  = map (\ (f,_) -> f) $ filter (\ (_,protos) -> hasProtocol schema protos) pList 
-    liftIO $ putStrLn schema
     if null pages 
-     then do liftIO $ putStrLn "Nothing"
-             return Nothing
+     then return Nothing
      else do page <- (head pages)
+             load page uri
              return (Just page)
  where hasProtocol prot = not . null . filter (== prot) 
