@@ -35,6 +35,8 @@ data Page m = forall a . (PageClass a m) => Page a
 
 instance MonadIO m => PageClass (Page m) m where
    new = return (error "Can't create existential quantificated datatype")  
+
+   load (Page p) = load p
    
    back (Page p) = back p
    forward (Page p) = forward p
