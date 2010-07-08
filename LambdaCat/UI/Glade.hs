@@ -56,10 +56,7 @@ gtkOn onFunc widget func = do
 instance BrowserClass GladeBrowser GladeIO
 
 instance PageClass WebView GladeIO where 
-    new = io $ do 
-        webView <- webViewNew
-        webViewLoadUri webView "http://www.haskell.org/"
-        return webView
+    new = io $ webViewNew
 
     load page uri = io $ webViewLoadUri page uriString
         where uriString = uriToString id uri ""
