@@ -9,7 +9,6 @@ import LambdaCat.UI
 
 import Graphics.UI.Gtk
 import Graphics.UI.Gtk.Glade
-import Graphics.UI.Gtk.WebKit.WebView
 
 import Control.Concurrent.MVar
 import Control.Monad.Reader
@@ -27,7 +26,7 @@ data GladeBrowser = GladeBrowser
 type GladeIO = ReaderT (MVar GladeUIState) IO 
 
 data GladeUIState = GladeUIState {
-        pages :: [WebView]
+        pages :: [Page GladeIO]
     }
 
 runGladeIO :: GladeIO a -> IO a
@@ -56,7 +55,7 @@ gtkOn onFunc widget func = do
 
 instance BrowserClass GladeBrowser GladeIO
 
-instance UIClass GladeUI GladeBrowser WebView GladeIO where
+instance UIClass GladeUI GladeBrowser (Page GladeIO) GladeIO where
     init = do
      _ <- io initGUI  
      return GladeUI {} 
@@ -79,14 +78,15 @@ instance UIClass GladeUI GladeBrowser WebView GladeIO where
         onTBC pageReload (pageAction reload)
         pageURI <- io $ xmlGetWidget xml castToEntry "pageURI"
         gtkOn onEntryActivate pageURI $ do
-            text <- io $ entryGetText pageURI 
-            pageAction (\ w -> load w text)            
+            text <- io $ entryGetText pageURI
+            let (Just uri) = parseURI text
+            pageAction (\ w -> load w uri)            
         
         io $ widgetShowAll window
         return GladeBrowser { xml = xml, window = window, pageContainer = container }
 
      where 
-        pageAction :: (WebView -> GladeIO a) -> GladeIO ()
+        pageAction :: (Page GladeIO -> GladeIO a) -> GladeIO ()
         pageAction f = do
             uiState <- askGladeUIState
             let (page:_) = pages uiState
@@ -96,11 +96,11 @@ instance UIClass GladeUI GladeBrowser WebView GladeIO where
         xmlGetToolButton :: GladeXML -> String -> GladeIO ToolButton
         xmlGetToolButton xml name = io $ xmlGetWidget xml castToToolButton name  
 
-    embedPage _ GladeBrowser { xml = xml } webView = do
+    embedPage _ GladeBrowser { xml = xml } page@(Page widget) = do
         scrolledWindow <- io $ xmlGetWidget xml castToScrolledWindow "pageScrolledWindow"
-        io $ containerAdd scrolledWindow webView
-        io $ widgetShowAll webView
-        withGladeUIState (\ s -> s { pages = webView : (pages s) } )
+        io $ containerAdd scrolledWindow widget
+        io $ widgetShowAll widget
+        withGladeUIState (\ s -> s { pages = page : (pages s) } )
         return ()
 
     mainLoop _ = io mainGUI

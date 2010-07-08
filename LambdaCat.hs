@@ -6,6 +6,7 @@ import LambdaCat.UI.Glade
 import qualified LambdaCat.UI as UI
 import LambdaCat.Browser
 import qualified LambdaCat.Page as Page 
+import LambdaCat.Page.WebView
 import Graphics.UI.Gtk.WebKit.WebView
 import Network.URI
 
@@ -16,7 +17,7 @@ main = runGladeIO $ do
     let pageList = [(Page.new :: GladeIO WebView,["http:","https:"])]
     mpage <- Page.pageFromURI pageList (parseURI "http://www.plagis.de")
     case mpage of
-        (Just page) -> UI.embedPage ui browser page 
+        (Just page) -> UI.embedPage ui browser (Page.Page page)
         Nothing     -> return ()
     -- page <- Page.new :: GladeIO WebView
     UI.mainLoop ui

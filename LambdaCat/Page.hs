@@ -11,6 +11,7 @@ import LambdaCat.Protocol
 
 import Control.Monad.Trans
 import Network.URI
+import Graphics.UI.Gtk.Abstract.Widget
 
 class MonadIO m => PageClass page m where
     -- | Creates a new page.
@@ -31,7 +32,8 @@ class MonadIO m => PageClass page m where
     getBackHistory _ = return []
     getForwardHistory _ = return []
 
-data Page m = forall a . (PageClass a m) => Page a 
+
+data Page m = forall a . (WidgetClass a,PageClass a m) => Page a 
 
 instance MonadIO m => PageClass (Page m) m where
    new = return (error "Can't create existential quantificated datatype")  
