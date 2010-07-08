@@ -45,7 +45,7 @@ askGladeUIState = do
     state <- ask 
     liftIO $ readMVar state
 
-io :: forall a. IO a -> GladeIO a
+io :: IO a -> GladeIO a
 io = liftIO
 
 gtkOn :: GObjectClass self => (self -> IO () -> IO (ConnectId self)) -> self -> GladeIO () -> GladeIO (ConnectId self) 
