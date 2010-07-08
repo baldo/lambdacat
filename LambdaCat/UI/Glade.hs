@@ -4,6 +4,7 @@ module LambdaCat.UI.Glade where
 
 import LambdaCat.Browser
 import LambdaCat.Page
+import LambdaCat.Page.WebView
 import LambdaCat.UI 
 
 import Graphics.UI.Gtk
@@ -55,17 +56,6 @@ gtkOn onFunc widget func = do
 
 instance BrowserClass GladeBrowser GladeIO
 
-instance PageClass WebView GladeIO where 
-    new = io webViewNew
-
-    load page uri = io $ webViewLoadUri page uriString
-        where uriString = uriToString id uri ""
-
-    back    = io . webViewGoBack
-    forward = io . webViewGoForward
-    stop    = io . webViewStopLoading
-    reload  = io . webViewReload
-
 instance UIClass GladeUI GladeBrowser WebView GladeIO where
     init = do
      _ <- io initGUI  
@@ -90,7 +80,7 @@ instance UIClass GladeUI GladeBrowser WebView GladeIO where
         pageURI <- io $ xmlGetWidget xml castToEntry "pageURI"
         gtkOn onEntryActivate pageURI $ do
             text <- io $ entryGetText pageURI 
-            pageAction (\ w -> io $ webViewLoadUri w text)            
+            pageAction (\ w -> load w text)            
         
         io $ widgetShowAll window
         return GladeBrowser { xml = xml, window = window, pageContainer = container }

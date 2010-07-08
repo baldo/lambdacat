@@ -35,6 +35,7 @@ Library
         LambdaCat.Browser
         LambdaCat.Loadable
         LambdaCat.Page
+        LambdaCat.Page.WebView
         LambdaCat.UI
         LambdaCat.UI.Glade
         LambdaCat.Protocol
