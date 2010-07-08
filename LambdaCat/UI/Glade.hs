@@ -56,7 +56,7 @@ gtkOn onFunc widget func = do
 instance BrowserClass GladeBrowser GladeIO
 
 instance PageClass WebView GladeIO where 
-    new = io $ webViewNew
+    new = io webViewNew
 
     load page uri = io $ webViewLoadUri page uriString
         where uriString = uriToString id uri ""
@@ -113,7 +113,4 @@ instance UIClass GladeUI GladeBrowser WebView GladeIO where
         withGladeUIState (\ s -> s { pages = webView : (pages s) } )
         return ()
 
-    mainLoop _ = do
-        io mainGUI
-        return ()
-  
+    mainLoop _ = io mainGUI
