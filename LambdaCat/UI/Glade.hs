@@ -4,7 +4,8 @@ module LambdaCat.UI.Glade where
 
 import LambdaCat.Browser
 import LambdaCat.Page
---import LambdaCat.Page.WebView
+import LambdaCat.Page.WebView
+import LambdaCat.Page.Poppler
 import LambdaCat.UI 
 
 import Graphics.UI.Gtk
@@ -80,7 +81,13 @@ instance UIClass GladeUI GladeBrowser (Page GladeIO) GladeIO where
         _ <- gtkOn onEntryActivate pageURI $ do
             text <- io $ entryGetText pageURI
             let (Just uri) = parseURI text
-            pageAction (\ w -> load w uri)            
+            pageAction (\ w -> do
+                                let pageList = [ (Page (undefined :: WebViewPage), ["http:","https:"])
+                                               , (Page (undefined :: PopplerPage), ["file:"])
+                                               ]
+                                Just w' <- pageFromProtocol pageList (Just w) (Just uri)
+                                load w' uri
+                                embedPage GladeUI {} GladeBrowser { gladeXml = xml } w')
         
         io $ widgetShowAll window
         return GladeBrowser { gladeXml = xml, gladeWindow = window, pageContainer = container }
@@ -99,8 +106,11 @@ instance UIClass GladeUI GladeBrowser (Page GladeIO) GladeIO where
     embedPage _ GladeBrowser { gladeXml = xml } page@(Page hasWidget) = do
         let widget = getWidget hasWidget
         scrolledWindow <- io $ xmlGetWidget xml castToScrolledWindow "pageScrolledWindow"
-        io $ containerAdd scrolledWindow widget
-        io $ widgetShowAll widget
+        io $ do
+            ws <- containerGetChildren scrolledWindow
+            mapM_ (containerRemove scrolledWindow) ws
+            containerAdd scrolledWindow widget
+            widgetShowAll widget
         withGladeUIState (\ s -> s { pages = page : (pages s) } )
         return ()
 
