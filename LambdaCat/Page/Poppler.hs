@@ -13,7 +13,6 @@ import System.Glib.GObject
 import Graphics.UI.Gtk hiding (Point)
 import Graphics.UI.Gtk.Poppler.Document hiding (PageClass)
 import Graphics.UI.Gtk.Poppler.Page 
-import Graphics.UI.Gtk.Abstract.Object
 import Network.URI
 import Data.Maybe
 import Control.Monad
@@ -44,7 +43,7 @@ instance ObjectClass PopplerPage
 
 instance GObjectClass PopplerPage where
     toGObject PopplerPage { pageScrollable = scroll } = toGObject scroll 
-    unsafeCastGObject o = (error "LALALALALA")
+    unsafeCastGObject _ = (error "LALALALALA")
    
 instance WidgetClass PopplerPage 
 
@@ -69,11 +68,11 @@ instance MonadIO m => PageClass PopplerPage m where
                                       , pageNumber = num 
                                       }
         
-        area `on` exposeEvent $ tryEvent $ viewerDraw popplerPage
+        _ <- area `on` exposeEvent $ tryEvent $ viewerDraw popplerPage
 
         return popplerPage
 
-    load page@(PopplerPage { pageArea = area,  pageDocument = mdoc }) uri = liftIO $ do
+    load PopplerPage { pageArea = area,  pageDocument = mdoc } uri = liftIO $ do
         doc <- liftM (fromMaybe (error "Error opening pdf file.")) (documentNewFromFile (uriString) Nothing)
         _ <-  takeMVar mdoc
         putMVar mdoc (Just doc)
@@ -108,23 +107,12 @@ viewerDraw viewer = do
   liftIO $ putMVar (pageDocument viewer) mayBeDoc
 
 
-    
-
-eventWindowSize :: EventM EExpose (Double, Double)      
-eventWindowSize = do
-    dr    <- eventWindow
-    (w,h) <- liftIO $ drawableGetSize dr
-    return $ if w * h > 1
-               then (fromIntegral w, fromIntegral h)
-               else (1,1)
-
-
 fitPage :: PagePositioner 
 fitPage doc currentPage count (winWidth,winHeight) = do
     numOfPages <- documentGetNPages doc
     let cPosNum   = currentPage `mod` count
         firstPage = currentPage - cPosNum
-        lastPage  = firstPage + count - 1
+        lastPage  = numOfPages `min` firstPage + count - 1 
         pageSpace = (fromIntegral $ floor $ winWidth / fromIntegral count)  :: Double 
     pages <- mapM (\num -> documentGetPage doc num) [firstPage..lastPage]
     foldM (\ lst page -> do
