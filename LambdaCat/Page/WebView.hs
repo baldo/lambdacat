@@ -1,22 +1,29 @@
-{-# LANGUAGE FlexibleInstances, MultiParamTypeClasses #-}
+{-# LANGUAGE DeriveDataTypeable, FlexibleInstances, MultiParamTypeClasses #-}
 
 module LambdaCat.Page.WebView 
-    (
+    ( WebViewPage
     ) where
 
 import LambdaCat.Page
 
 import Control.Monad.Trans
+import Data.Typeable
 import Graphics.UI.Gtk.WebKit.WebView
 import Network.URI
 
-instance MonadIO m => PageClass WebView m where 
-    new = liftIO webViewNew
+newtype WebViewPage = WebViewPage { unWebViewPage :: WebView }
+  deriving Typeable
 
-    load page uri = liftIO $ webViewLoadUri page uriString
+instance HasWidget WebViewPage WebView where
+    getWidget = unWebViewPage
+
+instance MonadIO m => PageClass WebViewPage m where 
+    new = liftIO webViewNew >>= return . WebViewPage
+
+    load page uri = liftIO $ webViewLoadUri (unWebViewPage page) uriString
         where uriString = uriToString id uri ""
 
-    back    = liftIO . webViewGoBack
-    forward = liftIO . webViewGoForward
-    stop    = liftIO . webViewStopLoading
-    reload  = liftIO . webViewReload
+    back    = liftIO . webViewGoBack . unWebViewPage
+    forward = liftIO . webViewGoForward . unWebViewPage
+    stop    = liftIO . webViewStopLoading . unWebViewPage
+    reload  = liftIO . webViewReload . unWebViewPage

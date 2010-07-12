@@ -1,4 +1,4 @@
-{-# LANGUAGE FlexibleInstances,MultiParamTypeClasses #-}
+{-# LANGUAGE DeriveDataTypeable, FlexibleInstances, MultiParamTypeClasses #-}
 
 module LambdaCat.Page.Poppler 
     ( PopplerPage
@@ -8,6 +8,7 @@ import LambdaCat.Page hiding (Page)
 
 import Control.Concurrent
 import Control.Monad.Trans
+import Data.Typeable
 import System.Glib.GObject
 import Graphics.UI.Gtk hiding (Point)
 import Graphics.UI.Gtk.Poppler.Document hiding (PageClass)
@@ -25,6 +26,7 @@ data PopplerPage = PopplerPage
     , pageDocument :: MVar (Maybe Document)
     , pageNumber   :: MVar Int 
     }
+  deriving Typeable
 
 type CurrentPage = Int
 type Point = (Double,Double)
@@ -47,6 +49,9 @@ instance GObjectClass PopplerPage where
 instance WidgetClass PopplerPage 
 
 -- This is a better idea ;)
+
+instance HasWidget PopplerPage PopplerPage where
+    getWidget = id
 
 instance MonadIO m => PageClass PopplerPage m where 
     new = liftIO $ do

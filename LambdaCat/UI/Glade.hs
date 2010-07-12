@@ -96,7 +96,8 @@ instance UIClass GladeUI GladeBrowser (Page GladeIO) GladeIO where
         xmlGetToolButton :: GladeXML -> String -> GladeIO ToolButton
         xmlGetToolButton xml name = io $ xmlGetWidget xml castToToolButton name  
 
-    embedPage _ GladeBrowser { gladeXml = xml } page@(Page widget) = do
+    embedPage _ GladeBrowser { gladeXml = xml } page@(Page hasWidget) = do
+        let widget = getWidget hasWidget
         scrolledWindow <- io $ xmlGetWidget xml castToScrolledWindow "pageScrolledWindow"
         io $ containerAdd scrolledWindow widget
         io $ widgetShowAll widget

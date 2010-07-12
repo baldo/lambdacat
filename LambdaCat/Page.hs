@@ -1,8 +1,9 @@
-{-# LANGUAGE MultiParamTypeClasses, ExistentialQuantification, FlexibleInstances #-}
+{-# LANGUAGE FunctionalDependencies, MultiParamTypeClasses, ExistentialQuantification, FlexibleInstances #-}
 
 module LambdaCat.Page
     ( Page (..)
     , PageClass (..)
+    , HasWidget (..)
     , pageFromURI 
     )
 where
@@ -32,8 +33,10 @@ class MonadIO m => PageClass page m where
     getBackHistory _ = return []
     getForwardHistory _ = return []
 
+class WidgetClass w => HasWidget hw w | hw -> w where
+    getWidget :: hw -> w
 
-data Page m = forall a . (WidgetClass a,PageClass a m) => Page a 
+data Page m = forall hw w . (HasWidget hw w, PageClass hw m) => Page hw
 
 instance MonadIO m => PageClass (Page m) m where
    new = return (error "Can't create existential quantificated datatype")  
