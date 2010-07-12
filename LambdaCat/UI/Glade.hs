@@ -4,7 +4,7 @@ module LambdaCat.UI.Glade where
 
 import LambdaCat.Browser
 import LambdaCat.Page
-import LambdaCat.Page.WebView
+--import LambdaCat.Page.WebView
 import LambdaCat.UI 
 
 import Graphics.UI.Gtk
@@ -18,8 +18,8 @@ import Network.URI
 data GladeUI = GladeUI {}
 
 data GladeBrowser = GladeBrowser 
-    { xml :: GladeXML
-    , window :: Window
+    { gladeXml :: GladeXML
+    , gladeWindow :: Window
     , pageContainer :: Container 
     }
 
@@ -66,10 +66,10 @@ instance UIClass GladeUI GladeBrowser (Page GladeIO) GladeIO where
         container <- io $ xmlGetWidget xml castToContainer "pageContainer"
 
         -- General / Events ---------------------------------------------------
-        io $ onDestroy window mainQuit
+        _ <- io $ onDestroy window mainQuit
 
         -- Toolbar / Events ---------------------------------------------------
-        let onTBC = gtkOn onToolButtonClicked
+        let onTBC w a = gtkOn onToolButtonClicked w a >> return ()
         pageBack <- xmlGetToolButton xml "pageBack"
         onTBC pageBack (pageAction back)
         pageForward <- xmlGetToolButton xml "pageForward"
@@ -77,26 +77,26 @@ instance UIClass GladeUI GladeBrowser (Page GladeIO) GladeIO where
         pageReload <- xmlGetToolButton xml "pageReload"
         onTBC pageReload (pageAction reload)
         pageURI <- io $ xmlGetWidget xml castToEntry "pageURI"
-        gtkOn onEntryActivate pageURI $ do
+        _ <- gtkOn onEntryActivate pageURI $ do
             text <- io $ entryGetText pageURI
             let (Just uri) = parseURI text
             pageAction (\ w -> load w uri)            
         
         io $ widgetShowAll window
-        return GladeBrowser { xml = xml, window = window, pageContainer = container }
+        return GladeBrowser { gladeXml = xml, gladeWindow = window, pageContainer = container }
 
      where 
         pageAction :: (Page GladeIO -> GladeIO a) -> GladeIO ()
         pageAction f = do
             uiState <- askGladeUIState
             let (page:_) = pages uiState
-            f page
+            _ <- f page
             return ()
 
         xmlGetToolButton :: GladeXML -> String -> GladeIO ToolButton
         xmlGetToolButton xml name = io $ xmlGetWidget xml castToToolButton name  
 
-    embedPage _ GladeBrowser { xml = xml } page@(Page widget) = do
+    embedPage _ GladeBrowser { gladeXml = xml } page@(Page widget) = do
         scrolledWindow <- io $ xmlGetWidget xml castToScrolledWindow "pageScrolledWindow"
         io $ containerAdd scrolledWindow widget
         io $ widgetShowAll widget
