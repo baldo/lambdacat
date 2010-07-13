@@ -3,6 +3,7 @@
 module LambdaCat.UI.Glade where
 
 import LambdaCat.Browser
+import LambdaCat.Core
 import LambdaCat.Page
 import LambdaCat.Page.WebView
 import LambdaCat.Page.Poppler
@@ -90,6 +91,7 @@ instance UIClass GladeUI GladeBrowser (Page GladeIO) GladeIO where
                                 embedPage GladeUI {} GladeBrowser { gladeXml = xml } w')
         
         io $ widgetShowAll window
+        lambdaCatAddUI (UI GladeUI {})
         return GladeBrowser { gladeXml = xml, gladeWindow = window, pageContainer = container }
 
      where 

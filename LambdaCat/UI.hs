@@ -21,6 +21,11 @@ class (BrowserClass browser m, PageClass page m, MonadIO m) => UIClass ui browse
     -- | Embed the page into the given browser.
     embedPage :: ui -> browser -> page -> m ()
 
+    -- | Checks if a page is child of this brower/ui
+    containsPage :: ui -> page -> m Bool
+    uriChanged   :: ui -> page -> m ()
+
+
     -- | The main loop for the UI.
     mainLoop :: ui -> m ()
 

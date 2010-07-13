@@ -38,6 +38,7 @@ Library
     Exposed-Modules:
         LambdaCat.Browser
         LambdaCat.Loadable
+        LambdaCat.Core
         LambdaCat.Page
         LambdaCat.Page.WebView
         LambdaCat.Page.Poppler
