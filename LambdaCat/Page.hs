@@ -31,7 +31,7 @@ class MonadIO m => UIClass ui m where
     containsPage :: ui -> Page m -> m Bool
     uriChanged   :: ui -> Page m -> m ()
 
-    update :: ui -> (ui -> m()) -> m ()
+    update :: ui -> CallBack ui m 
 
     -- | The main loop for the UI.
     mainLoop :: ui -> m ()
