@@ -1,8 +1,7 @@
 {-# LANGUAGE MultiParamTypeClasses, FunctionalDependencies, ExistentialQuantification, FlexibleInstances #-}
 
 module LambdaCat.UI
-    ( UI (..)
-    , UIClass (..)
+    ( UIClass (..)
     )
 where
 
@@ -11,31 +10,20 @@ import LambdaCat.Page
 
 import Control.Monad.Trans
 
-class (BrowserClass browser m, PageClass page m, MonadIO m) => UIClass ui browser page m | ui -> browser page where
+class MonadIO m => UIClass ui m where
     -- | Initializes the UI and returns an UI handle.
     init :: m ui
 
     -- | Creates the main UI widget for the browser (e.g. a window).
-    newBrowser :: ui -> m browser
+    newBrowser :: ui -> m BrowserID
 
     -- | Embed the page into the given browser.
-    embedPage :: ui -> browser -> page -> m ()
+    embedPage :: ui -> BrowserID -> Page m -> m ()
 
     -- | Checks if a page is child of this brower/ui
-    containsPage :: ui -> page -> m Bool
-    uriChanged   :: ui -> page -> m ()
+    containsPage :: ui -> Page m -> m Bool
+    uriChanged   :: ui -> Page m -> m ()
 
 
     -- | The main loop for the UI.
     mainLoop :: ui -> m ()
-
-data UI b p m = forall u . (UIClass u b p m) => UI u
-
-instance (BrowserClass browser m, PageClass page m, MonadIO m) => UIClass (UI browser page m) browser page m where
-    init = return (error "Can't initialize existential quantificated datatype")
-
-    newBrowser (UI u) = newBrowser u
-
-    embedPage (UI u) b p = embedPage u b p 
-
-    mainLoop (UI u) = mainLoop u 

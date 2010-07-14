@@ -18,7 +18,7 @@ instance HasWidget WebViewPage WebView where
     getWidget = unWebViewPage
 
 instance MonadIO m => PageClass WebViewPage m where 
-    new = liftIO webViewNew >>= return . WebViewPage
+    new _ = liftIO webViewNew >>= return . WebViewPage
 
     load page uri = liftIO $ webViewLoadUri (unWebViewPage page) uriString
         where uriString = uriToString id uri ""

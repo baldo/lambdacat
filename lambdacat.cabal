@@ -30,7 +30,8 @@ Library
         cairo == 0.11.*,
         webkit >= 0.11 && < 0.12,
         poppler == 0.11.*,
-        network == 2.2.*
+        network == 2.2.*,
+        containers == 0.3.*
 
     Ghc-Options:
         -Wall -threaded
@@ -38,7 +39,6 @@ Library
     Exposed-Modules:
         LambdaCat.Browser
         LambdaCat.Loadable
-        LambdaCat.Core
         LambdaCat.Page
         LambdaCat.Page.WebView
         LambdaCat.Page.Poppler

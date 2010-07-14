@@ -19,11 +19,11 @@ main = do
     let uri = head args
     runGladeIO $ do
         ui <- UI.init :: GladeIO GladeUI
-        browser <- UI.newBrowser ui :: GladeIO GladeBrowser
+        browser <- UI.newBrowser ui :: GladeIO BrowserID
         let pageList = [ (Page.Page (undefined :: WebViewPage), ["http:","https:"])
                        , (Page.Page (undefined :: PopplerPage), ["file:"])
                        ]
-        mpage <- Page.pageFromProtocol pageList Nothing (parseURI uri)
+        mpage <- Page.pageFromProtocol (\ _ -> return ()) pageList Nothing (parseURI uri)
         case mpage of
             (Just page) -> do
                 Page.load page (fromJust $ parseURI uri)

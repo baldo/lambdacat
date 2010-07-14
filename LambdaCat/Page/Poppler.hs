@@ -53,7 +53,7 @@ instance HasWidget PopplerPage PopplerPage where
     getWidget = id
 
 instance MonadIO m => PageClass PopplerPage m where 
-    new = liftIO $ do
+    new _ = liftIO $ do
         area <- drawingAreaNew
         scrollWindow <- scrolledWindowNew Nothing Nothing
         doc <- newMVar Nothing

@@ -17,7 +17,7 @@ import Graphics.UI.Gtk.Abstract.Widget
 
 class MonadIO m => PageClass page m where
     -- | Creates a new page.
-    new :: m page
+    new :: (Page m -> m ()) -> m page
 
     -- | Some uri functions
     load :: page -> URI -> m ()
@@ -58,21 +58,21 @@ eqType a b = typeOf a == typeOf b
 eqPageType :: Page m1 -> Page m2 -> Bool
 eqPageType (Page p1) (Page p2) = p1 `eqType` p2
 
-createPage :: (MonadIO m, PageClass p m) => p -> m p
+createPage :: (MonadIO m, PageClass p m) => p -> (Page m -> m ()) -> m p
 createPage _ = new
 
-pageFromProtocol :: MonadIO m => [(Page m, [Protocol])] -> Maybe (Page m) -> Maybe URI -> m (Maybe (Page m))
-pageFromProtocol _  _  Nothing    = return Nothing
-pageFromProtocol [] _  _          = return Nothing
-pageFromProtocol ps mp (Just uri) = do
+pageFromProtocol :: MonadIO m => (Page m -> m ()) -> [(Page m, [Protocol])] -> Maybe (Page m) -> Maybe URI -> m (Maybe (Page m))
+pageFromProtocol _  _  _  Nothing    = return Nothing
+pageFromProtocol _  [] _  _          = return Nothing
+pageFromProtocol cb ps mp (Just uri) = do
     mp' <- lookupProtocol ps
 
     case (mp, mp') of
         (_,       Nothing       ) -> return Nothing
-        (Nothing, Just (Page p')) -> createPage p' >>= return . Just . Page
+        (Nothing, Just (Page p')) -> createPage p' cb >>= return . Just . Page
         (Just (Page p), Just (Page p'))
             | p `eqType` p' -> return mp
-            | otherwise     -> createPage p' >>= return . Just . Page
+            | otherwise     -> createPage p' cb >>= return . Just . Page
 
     where
         protocol = uriScheme uri

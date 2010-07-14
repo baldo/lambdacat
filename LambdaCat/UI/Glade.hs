@@ -3,7 +3,6 @@
 module LambdaCat.UI.Glade where
 
 import LambdaCat.Browser
-import LambdaCat.Core
 import LambdaCat.Page
 import LambdaCat.Page.WebView
 import LambdaCat.Page.Poppler
@@ -17,13 +16,21 @@ import Control.Monad.Reader
 
 import Network.URI
 
-data GladeUI = GladeUI {}
+import qualified Data.Map as Map
+import Data.Map (Map)
+
+data GladeUI = GladeUI {
+    browsers :: MVar (Map BrowserID GladeBrowser)
+}
 
 data GladeBrowser = GladeBrowser 
     { gladeXml :: GladeXML
     , gladeWindow :: Window
     , pageContainer :: Container 
     }
+
+instance Show GladeBrowser where
+    show _ = "GladeBrowser"
 
 type GladeIO = ReaderT (MVar GladeUIState) IO 
 
@@ -47,6 +54,26 @@ askGladeUIState = do
     state <- ask 
     liftIO $ readMVar state
 
+gAddBrowser :: GladeUI -> GladeBrowser -> GladeIO BrowserID
+gAddBrowser ui g = do
+    let bs = browsers ui
+    bid <- newBrowserID
+    liftIO $ modifyMVar_ bs (return . Map.insert bid g)
+    return bid
+
+gRemoveBrowser :: GladeUI -> BrowserID -> GladeIO ()
+gRemoveBrowser ui bid = do
+    let bs = browsers ui
+    bid <- newBrowserID
+    liftIO $ modifyMVar_ bs (return . Map.delete bid)
+
+gGetBrowser :: GladeUI -> BrowserID -> GladeIO GladeBrowser
+gGetBrowser ui bid =  do
+    let bs = browsers ui
+    -- TODO error handling
+    (Just b) <- liftIO $ withMVar bs (return . Map.lookup bid)
+    return b
+
 io :: IO a -> GladeIO a
 io = liftIO
 
@@ -55,18 +82,19 @@ gtkOn onFunc widget func = do
     state <- ask 
     io $ onFunc widget (runReaderT func state) 
 
-instance BrowserClass GladeBrowser GladeIO
-
-instance UIClass GladeUI GladeBrowser (Page GladeIO) GladeIO where
+instance UIClass GladeUI GladeIO where
     init = do
      _ <- io initGUI  
-     return GladeUI {} 
+     b <- io $ newMVar Map.empty 
+     return GladeUI { browsers = b } 
 
-    newBrowser _ = do 
+    newBrowser ui = do 
         Just xml <- io $ xmlNew "lambdacat.glade"
         window <- io $ xmlGetWidget xml castToWindow "browserWindow"
         container <- io $ xmlGetWidget xml castToContainer "pageContainer"
 
+        let browser = GladeBrowser { gladeXml = xml, gladeWindow = window, pageContainer = container }
+        bid <- gAddBrowser ui browser 
         -- General / Events ---------------------------------------------------
         _ <- io $ onDestroy window mainQuit
 
@@ -86,13 +114,11 @@ instance UIClass GladeUI GladeBrowser (Page GladeIO) GladeIO where
                                 let pageList = [ (Page (undefined :: WebViewPage), ["http:","https:"])
                                                , (Page (undefined :: PopplerPage), ["file:"])
                                                ]
-                                Just w' <- pageFromProtocol pageList (Just w) (Just uri)
+                                Just w' <- pageFromProtocol (\ _ -> return ()) pageList (Just w) (Just uri)
                                 load w' uri
-                                embedPage GladeUI {} GladeBrowser { gladeXml = xml } w')
-        
+                                embedPage ui bid w')
         io $ widgetShowAll window
-        lambdaCatAddUI (UI GladeUI {})
-        return GladeBrowser { gladeXml = xml, gladeWindow = window, pageContainer = container }
+        return bid 
 
      where 
         pageAction :: (Page GladeIO -> GladeIO a) -> GladeIO ()
@@ -105,7 +131,8 @@ instance UIClass GladeUI GladeBrowser (Page GladeIO) GladeIO where
         xmlGetToolButton :: GladeXML -> String -> GladeIO ToolButton
         xmlGetToolButton xml name = io $ xmlGetWidget xml castToToolButton name  
 
-    embedPage _ GladeBrowser { gladeXml = xml } page@(Page hasWidget) = do
+    embedPage ui bid page@(Page hasWidget) = do
+        GladeBrowser { gladeXml = xml } <- gGetBrowser ui bid
         let widget = getWidget hasWidget
         scrolledWindow <- io $ xmlGetWidget xml castToScrolledWindow "pageScrolledWindow"
         io $ do

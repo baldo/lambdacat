@@ -1,16 +1,23 @@
-{-# LANGUAGE MultiParamTypeClasses, ExistentialQuantification, FlexibleInstances #-}
+{-# LANGUAGE MultiParamTypeClasses, ExistentialQuantification, FlexibleInstances, GeneralizedNewtypeDeriving #-}
 
 module LambdaCat.Browser
-    ( Browser (..)
-    , BrowserClass (..)
+    ( BrowserID
+    , newBrowserID
     )
 where
 
 import Control.Monad.Trans
+import Control.Concurrent.MVar
+import System.IO.Unsafe
 
-class MonadIO m => BrowserClass browser m
+newtype BrowserID = BrowserID Int
+    deriving (Eq,Show,Ord,Num)
 
-data Browser m = forall b . BrowserClass b m => Browser b
+nextID :: MVar BrowserID
+nextID = unsafePerformIO $ newMVar (BrowserID 0)
 
-instance MonadIO m => BrowserClass (Browser m) m where
-
+newBrowserID :: MonadIO m => m BrowserID
+newBrowserID = liftIO $ do 
+    i <- takeMVar nextID
+    putMVar nextID (i + 1)
+    return i 
