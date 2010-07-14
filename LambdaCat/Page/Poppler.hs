@@ -35,22 +35,8 @@ type PagePositioner = Document  -- ^ Document that should be layouted
                     -> Point -- ^ Size of the Screen
                     -> IO [(Page,Double,Point,Point)] -- ^ Where should which page be drawn
 
-
--- The following is probably a bad idea, maybe it throws an LALALALA error.
--- There is no documented way to instantiate a widget....
-
-instance ObjectClass PopplerPage 
-
-instance GObjectClass PopplerPage where
-    toGObject PopplerPage { pageScrollable = scroll } = toGObject scroll 
-    unsafeCastGObject _ = (error "LALALALALA")
-   
-instance WidgetClass PopplerPage 
-
--- This is a better idea ;)
-
-instance HasWidget PopplerPage PopplerPage where
-    getWidget = id
+instance HasWidget PopplerPage ScrolledWindow where
+    getWidget PopplerPage {pageScrollable = scroll } = scroll
 
 instance MonadIO m => PageClass PopplerPage m where 
     new _ = liftIO $ do
