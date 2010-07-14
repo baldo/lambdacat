@@ -1,7 +1,8 @@
-{-# LANGUAGE FunctionalDependencies, MultiParamTypeClasses, ExistentialQuantification, FlexibleInstances #-}
+{-# LANGUAGE FunctionalDependencies, MultiParamTypeClasses, ExistentialQuantification, FlexibleInstances, RankNTypes #-}
 
 module LambdaCat.Page
-    ( Page (..)
+    ( UIClass (..)
+    , Page (..)
     , PageClass (..)
     , HasWidget (..)
     , pageFromProtocol
@@ -9,15 +10,37 @@ module LambdaCat.Page
 where
 
 import LambdaCat.Protocol
+import LambdaCat.Browser
 
 import Control.Monad.Trans
 import Data.Typeable
 import Network.URI
 import Graphics.UI.Gtk.Abstract.Widget
 
+class MonadIO m => UIClass ui m where
+    -- | Initializes the UI and returns an UI handle.
+    init :: m ui
+
+    -- | Creates the main UI widget for the browser (e.g. a window).
+    newBrowser :: ui -> m BrowserID
+
+    -- | Embed the page into the given browser.
+    embedPage :: ui -> BrowserID -> Page m -> m ()
+
+    -- | Checks if a page is child of this brower/ui
+    containsPage :: ui -> Page m -> m Bool
+    uriChanged   :: ui -> Page m -> m ()
+
+    update :: ui -> (ui -> m()) -> m ()
+
+    -- | The main loop for the UI.
+    mainLoop :: ui -> m ()
+
+type CallBack ui m = (ui -> m ()) -> m ()
+
 class MonadIO m => PageClass page m where
     -- | Creates a new page.
-    new :: (Page m -> m ()) -> m page
+    new :: (UIClass ui m) => CallBack ui m -> m page
 
     -- | Some uri functions
     load :: page -> URI -> m ()
@@ -28,6 +51,10 @@ class MonadIO m => PageClass page m where
     forward _ = return ()
     stop _ = return ()
     reload _ = return ()
+
+    -- | generic informations on a page
+    getCurrentURI :: page -> m URI
+    getCurrentTitle :: page -> m String
 
     -- |
     getBackHistory, getForwardHistory :: page -> m [URI]
@@ -58,10 +85,10 @@ eqType a b = typeOf a == typeOf b
 eqPageType :: Page m1 -> Page m2 -> Bool
 eqPageType (Page p1) (Page p2) = p1 `eqType` p2
 
-createPage :: (MonadIO m, PageClass p m) => p -> (Page m -> m ()) -> m p
+createPage :: (MonadIO m, PageClass p m,UIClass ui m) => p -> CallBack ui m -> m p
 createPage _ = new
 
-pageFromProtocol :: MonadIO m => (Page m -> m ()) -> [(Page m, [Protocol])] -> Maybe (Page m) -> Maybe URI -> m (Maybe (Page m))
+pageFromProtocol :: (MonadIO m,UIClass u m) => CallBack u m -> [(Page m, [Protocol])] -> Maybe (Page m) -> Maybe URI -> m (Maybe (Page m))
 pageFromProtocol _  _  _  Nothing    = return Nothing
 pageFromProtocol _  [] _  _          = return Nothing
 pageFromProtocol cb ps mp (Just uri) = do

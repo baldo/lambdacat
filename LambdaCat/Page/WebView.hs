@@ -18,10 +18,22 @@ instance HasWidget WebViewPage WebView where
     getWidget = unWebViewPage
 
 instance MonadIO m => PageClass WebViewPage m where 
-    new _ = liftIO webViewNew >>= return . WebViewPage
+    new cb = do
+        page <- liftIO webViewNew >>= return . WebViewPage
+        cb (\ui -> uriChanged ui (Page page))
+        return page
+        
 
     load page uri = liftIO $ webViewLoadUri (unWebViewPage page) uriString
         where uriString = uriToString id uri ""
+
+    getCurrentURI page = do 
+        muri <- liftIO $ webViewGetUri $  unWebViewPage page
+        case muri of
+            Just uri -> case parseURI uri of 
+                Just x -> return x
+                _ -> return nullURI
+            _ -> return nullURI
 
     back    = liftIO . webViewGoBack . unWebViewPage
     forward = liftIO . webViewGoForward . unWebViewPage

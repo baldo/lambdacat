@@ -3,9 +3,10 @@ module Main
 where
 
 import LambdaCat.UI.Glade
-import qualified LambdaCat.UI as UI
+--import qualified LambdaCat.UI as UI
 import LambdaCat.Browser
 import qualified LambdaCat.Page as Page
+import qualified LambdaCat.Page as UI
 import LambdaCat.Page.WebView
 import LambdaCat.Page.Poppler
 import Graphics.UI.Gtk.WebKit.WebView
@@ -23,7 +24,7 @@ main = do
         let pageList = [ (Page.Page (undefined :: WebViewPage), ["http:","https:"])
                        , (Page.Page (undefined :: PopplerPage), ["file:"])
                        ]
-        mpage <- Page.pageFromProtocol (\ _ -> return ()) pageList Nothing (parseURI uri)
+        mpage <- Page.pageFromProtocol (UI.update ui) pageList Nothing (parseURI uri)
         case mpage of
             (Just page) -> do
                 Page.load page (fromJust $ parseURI uri)

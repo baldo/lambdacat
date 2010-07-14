@@ -114,7 +114,7 @@ instance UIClass GladeUI GladeIO where
                                 let pageList = [ (Page (undefined :: WebViewPage), ["http:","https:"])
                                                , (Page (undefined :: PopplerPage), ["file:"])
                                                ]
-                                Just w' <- pageFromProtocol (\ _ -> return ()) pageList (Just w) (Just uri)
+                                Just w' <- pageFromProtocol (update ui)  pageList (Just w) (Just uri)
                                 load w' uri
                                 embedPage ui bid w')
         io $ widgetShowAll window
@@ -130,6 +130,12 @@ instance UIClass GladeUI GladeIO where
 
         xmlGetToolButton :: GladeXML -> String -> GladeIO ToolButton
         xmlGetToolButton xml name = io $ xmlGetWidget xml castToToolButton name  
+
+    update ui f = do
+        f ui 
+        return ()
+
+    uriChanged _ _ = liftIO $ putStrLn "URICHANGED"
 
     embedPage ui bid page@(Page hasWidget) = do
         GladeBrowser { gladeXml = xml } <- gGetBrowser ui bid
