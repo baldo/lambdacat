@@ -3,10 +3,9 @@
 module LambdaCat.UI.Glade where
 
 import LambdaCat.Browser
-import LambdaCat.Page
 import LambdaCat.Page.WebView
 import LambdaCat.Page.Poppler
-import LambdaCat.UI 
+import LambdaCat.Page
 
 import Graphics.UI.Gtk
 import Graphics.UI.Gtk.Glade
@@ -150,3 +149,8 @@ instance UIClass GladeUI GladeIO where
         return ()
 
     mainLoop _ = io mainGUI
+
+instance SinkMonad GladeIO where
+    getSink = do 
+        state <- ask
+        return (\ f -> liftIO $ runReaderT f state)

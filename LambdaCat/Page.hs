@@ -2,9 +2,11 @@
 
 module LambdaCat.Page
     ( UIClass (..)
-    , Page (..)
     , PageClass (..)
+    , Page (..)
     , HasWidget (..)
+    , SinkMonad (..)
+
     , pageFromProtocol
     )
 where
@@ -63,6 +65,9 @@ class MonadIO m => PageClass page m where
 
 class WidgetClass w => HasWidget hw w | hw -> w where
     getWidget :: hw -> w
+
+class MonadIO m => SinkMonad m where
+    getSink :: (MonadIO m') => m (m a -> m' a)
 
 data Page m = forall hw w . (Typeable hw, HasWidget hw w, PageClass hw m) => Page hw
 

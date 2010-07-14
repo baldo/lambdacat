@@ -42,7 +42,6 @@ Library
         LambdaCat.Page
         LambdaCat.Page.WebView
         LambdaCat.Page.Poppler
-        LambdaCat.UI
         LambdaCat.UI.Glade
         LambdaCat.Protocol
 

@@ -9,7 +9,9 @@ import LambdaCat.Page
 import Control.Monad.Trans
 import Data.Typeable
 import Graphics.UI.Gtk.WebKit.WebView
+import Graphics.UI.Gtk
 import Network.URI
+import Control.Monad
 
 newtype WebViewPage = WebViewPage { unWebViewPage :: WebView }
   deriving Typeable
@@ -17,10 +19,13 @@ newtype WebViewPage = WebViewPage { unWebViewPage :: WebView }
 instance HasWidget WebViewPage WebView where
     getWidget = unWebViewPage
 
-instance MonadIO m => PageClass WebViewPage m where 
+instance SinkMonad m => PageClass WebViewPage m where 
     new cb = do
         page <- liftIO webViewNew >>= return . WebViewPage
         cb (\ui -> uriChanged ui (Page page))
+        sink <- getSink
+        -- TODO How to lift the MonadIO m into the call which has type IO a
+        liftIO $ (getWidget page) `on` loadStarted $ (\ _ -> sink $ cb (\ui -> uriChanged ui (Page page)))
         return page
         
 
