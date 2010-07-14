@@ -36,7 +36,7 @@ type PagePositioner = Document  -- ^ Document that should be layouted
                     -> IO [(Page,Double,Point,Point)] -- ^ Where should which page be drawn
 
 instance HasWidget PopplerPage ScrolledWindow where
-    getWidget PopplerPage {pageScrollable = scroll } = scroll
+    getWidget = pageScrollable
 
 instance MonadIO m => PageClass PopplerPage m where 
     new _ = liftIO $ do
