@@ -6,6 +6,7 @@ import LambdaCat.Browser
 import LambdaCat.Page
 import LambdaCat.Page.WebView
 import LambdaCat.Page.Poppler
+import LambdaCat.Page.MPlayer
 import LambdaCat.UI 
 
 import Graphics.UI.Gtk
@@ -113,10 +114,11 @@ instance UIClass GladeUI GladeIO where
             pageAction (\ w -> do
                                 let pageList = [ (Page (undefined :: WebViewPage), ["http:","https:"])
                                                , (Page (undefined :: PopplerPage), ["file:"])
+                                               , (Page (undefined :: MPlayerPage), ["mms:"])
                                                ]
                                 Just w' <- pageFromProtocol (update ui)  pageList (Just w) (Just uri)
-                                load w' uri
-                                embedPage ui bid w')
+                                embedPage ui bid w'
+                                load w' uri)
         io $ widgetShowAll window
         return bid 
 
