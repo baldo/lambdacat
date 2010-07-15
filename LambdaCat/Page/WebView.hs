@@ -12,7 +12,7 @@ import Graphics.UI.Gtk.WebKit.WebView
 import Network.URI
 
 newtype WebViewPage = WebViewPage { unWebViewPage :: WebView }
-  deriving Typeable
+  deriving (Eq, Typeable)
 
 instance HasWidget WebViewPage WebView where
     getWidget = unWebViewPage

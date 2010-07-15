@@ -38,7 +38,7 @@ class MonadIO m => UIClass ui m where
 
 type CallBack ui m = (ui -> m ()) -> m ()
 
-class MonadIO m => PageClass page m where
+class (Eq page, MonadIO m) => PageClass page m where
     -- | Creates a new page.
     new :: (UIClass ui m) => CallBack ui m -> m page
 
@@ -66,18 +66,23 @@ class WidgetClass w => HasWidget hw w | hw -> w where
 
 data Page m = forall hw w . (Typeable hw, HasWidget hw w, PageClass hw m) => Page hw
 
+instance MonadIO m => Eq (Page m) where
+    (Page p1) == (Page p2)
+        | p1 `eqType` p2 = cast p1 == Just p2
+        | otherwise      = False
+
 instance MonadIO m => PageClass (Page m) m where
-   new = return (error "Can't create existential quantificated datatype")
+    new = return (error "Can't create existential quantificated datatype")
 
-   load (Page p) = load p
+    load (Page p) = load p
 
-   back (Page p) = back p
-   forward (Page p) = forward p
-   stop (Page p) = stop p
-   reload (Page p) = reload p
+    back (Page p) = back p
+    forward (Page p) = forward p
+    stop (Page p) = stop p
+    reload (Page p) = reload p
 
-   getBackHistory (Page p) = getBackHistory p
-   getForwardHistory (Page p) = getForwardHistory p
+    getBackHistory (Page p) = getBackHistory p
+    getForwardHistory (Page p) = getForwardHistory p
 
 eqType :: (Typeable a, Typeable b) => a -> b -> Bool
 eqType a b = typeOf a == typeOf b
