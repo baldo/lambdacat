@@ -11,7 +11,6 @@ import Data.Typeable
 import Graphics.UI.Gtk.WebKit.WebView
 import Graphics.UI.Gtk
 import Network.URI
-import Control.Monad
 
 newtype WebViewPage = WebViewPage { unWebViewPage :: WebView }
   deriving (Eq, Typeable)
@@ -24,7 +23,7 @@ instance SinkMonad m => PageClass WebViewPage m where
         page <- liftIO webViewNew >>= return . WebViewPage
         cb (\ui -> uriChanged ui (Page page))
         sink <- getSink
-        liftIO $ (getWidget page) `on` loadFinished $ (\ _ -> sink $ cb (\ui -> uriChanged ui (Page page)))
+        _ <- liftIO $ getWidget page `on` loadFinished $ (\ _ -> sink $ cb (\ui -> uriChanged ui (Page page)))
         return page
         
 
@@ -32,12 +31,18 @@ instance SinkMonad m => PageClass WebViewPage m where
         where uriString = uriToString id uri ""
 
     getCurrentURI page = do 
-        muri <- liftIO $ webViewGetUri $  unWebViewPage page
+        muri <- liftIO.webViewGetUri.unWebViewPage $ page
         case muri of
             Just uri -> case parseURI uri of 
                 Just x -> return x
                 _ -> return nullURI
             _ -> return nullURI
+
+    getCurrentTitle page = do
+        mTitle <- liftIO.webViewGetTitle.unWebViewPage $ page
+        case mTitle of
+            Just title -> return title
+            _ -> return ""
 
     back    = liftIO . webViewGoBack . unWebViewPage
     forward = liftIO . webViewGoForward . unWebViewPage

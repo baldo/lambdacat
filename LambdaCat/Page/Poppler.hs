@@ -9,7 +9,6 @@ import LambdaCat.Page hiding (Page)
 import Control.Concurrent
 import Control.Monad.Trans
 import Data.Typeable
-import System.Glib.GObject
 import Graphics.UI.Gtk hiding (Point)
 import Graphics.UI.Gtk.Poppler.Document hiding (PageClass)
 import Graphics.UI.Gtk.Poppler.Page 
@@ -24,6 +23,7 @@ data PopplerPage = PopplerPage
     , pageScrollable :: ScrolledWindow
     , pageDocument :: MVar (Maybe Document)
     , pageNumber   :: MVar Int 
+    , pageURI      :: MVar URI
     }
   deriving (Eq, Typeable)
 
@@ -44,6 +44,7 @@ instance MonadIO m => PageClass PopplerPage m where
         scrollWindow <- scrolledWindowNew Nothing Nothing
         doc <- newMVar Nothing
         num <- newMVar 0
+        uri <- newMVar nullURI
 
         scrolledWindowAddWithViewport scrollWindow area
         scrolledWindowSetPolicy scrollWindow PolicyAutomatic PolicyAutomatic
@@ -52,6 +53,7 @@ instance MonadIO m => PageClass PopplerPage m where
                                       , pageScrollable = scrollWindow
                                       , pageDocument = doc
                                       , pageNumber = num 
+                                      , pageURI = uri
                                       }
         
         _ <- area `on` exposeEvent $ tryEvent $ viewerDraw popplerPage
@@ -59,11 +61,21 @@ instance MonadIO m => PageClass PopplerPage m where
         return popplerPage
 
     load PopplerPage { pageArea = area,  pageDocument = mdoc } uri = liftIO $ do
-        doc <- liftM (fromMaybe (error "Error opening pdf file.")) (documentNewFromFile (uriString) Nothing)
+        doc <- liftM (fromMaybe (error "Error opening pdf file.")) (documentNewFromFile uriString Nothing)
         _ <-  takeMVar mdoc
         putMVar mdoc (Just doc)
         widgetQueueDraw area 
      where uriString = uriToString id uri ""
+
+    getCurrentURI page = do 
+        let mURI = (pageURI page)
+        liftIO $ withMVar mURI return
+ 
+    getCurrentTitle page = do 
+        let mDoc = (pageDocument page)
+        liftIO $ withMVar mDoc $ \ m -> case m of
+                (Just d) -> get d documentTitle
+                _ -> return ""
 
 viewerDraw :: PopplerPage -> EventM EExpose ()
 viewerDraw viewer = do
@@ -89,7 +101,7 @@ viewerDraw viewer = do
             translate x0 y0
             scale scal scal
             pageRender page
-            ) $ positions
+            ) positions
   liftIO $ putMVar (pageDocument viewer) mayBeDoc
 
 
@@ -99,18 +111,18 @@ fitPage doc currentPage count (winWidth,winHeight) = do
     let cPosNum   = currentPage `mod` count
         firstPage = currentPage - cPosNum
         lastPage  = numOfPages `min` firstPage + count - 1 
-        pageSpace = (fromIntegral $ floor $ winWidth / fromIntegral count)  :: Double 
-    pages <- mapM (\num -> documentGetPage doc num) [firstPage..lastPage]
+        pageSpace = fromIntegral $ floor $ winWidth / fromIntegral count :: Double 
+    pages <- mapM (documentGetPage doc) [firstPage..lastPage]
     foldM (\ lst page -> do
             (pageWidth,pageHeight) <- pageGetSize page
-            let leftSide  = (fromIntegral $ length lst )  * pageSpace
+            let leftSide  = fromIntegral (length lst )  * pageSpace
                 rightSide = leftSide + pageSpace `min` winWidth
                 drawHeight = if leftSide + (winHeight / pageHeight) * pageWidth > rightSide
                              then (pageSpace / pageWidth) * pageHeight
                              else winHeight - 5
                 scaleX = drawHeight / pageHeight
                 drawWidth = pageWidth * scaleX
-                x0 = fromIntegral $  0 `max` (floor $ (pageSpace - drawWidth) / 2)
-                y0 = fromIntegral $  0 `max` (floor $ (winHeight - drawHeight) / 2)
+                x0 = fromIntegral $  0 `max` floor ( (pageSpace - drawWidth) / 2)
+                y0 = fromIntegral $  0 `max` floor ( (winHeight - drawHeight) / 2)
             return $ (page,scaleX,(x0 + leftSide,y0),(drawWidth,drawHeight)):lst
          ) [] pages

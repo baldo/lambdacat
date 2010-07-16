@@ -30,7 +30,6 @@ class MonadIO m => UIClass ui m where
     embedPage :: ui -> BrowserID -> Page m -> m ()
 
     -- | Checks if a page is child of this brower/ui
-    containsPage :: ui -> Page m -> m Bool
     uriChanged   :: ui -> Page m -> m ()
 
     update :: ui -> CallBack ui m 

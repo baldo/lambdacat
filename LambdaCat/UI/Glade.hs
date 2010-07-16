@@ -49,10 +49,7 @@ addPageToBrowser ui bid page = do
     liftIO $ modifyMVar_ bs (return . Map.mapWithKey (\ k a@(bw,pages) -> if k == bid then (bw,page:pages) else a))
 
 removeBrowser :: GladeUI -> BrowserID -> GladeIO ()
-removeBrowser ui bid = do
-    let bs = browsers ui
-    bid <- newBrowserID
-    liftIO $ modifyMVar_ bs (return . Map.delete bid)
+removeBrowser ui bid = liftIO $ modifyMVar_ (browsers ui) (return . Map.delete bid)
 
 getBrowser :: GladeUI -> BrowserID -> GladeIO GladeBrowser
 getBrowser ui bid =  do
@@ -71,7 +68,7 @@ getBrowserPages ui bid = do
 getBrowserByPage :: GladeUI -> Page GladeIO -> GladeIO (Maybe (BrowserID,GladeBrowser))
 getBrowserByPage ui page = do
     let bs = browsers ui 
-    liftIO $ withMVar bs (return . (Map.foldWithKey findBrowser Nothing))
+    liftIO $ withMVar bs (return . Map.foldWithKey findBrowser Nothing)
  where findBrowser _ _ x@(Just _) = x
        findBrowser bid (browser,pages) Nothing =
             let page' = filter (/= page) pages
