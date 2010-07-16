@@ -51,19 +51,23 @@ addPageToBrowser ui bid page = do
 removeBrowser :: GladeUI -> BrowserID -> GladeIO ()
 removeBrowser ui bid = liftIO $ modifyMVar_ (browsers ui) (return . Map.delete bid)
 
-getBrowser :: GladeUI -> BrowserID -> GladeIO GladeBrowser
+getBrowser :: GladeUI -> BrowserID -> GladeIO (Maybe GladeBrowser)
 getBrowser ui bid =  do
     let bs = browsers ui
     -- TODO error handling
-    (Just b) <- liftIO $ withMVar bs (return . Map.lookup bid)
-    return $ fst b
+    b <- liftIO $ withMVar bs (return . Map.lookup bid)
+    case b of 
+        (Just x) -> return $ Just (fst x)
+        Nothing  -> return Nothing 
 
 getBrowserPages :: GladeUI -> BrowserID -> GladeIO [Page GladeIO]
 getBrowserPages ui bid = do 
     let bs = browsers ui
     -- TODO error handling
-    (Just b) <- liftIO $ withMVar bs (return . Map.lookup bid)
-    return $ snd b
+    mPages  <- liftIO $ withMVar bs (return . Map.lookup bid)
+    case mPages of 
+        Just b -> return $ snd b
+        Nothing -> return [] 
 
 getBrowserByPage :: GladeUI -> Page GladeIO -> GladeIO (Maybe (BrowserID,GladeBrowser))
 getBrowserByPage ui page = do
@@ -148,16 +152,19 @@ instance UIClass GladeUI GladeIO where
         
 
     embedPage ui bid page@(Page hasWidget) = do
-        GladeBrowser { gladeXml = xml } <- getBrowser ui bid
-        let widget = getWidget hasWidget
-        scrolledWindow <- io $ xmlGetWidget xml castToScrolledWindow "pageScrolledWindow"
-        io $ do
-            ws <- containerGetChildren scrolledWindow
-            mapM_ (containerRemove scrolledWindow) ws
-            containerAdd scrolledWindow widget
-            widgetShowAll widget
-        addPageToBrowser ui bid page 
-        return ()
+        bool <- getBrowser ui bid
+        case bool of 
+          Just (GladeBrowser { gladeXml = xml }) -> do
+            let widget = getWidget hasWidget
+            scrolledWindow <- io $ xmlGetWidget xml castToScrolledWindow "pageScrolledWindow"
+            io $ do
+                ws <- containerGetChildren scrolledWindow
+                mapM_ (containerRemove scrolledWindow) ws
+                containerAdd scrolledWindow widget
+                widgetShowAll widget
+            addPageToBrowser ui bid page 
+            return ()
+          Nothing -> return ()
 
     mainLoop _ = io mainGUI
 
