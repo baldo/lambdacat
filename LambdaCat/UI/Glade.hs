@@ -35,7 +35,6 @@ type GladeIO = IO
 
 runGladeIO :: GladeIO a -> IO a
 runGladeIO = id
-    
 
 addBrowser :: GladeUI -> GladeBrowser -> GladeIO BrowserID
 addBrowser ui g = do
@@ -141,11 +140,9 @@ instance UIClass GladeUI GladeIO where
         return ()
 
     uriChanged ui page = do 
-        let bs = browsers ui   
-        GladeBrowser { gladeXml = xml } <- liftIO $ withMVar bs (\ x -> return . fst  . head $ Map.elems x)
+        Just (_,GladeBrowser { gladeXml = xml }) <- getBrowserByPage ui page  
         pageURI <- liftIO $ xmlGetWidget xml castToEntry "pageURI"
         uri <- getCurrentURI page 
-        liftIO $ print uri
         liftIO $ entrySetText pageURI (uriString uri)
       where uriString uri = uriToString id uri ""
         
