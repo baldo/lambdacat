@@ -24,8 +24,7 @@ instance SinkMonad m => PageClass WebViewPage m where
         page <- liftIO webViewNew >>= return . WebViewPage
         cb (\ui -> uriChanged ui (Page page))
         sink <- getSink
-        -- TODO How to lift the MonadIO m into the call which has type IO a
-        liftIO $ (getWidget page) `on` loadStarted $ (\ _ -> sink $ cb (\ui -> uriChanged ui (Page page)))
+        liftIO $ (getWidget page) `on` loadFinished $ (\ _ -> sink $ cb (\ui -> uriChanged ui (Page page)))
         return page
         
 

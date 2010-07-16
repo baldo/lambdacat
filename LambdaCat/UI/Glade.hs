@@ -134,7 +134,15 @@ instance UIClass GladeUI GladeIO where
         f ui 
         return ()
 
-    uriChanged _ _ = liftIO $ putStrLn "URICHANGED"
+    uriChanged ui page = do 
+        let bs = browsers ui   
+        GladeBrowser { gladeXml = xml } <- liftIO $ withMVar bs (\ x -> return . head $ Map.elems x)
+        pageURI <- liftIO $ xmlGetWidget xml castToEntry "pageURI"
+        uri <- getCurrentURI page 
+        liftIO $ print uri
+        liftIO $ entrySetText pageURI (uriString uri)
+      where uriString uri = uriToString id uri ""
+        
 
     embedPage ui bid page@(Page hasWidget) = do
         GladeBrowser { gladeXml = xml } <- gGetBrowser ui bid
