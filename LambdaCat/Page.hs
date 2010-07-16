@@ -81,6 +81,9 @@ instance MonadIO m => PageClass (Page m) m where
    stop (Page p) = stop p
    reload (Page p) = reload p
 
+   getCurrentURI (Page p)   = getCurrentURI p 
+   getCurrentTitle (Page p) = getCurrentTitle p
+
    getBackHistory (Page p) = getBackHistory p
    getForwardHistory (Page p) = getForwardHistory p
 
