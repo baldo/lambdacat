@@ -86,11 +86,11 @@ instance MonadIO m => PageClass (Page m) m where
     stop (Page p) = stop p
     reload (Page p) = reload p
 
-   getCurrentURI (Page p)   = getCurrentURI p 
-   getCurrentTitle (Page p) = getCurrentTitle p
+    getCurrentURI (Page p)   = getCurrentURI p 
+    getCurrentTitle (Page p) = getCurrentTitle p
 
-   getBackHistory (Page p) = getBackHistory p
-   getForwardHistory (Page p) = getForwardHistory p
+    getBackHistory (Page p) = getBackHistory p
+    getForwardHistory (Page p) = getForwardHistory p
 
 eqType :: (Typeable a, Typeable b) => a -> b -> Bool
 eqType a b = typeOf a == typeOf b
