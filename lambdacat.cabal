@@ -34,7 +34,7 @@ Library
         containers == 0.3.*
 
     Ghc-Options:
-        -Wall -threaded
+        -O2 -Wall -threaded
 
     Exposed-Modules:
         LambdaCat.Browser

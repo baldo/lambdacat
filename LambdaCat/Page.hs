@@ -120,7 +120,6 @@ pageFromProtocol cb ps mp (Just uri) = do
         lookupProtocol :: MonadIO m => [(Page m, [Protocol])] -> m (Maybe (Page m))
         lookupProtocol [] = return Nothing
         lookupProtocol ((page, protos) : plist)
-            | protocol `elem` protos = do
-                return $ Just page
-            | otherwise = lookupProtocol plist
+            | protocol `elem` protos = return $ Just page
+            | otherwise              = lookupProtocol plist
 
