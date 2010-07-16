@@ -149,7 +149,7 @@ instance UIClass GladeUI GladeIO where
             pageURI <- liftIO $ xmlGetWidget xml castToEntry "pageURI"
             uri <- getCurrentURI page 
             liftIO $ entrySetText pageURI (uriString uri)
-          Nothing  -> liftIO $ putStrLn "Browser not found" 
+          Nothing  -> return ()
       where uriString uri = uriToString id uri ""
         
 
