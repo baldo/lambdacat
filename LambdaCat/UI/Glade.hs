@@ -137,10 +137,13 @@ instance UIClass GladeUI GladeIO where
         return ()
 
     uriChanged ui page = do 
-        Just (_,GladeBrowser { gladeXml = xml }) <- getBrowserByPage ui page  
-        pageURI <- liftIO $ xmlGetWidget xml castToEntry "pageURI"
-        uri <- getCurrentURI page 
-        liftIO $ entrySetText pageURI (uriString uri)
+        p <-  getBrowserByPage ui page
+        case p of
+          Just (_,GladeBrowser { gladeXml = xml }) -> do
+            pageURI <- liftIO $ xmlGetWidget xml castToEntry "pageURI"
+            uri <- getCurrentURI page 
+            liftIO $ entrySetText pageURI (uriString uri)
+          Nothing  -> return ()
       where uriString uri = uriToString id uri ""
         
 
