@@ -47,6 +47,8 @@ addPageToBrowser :: GladeUI -> BrowserID -> Page GladeIO ->  GladeIO ()
 addPageToBrowser ui bid page = do
     let bs = browsers ui
     liftIO $ modifyMVar_ bs (return . Map.mapWithKey (\ k a@(bw,pages) -> if k == bid then (bw,page:pages) else a))
+    f <- getBrowserByPage ui page
+    print f 
 
 removeBrowser :: GladeUI -> BrowserID -> GladeIO ()
 removeBrowser ui bid = liftIO $ modifyMVar_ (browsers ui) (return . Map.delete bid)
@@ -75,7 +77,7 @@ getBrowserByPage ui page = do
     liftIO $ withMVar bs (return . Map.foldWithKey findBrowser Nothing)
  where findBrowser _ _ x@(Just _) = x
        findBrowser bid (browser,pages) Nothing =
-            let page' = filter (/= page) pages
+            let page' = filter (== page) pages
             in if null page'
              then Nothing
              else Just (bid,browser)
@@ -115,14 +117,16 @@ instance UIClass GladeUI GladeIO where
         pageURI <- io $ xmlGetWidget xml castToEntry "pageURI"
         _ <- gtkOn onEntryActivate pageURI $ do
             text <- io $ entryGetText pageURI
-            let (Just uri) = parseURI text
-            pageAction bid (\ w -> do
+            case parseURI text of
+              Just uri ->
+                pageAction bid (\ w -> do
                                 let pageList = [ (Page (undefined :: WebViewPage), ["http:","https:"])
                                                , (Page (undefined :: PopplerPage), ["file:"])
                                                ]
                                 Just w' <- pageFromProtocol (update ui)  pageList (Just w) (Just uri)
                                 load w' uri
                                 embedPage ui bid w')
+              Nothing -> return ()
         io $ widgetShowAll window
         return bid 
 
@@ -147,7 +151,7 @@ instance UIClass GladeUI GladeIO where
             pageURI <- liftIO $ xmlGetWidget xml castToEntry "pageURI"
             uri <- getCurrentURI page 
             liftIO $ entrySetText pageURI (uriString uri)
-          Nothing  -> return ()
+          Nothing  -> liftIO $ putStrLn "Browser not found" 
       where uriString uri = uriToString id uri ""
         
 
