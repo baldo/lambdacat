@@ -17,7 +17,9 @@ import Data.Maybe
 main :: IO ()
 main = do
     args <- getArgs
-    let uri = head args
+    let uri = if null args
+              then "http://www.haskell.org"
+              else  head args
     runGladeIO $ do
         ui <- UI.init :: GladeIO GladeUI
         browser <- UI.newBrowser ui :: GladeIO BrowserID
