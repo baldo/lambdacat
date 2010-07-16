@@ -14,7 +14,7 @@ import Network.URI
 import Control.Monad
 
 newtype WebViewPage = WebViewPage { unWebViewPage :: WebView }
-  deriving Typeable
+  deriving (Eq, Typeable)
 
 instance HasWidget WebViewPage WebView where
     getWidget = unWebViewPage

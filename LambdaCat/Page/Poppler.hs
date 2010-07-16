@@ -25,7 +25,7 @@ data PopplerPage = PopplerPage
     , pageDocument :: MVar (Maybe Document)
     , pageNumber   :: MVar Int 
     }
-  deriving Typeable
+  deriving (Eq, Typeable)
 
 type CurrentPage = Int
 type Point = (Double,Double)
