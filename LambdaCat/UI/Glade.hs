@@ -19,7 +19,7 @@ import qualified Data.Map as Map
 import Data.Map (Map)
 
 data GladeUI = GladeUI {
-    browsers :: MVar (Map BrowserID GladeBrowser)
+    browsers :: MVar (Map BrowserID (GladeBrowser,[Page GladeIO]))
 }
 
 data GladeBrowser = GladeBrowser 
@@ -57,8 +57,13 @@ gAddBrowser :: GladeUI -> GladeBrowser -> GladeIO BrowserID
 gAddBrowser ui g = do
     let bs = browsers ui
     bid <- newBrowserID
-    liftIO $ modifyMVar_ bs (return . Map.insert bid g)
+    liftIO $ modifyMVar_ bs (return . Map.insert bid (g,[]))
     return bid
+
+addPageToBrowser :: GladeUI -> BrowserID -> Page GladeIO ->  GladeIO ()
+addPageToBrowser ui bid page = do
+    let bs = browsers ui
+    liftIO $ modifyMVar_ bs (return . Map.mapWithKey (\ k a@(bw,pages) -> if k == bid then (bw,page:pages) else a))
 
 gRemoveBrowser :: GladeUI -> BrowserID -> GladeIO ()
 gRemoveBrowser ui bid = do
@@ -71,7 +76,20 @@ gGetBrowser ui bid =  do
     let bs = browsers ui
     -- TODO error handling
     (Just b) <- liftIO $ withMVar bs (return . Map.lookup bid)
-    return b
+    return $ fst b
+
+getBrowserByPage :: GladeUI -> Page GladeIO -> GladeIO (Maybe (BrowserID,GladeBrowser))
+getBrowserByPage ui page = do
+    let bs = browsers ui 
+    liftIO $ withMVar bs (return . (Map.foldWithKey findBrowser Nothing))
+ where findBrowser _ _ x@(Just _) = x
+       findBrowser bid (browser,pages) Nothing =
+            let page' = filter (/= page) pages
+            in if null page'
+             then Nothing
+             else Just (bid,browser)
+        
+            
 
 io :: IO a -> GladeIO a
 io = liftIO
@@ -136,7 +154,7 @@ instance UIClass GladeUI GladeIO where
 
     uriChanged ui page = do 
         let bs = browsers ui   
-        GladeBrowser { gladeXml = xml } <- liftIO $ withMVar bs (\ x -> return . head $ Map.elems x)
+        GladeBrowser { gladeXml = xml } <- liftIO $ withMVar bs (\ x -> return . fst  . head $ Map.elems x)
         pageURI <- liftIO $ xmlGetWidget xml castToEntry "pageURI"
         uri <- getCurrentURI page 
         liftIO $ print uri
