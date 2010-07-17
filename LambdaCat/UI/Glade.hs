@@ -176,6 +176,8 @@ instance UIClass GladeUI GladeIO where
                 widgetShowAll widget
             removePageFromBrowser ui bid oldpage
             addPageToBrowser ui bid 0 page
+            -- We should do it in this way
+            -- replacePageInBrowser ui bid oldpage page
             return ()
           Nothing -> return ()
 
@@ -188,7 +190,9 @@ instance UIClass GladeUI GladeIO where
             io $ do
                 containerAdd scrolledWindow widget
                 widgetShowAll widget
-            addPageToBrowser ui bid 0  page 
+            -- here we need to generate new TabIDs when a new tab is created, 
+            -- maybe a prechecked Map.findMax could help.
+            addPageToBrowser ui bid 0 page 
             return ()
           Nothing -> return ()
 
