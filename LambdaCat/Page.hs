@@ -29,6 +29,8 @@ class MonadIO m => UIClass ui m where
     -- | Embed the page into the given browser.
     embedPage :: ui -> BrowserID -> Page m -> m ()
 
+    replacePage :: ui -> BrowserID -> Page m -> Page m -> m ()
+
     -- | Checks if a page is child of this brower/ui
     uriChanged   :: ui -> Page m -> m ()
 

@@ -3,16 +3,15 @@
 module LambdaCat.UI.Glade where
 
 import LambdaCat.Browser
+import LambdaCat.Page
 import LambdaCat.Page.WebView
 import LambdaCat.Page.Poppler
-import LambdaCat.Page
+import LambdaCat.Page.MPlayer
 
 import Graphics.UI.Gtk
 import Graphics.UI.Gtk.Glade
-
 import Control.Concurrent.MVar
 import Control.Monad.Reader
-
 import Network.URI
 
 import qualified Data.Map as Map
@@ -47,6 +46,11 @@ addPageToBrowser :: GladeUI -> BrowserID -> Page GladeIO ->  GladeIO ()
 addPageToBrowser ui bid page = do
     let bs = browsers ui
     liftIO $ modifyMVar_ bs (return . Map.mapWithKey (\ k a@(bw,pages) -> if k == bid then (bw,page:pages) else a))
+
+removePageFromBrowser :: GladeUI -> BrowserID -> Page GladeIO -> GladeIO()
+removePageFromBrowser ui bid page = do 
+    let bs = browsers ui
+    liftIO $ modifyMVar_ bs (return . Map.mapWithKey (\ k a@(bw,pages) -> if k == bid then (bw,filter (/=page) pages) else a ))
 
 removeBrowser :: GladeUI -> BrowserID -> GladeIO ()
 removeBrowser ui bid = liftIO $ modifyMVar_ (browsers ui) (return . Map.delete bid)
@@ -120,10 +124,11 @@ instance UIClass GladeUI GladeIO where
                 pageAction bid (\ w -> do
                                 let pageList = [ (Page (undefined :: WebViewPage), ["http:","https:"])
                                                , (Page (undefined :: PopplerPage), ["file:"])
+                                               , (Page (undefined :: MPlayerPage), ["mms:"])
                                                ]
                                 Just w' <- pageFromProtocol (update ui)  pageList (Just w) (Just uri)
-                                load w' uri
-                                embedPage ui bid w')
+                                replacePage ui bid w' w
+                                load w' uri)
               Nothing -> return ()
         io $ widgetShowAll window
         return bid 
@@ -153,6 +158,23 @@ instance UIClass GladeUI GladeIO where
       where uriString uri = uriToString id uri ""
         
 
+    replacePage ui bid oldpage page@(Page hasWidget) = do
+        bool <- getBrowser ui bid  
+        case bool of 
+          Just (GladeBrowser { gladeXml = xml }) -> do
+            let widget = getWidget hasWidget
+            scrolledWindow <- io $ xmlGetWidget xml castToScrolledWindow "pageScrolledWindow"
+            -- Remove page instance from container
+            io $ do
+                ws <- containerGetChildren scrolledWindow
+                mapM_ (containerRemove scrolledWindow) ws
+                containerAdd scrolledWindow widget
+                widgetShowAll widget
+            removePageFromBrowser ui bid oldpage
+            addPageToBrowser ui bid page
+            return ()
+          Nothing -> return ()
+
     embedPage ui bid page@(Page hasWidget) = do
         bool <- getBrowser ui bid
         case bool of 
@@ -160,8 +182,6 @@ instance UIClass GladeUI GladeIO where
             let widget = getWidget hasWidget
             scrolledWindow <- io $ xmlGetWidget xml castToScrolledWindow "pageScrolledWindow"
             io $ do
-                ws <- containerGetChildren scrolledWindow
-                mapM_ (containerRemove scrolledWindow) ws
                 containerAdd scrolledWindow widget
                 widgetShowAll widget
             addPageToBrowser ui bid page 

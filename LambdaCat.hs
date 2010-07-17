@@ -9,6 +9,7 @@ import qualified LambdaCat.Page as Page
 import qualified LambdaCat.Page as UI
 import LambdaCat.Page.WebView
 import LambdaCat.Page.Poppler
+import LambdaCat.Page.MPlayer
 import Graphics.UI.Gtk.WebKit.WebView
 import Network.URI
 import System
@@ -25,12 +26,13 @@ main = do
         browser <- UI.newBrowser ui :: GladeIO BrowserID
         let pageList = [ (Page.Page (undefined :: WebViewPage), ["http:","https:"])
                        , (Page.Page (undefined :: PopplerPage), ["file:"])
+                       , (Page.Page (undefined :: MPlayerPage), ["mms:"])
                        ]
         mpage <- Page.pageFromProtocol (UI.update ui) pageList Nothing (parseURI uri)
         case mpage of
             (Just page) -> do
-                Page.load page (fromJust $ parseURI uri)
                 UI.embedPage ui browser page
+                Page.load page (fromJust $ parseURI uri)
             Nothing     -> return ()
         -- page <- Page.new :: GladeIO WebView
         UI.mainLoop ui

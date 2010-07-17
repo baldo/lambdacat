@@ -31,7 +31,8 @@ Library
         webkit >= 0.11 && < 0.12,
         poppler == 0.11.*,
         network == 2.2.*,
-        containers == 0.3.*
+        containers == 0.3.*,
+        process == 1.0.*
 
     Ghc-Options:
         -O2 -Wall -threaded
@@ -41,6 +42,7 @@ Library
         LambdaCat.Loadable
         LambdaCat.Page
         LambdaCat.Page.WebView
+        LambdaCat.Page.MPlayer
         LambdaCat.Page.Poppler
         LambdaCat.UI.Glade
         LambdaCat.Protocol
