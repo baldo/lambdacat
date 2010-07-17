@@ -131,7 +131,7 @@ instance UIClass GladeUI GladeIO where
                                                , (Page (undefined :: MPlayerPage), ["mms:"])
                                                ]
                                 Just w' <- pageFromProtocol (update ui)  pageList (Just w) (Just uri)
-                                replacePage ui bid w' w
+                                replacePage ui bid w w'
                                 load w' uri)
               Nothing -> return ()
         io $ widgetShowAll window
