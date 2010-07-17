@@ -44,15 +44,17 @@ addBrowser ui g = do
     liftIO $ modifyMVar_ bs (return . Map.insert bid (g,Map.empty))
     return bid
 
+-- | Add a page to the browser identified by BrowserID, if there
+-- is already an page with given TabID then the page gets replaced.
 addPageToBrowser :: GladeUI -> BrowserID -> TabID -> Page GladeIO ->  GladeIO ()
 addPageToBrowser ui bid tid page = do
     let bs = browsers ui
-    liftIO $ modifyMVar_ bs (return . Map.mapWithKey (\ k a@(bw,pMap) -> if k == bid then (bw,Map.insert tid page pMap) else a))
+    liftIO $ modifyMVar_ bs (return . Map.update (\ (bw,pages) -> Just (bw,Map.insert tid page pages)) bid)
 
 removePageFromBrowser :: GladeUI -> BrowserID -> Page GladeIO -> GladeIO()
 removePageFromBrowser ui bid page = do 
     let bs = browsers ui
-    liftIO $ modifyMVar_ bs (return . Map.mapWithKey (\ k a@(bw,pages) -> if k == bid then (bw,Map.filter (/=page) pages) else a ))
+    liftIO $ modifyMVar_ bs (return . Map.update (\ (bw,pages) -> Just (bw,Map.filter (/=page) pages)) bid)
 
 removeBrowser :: GladeUI -> BrowserID -> GladeIO ()
 removeBrowser ui bid = liftIO $ modifyMVar_ (browsers ui) (return . Map.delete bid)
