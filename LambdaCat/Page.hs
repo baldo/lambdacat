@@ -34,6 +34,9 @@ class MonadIO m => UIClass ui m where
     -- | Checks if a page is child of this brower/ui
     uriChanged   :: ui -> Page m -> m ()
 
+    -- | Replace current title with the one from given page
+    changedTitle :: ui -> Page m -> m ()
+
     update :: ui -> CallBack ui m 
 
     -- | The main loop for the UI.
