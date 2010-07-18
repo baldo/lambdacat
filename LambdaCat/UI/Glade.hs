@@ -138,6 +138,12 @@ instance UIClass GladeUI GladeIO where
         bid <- addBrowser ui browser 
         -- General / Events ---------------------------------------------------
         _ <- io $ onDestroy window mainQuit
+        _ <- io $ notebook `on`  switchPage $ \ newActive -> do
+            mPage <- io $ getPageFromBrowser ui bid newActive
+            case mPage of
+                Nothing  -> return ()
+                (Just p) -> do 
+                    uriChanged ui p
 
         -- Toolbar / Events ---------------------------------------------------
         let onTBC w a = gtkOn onToolButtonClicked w a >> return ()
@@ -182,7 +188,7 @@ instance UIClass GladeUI GladeIO where
         return ()
 
     uriChanged ui page = do 
-        p <-  getBrowserByPage ui page
+        p <- getBrowserByPage ui page
         case p of
           Just (_,GladeBrowser { gladeXml = xml }) -> do
             pageURI <- liftIO $ xmlGetWidget xml castToEntry "pageURI"
