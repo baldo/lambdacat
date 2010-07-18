@@ -7,6 +7,7 @@ import LambdaCat.UI.Glade
 import LambdaCat.Browser
 import qualified LambdaCat.Page as Page
 import qualified LambdaCat.Page as UI
+import LambdaCat.Page.Cat
 import LambdaCat.Page.WebView
 import LambdaCat.Page.Poppler
 import LambdaCat.Page.MPlayer
@@ -27,6 +28,7 @@ main = do
         let pageList = [ (Page.Page (undefined :: WebViewPage), ["http:","https:"])
                        , (Page.Page (undefined :: PopplerPage), ["file:"])
                        , (Page.Page (undefined :: MPlayerPage), ["mms:"])
+                       , (Page.Page (undefined :: CatPage), ["cat:"])
                        ]
         mpage <- Page.pageFromProtocol (UI.update ui browser) pageList Nothing (parseURI uri)
         case mpage of

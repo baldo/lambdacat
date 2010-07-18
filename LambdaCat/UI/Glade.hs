@@ -4,9 +4,12 @@ module LambdaCat.UI.Glade where
 
 import LambdaCat.Browser
 import LambdaCat.Page
+import LambdaCat.Page.Cat
 import LambdaCat.Page.WebView
 import LambdaCat.Page.Poppler
 import LambdaCat.Page.MPlayer
+
+import Paths_lambdacat
 
 import Graphics.UI.Gtk
 import Graphics.UI.Gtk.Glade
@@ -130,7 +133,8 @@ instance UIClass GladeUI GladeIO where
      return GladeUI { browsers = b} 
 
     newBrowser ui = do 
-        Just xml <- io $ xmlNew "lambdacat.glade"
+        fpath <- io $ getDataFileName "lambdacat.glade"
+        Just xml <- io $ xmlNew fpath
         window <- io $ xmlGetWidget xml castToWindow "browserWindow"
         notebook <- io $ xmlGetWidget xml castToNotebook "pageNoteBook"
 
@@ -163,6 +167,7 @@ instance UIClass GladeUI GladeIO where
                                 let pageList = [ (Page (undefined :: WebViewPage), ["http:","https:"])
                                                , (Page (undefined :: PopplerPage), ["file:"])
                                                , (Page (undefined :: MPlayerPage), ["mms:"])
+                                               , (Page (undefined :: CatPage), ["cat:"])
                                                ]
                                 mw' <- pageFromProtocol (update ui bid)  pageList (Just w) (Just uri)
                                 case mw' of 
