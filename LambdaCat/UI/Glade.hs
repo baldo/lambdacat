@@ -144,6 +144,7 @@ instance UIClass GladeUI GladeIO where
                 Nothing  -> return ()
                 (Just p) -> do 
                     uriChanged ui p
+                    changedTitle ui p 
 
         -- Toolbar / Events ---------------------------------------------------
         let onTBC w a = gtkOn onToolButtonClicked w a >> return ()
@@ -196,7 +197,24 @@ instance UIClass GladeUI GladeIO where
             liftIO $ entrySetText pageURI (uriString uri)
           Nothing  -> return ()
       where uriString uri = uriToString id uri ""
-        
+    
+    changedTitle ui page = do 
+        mBrowser <- getBrowserByPage ui page
+        case mBrowser of
+            Nothing -> return ()
+            Just (bid,GladeBrowser { gladeXml = xml}) -> do
+                title <- getCurrentTitle page 
+                mTid  <- getTabIDForPage ui bid page
+                case mTid of
+                    Nothing  -> return ()
+                    Just tid -> do
+                        notebook <- io $ xmlGetWidget xml castToNotebook "pageNoteBook"
+                        mTab <- io $ notebookGetNthPage notebook tid 
+                        case mTab of 
+                            (Just tab) -> io $ notebookSetTabLabelText notebook tab title 
+                            Nothing    -> return ()
+                window <- io $ xmlGetWidget xml castToWindow "browserWindow"
+                io $ set window [ windowTitle := title ] 
 
     replacePage ui bid oldpage page@(Page hasWidget) = do
         bool <- getBrowser ui bid  
