@@ -17,9 +17,10 @@ import Network.URI
 import qualified Data.Map as Map
 import Data.Map (Map)
 
-data GladeUI = GladeUI {
-    browsers :: MVar (Map BrowserID (GladeBrowser,Map TabID (Page GladeIO)))
-}
+data GladeUI = GladeUI 
+   { browsers  :: MVar (Map BrowserID (GladeBrowser,Map TabID (Page GladeIO)))
+   ,  nextTabID :: MVar Int 
+   }
 
 data GladeBrowser = GladeBrowser 
     { gladeXml :: GladeXML
@@ -47,14 +48,25 @@ addBrowser ui g = do
 -- | Add a page to the browser identified by BrowserID, if there
 -- is already an page with given TabID then the page gets replaced.
 addPageToBrowser :: GladeUI -> BrowserID -> TabID -> Page GladeIO ->  GladeIO ()
-addPageToBrowser ui bid tid page = do
-    let bs = browsers ui
-    liftIO $ modifyMVar_ bs (return . Map.update (\ (bw,pages) -> Just (bw,Map.insert tid page pages)) bid)
+addPageToBrowser ui bid tid page = 
+  liftIO $ modifyMVar_ (browsers ui) (return . Map.update (\ (bw,pages) -> Just (bw,Map.insert tid page pages)) bid)
 
 removePageFromBrowser :: GladeUI -> BrowserID -> Page GladeIO -> GladeIO()
-removePageFromBrowser ui bid page = do 
-    let bs = browsers ui
-    liftIO $ modifyMVar_ bs (return . Map.update (\ (bw,pages) -> Just (bw,Map.filter (/=page) pages)) bid)
+removePageFromBrowser ui bid page = 
+    liftIO $ modifyMVar_ (browsers ui) (return . Map.update (\ (bw,pages) -> Just (bw,Map.filter (/=page) pages)) bid)
+
+
+replacePageInBrowser :: GladeUI -> BrowserID -> Page GladeIO -> Page GladeIO -> GladeIO ()
+replacePageInBrowser ui bid oldpage newpage = do
+    liftIO $ modifyMVar_ (browsers ui) (return . Map.update (\ (bw,pages) -> Just (bw,Map.map replace pages)) bid)
+  where replace :: Page GladeIO -> Page GladeIO
+        replace page | page == oldpage = newpage
+                     | otherwise       = page 
+countTabsInBrowser :: GladeUI -> BrowserID -> GladeIO Int
+countTabsInBrowser ui bid =
+    liftIO $ withMVar (browsers ui) (return . size . Map.lookup bid)
+  where size (Just (_,m)) = Map.size m
+        size Nothing  = 0
 
 removeBrowser :: GladeUI -> BrowserID -> GladeIO ()
 removeBrowser ui bid = liftIO $ modifyMVar_ (browsers ui) (return . Map.delete bid)
@@ -88,6 +100,13 @@ getBrowserByPage ui page = do
              then Nothing
              else Just (bid,browser)
 
+generateTabID :: GladeUI -> GladeIO Int
+generateTabID ui = do
+    let mvar = nextTabID ui
+    i <- liftIO $ takeMVar mvar
+    putMVar mvar (i + 1)
+    return i 
+
 io :: IO a -> GladeIO a
 io = liftIO
 
@@ -100,7 +119,8 @@ instance UIClass GladeUI GladeIO where
     init = do
      _ <- io initGUI  
      b <- io $ newMVar Map.empty 
-     return GladeUI { browsers = b } 
+     i <- io $ newMVar 0
+     return GladeUI { browsers = b, nextTabID = i } 
 
     newBrowser ui = do 
         Just xml <- io $ xmlNew "lambdacat.glade"
@@ -131,7 +151,7 @@ instance UIClass GladeUI GladeIO where
                                                , (Page (undefined :: MPlayerPage), ["mms:"])
                                                ]
                                 Just w' <- pageFromProtocol (update ui)  pageList (Just w) (Just uri)
-                                replacePage ui bid w' w
+                                replacePage ui bid w w'
                                 load w' uri)
               Nothing -> return ()
         io $ widgetShowAll window
@@ -174,10 +194,10 @@ instance UIClass GladeUI GladeIO where
                 mapM_ (containerRemove scrolledWindow) ws
                 containerAdd scrolledWindow widget
                 widgetShowAll widget
-            removePageFromBrowser ui bid oldpage
-            addPageToBrowser ui bid 0 page
+            --removePageFromBrowser ui bid oldpage
+            --addPageToBrowser ui bid 0 page
             -- We should do it in this way
-            -- replacePageInBrowser ui bid oldpage page
+            replacePageInBrowser ui bid oldpage page
             return ()
           Nothing -> return ()
 
@@ -187,12 +207,13 @@ instance UIClass GladeUI GladeIO where
           Just (GladeBrowser { gladeXml = xml }) -> do
             let widget = getWidget hasWidget
             scrolledWindow <- io $ xmlGetWidget xml castToScrolledWindow "pageScrolledWindow"
+            newTabID <- generateTabID ui
             io $ do
                 containerAdd scrolledWindow widget
                 widgetShowAll widget
             -- here we need to generate new TabIDs when a new tab is created, 
             -- maybe a prechecked Map.findMax could help.
-            addPageToBrowser ui bid 0 page 
+            addPageToBrowser ui bid newTabID page
             return ()
           Nothing -> return ()
 
