@@ -19,7 +19,6 @@ import Data.Map (Map)
 
 data GladeUI = GladeUI 
    { browsers  :: MVar (Map BrowserID (GladeBrowser,Map TabID (Page GladeIO)))
-   ,  nextTabID :: MVar Int 
    }
 
 data GladeBrowser = GladeBrowser 
@@ -100,13 +99,6 @@ getBrowserByPage ui page = do
              then Nothing
              else Just (bid,browser)
 
-generateTabID :: GladeUI -> GladeIO Int
-generateTabID ui = do
-    let mvar = nextTabID ui
-    i <- liftIO $ takeMVar mvar
-    putMVar mvar (i + 1)
-    return i 
-
 io :: IO a -> GladeIO a
 io = liftIO
 
@@ -119,8 +111,7 @@ instance UIClass GladeUI GladeIO where
     init = do
      _ <- io initGUI  
      b <- io $ newMVar Map.empty 
-     i <- io $ newMVar 0
-     return GladeUI { browsers = b, nextTabID = i } 
+     return GladeUI { browsers = b} 
 
     newBrowser ui = do 
         Just xml <- io $ xmlNew "lambdacat.glade"
@@ -187,11 +178,13 @@ instance UIClass GladeUI GladeIO where
         case bool of 
           Just (GladeBrowser { gladeXml = xml }) -> do
             let widget = getWidget hasWidget
-            scrolledWindow <- io $ xmlGetWidget xml castToScrolledWindow "pageScrolledWindow"
+            noteBook <- io $ xmlGetWidget xml castToNotebook "pageNoteBook"
             -- Remove page instance from container
             io $ do
-                ws <- containerGetChildren scrolledWindow
-                mapM_ (containerRemove scrolledWindow) ws
+                tabID <- notebookGetCurrentPage noteBook
+                (Just scroll) <- notebookGetNthPage noteBook tabID
+                let scrolledWindow =  castToScrolledWindow scroll
+                mapM_ (containerRemove scrolledWindow) =<< containerGetChildren scrolledWindow 
                 containerAdd scrolledWindow widget
                 widgetShowAll widget
             --removePageFromBrowser ui bid oldpage
@@ -206,11 +199,13 @@ instance UIClass GladeUI GladeIO where
         case bool of 
           Just (GladeBrowser { gladeXml = xml }) -> do
             let widget = getWidget hasWidget
-            scrolledWindow <- io $ xmlGetWidget xml castToScrolledWindow "pageScrolledWindow"
-            newTabID <- generateTabID ui
-            io $ do
-                containerAdd scrolledWindow widget
-                widgetShowAll widget
+            noteBook  <- io $ xmlGetWidget xml castToNotebook "pageNoteBook"
+            scrolledWindow <- io $ scrolledWindowNew Nothing Nothing
+            io $ containerAdd scrolledWindow widget 
+            newTabID  <- io $ notebookAppendPage noteBook scrolledWindow "Foo"
+            widgetShowAll noteBook
+            io $ notebookGetNPages noteBook >>= print
+            
             -- here we need to generate new TabIDs when a new tab is created, 
             -- maybe a prechecked Map.findMax could help.
             addPageToBrowser ui bid newTabID page
