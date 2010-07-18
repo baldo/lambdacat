@@ -45,6 +45,7 @@ instance MonadIO m => PageClass MPlayerPage m where
         mplayerCommand page $ "quit"
         handles <- liftIO $ spawnMPlayer socket uri
         updateHandles page $ Just handles 
+        return True
 
     getCurrentURI = flip withURI return
     getCurrentTitle = flip withURI (return . (flip (uriToString id) ""))

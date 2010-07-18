@@ -49,7 +49,7 @@ class (Eq page, MonadIO m) => PageClass page m where
     new :: (UIClass ui m) => CallBack ui m -> m page
 
     -- | Some uri functions
-    load :: page -> URI -> m ()
+    load :: page -> URI -> m Bool
 
     -- |
     back, forward, stop, reload :: page -> m ()

@@ -28,7 +28,7 @@ instance SinkMonad m => PageClass WebViewPage m where
         return page
         
 
-    load page uri = liftIO $ webViewLoadUri (unWebViewPage page) uriString
+    load page uri = liftIO $ webViewLoadUri (unWebViewPage page) uriString >> return True
         where uriString = uriToString id uri ""
 
     getCurrentURI page = do 

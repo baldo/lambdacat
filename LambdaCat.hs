@@ -33,12 +33,14 @@ main = do
             (Just page) -> do
                 UI.embedPage ui browser page
                 Page.load page (fromJust $ parseURI uri)
+                return ()
             Nothing     -> return ()
         mpage2 <- Page.pageFromProtocol (UI.update ui) pageList Nothing (parseURI uri)
         case mpage2 of
             (Just page) -> do
                 UI.embedPage ui browser page
                 Page.load page (fromJust $ parseURI uri)
+                return ()
             Nothing     -> return ()
 
         -- page <- Page.new :: GladeIO WebView
