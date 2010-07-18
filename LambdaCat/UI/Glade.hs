@@ -164,9 +164,15 @@ instance UIClass GladeUI GladeIO where
                                                , (Page (undefined :: PopplerPage), ["file:"])
                                                , (Page (undefined :: MPlayerPage), ["mms:"])
                                                ]
-                                Just w' <- pageFromProtocol (update ui)  pageList (Just w) (Just uri)
-                                replacePage ui bid w w'
-                                load w' uri)
+                                mw' <- pageFromProtocol (update ui)  pageList (Just w) (Just uri)
+                                case mw' of 
+                                    -- TODO call an default error page
+                                    Nothing -> return ()
+                                    Just w' -> do
+                                        replacePage ui bid w w'
+                                        load w' uri
+                                        return ()
+                                )
               Nothing -> return ()
         io $ widgetShowAll window
         return bid 
