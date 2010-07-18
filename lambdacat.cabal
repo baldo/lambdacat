@@ -16,6 +16,9 @@ Cabal-Version: >= 1.2.3
 Extra-Source-Files:
     README
 
+Data-Files:
+    lambdacat.glade
+
 Executable lambdacat
     Main-is: LambdaCat.hs
 
@@ -46,6 +49,9 @@ Library
         LambdaCat.Page.Poppler
         LambdaCat.UI.Glade
         LambdaCat.Protocol
+
+    Other-Modules:
+        Paths_lambdacat
 
     Extensions:
         FunctionalDependencies,
