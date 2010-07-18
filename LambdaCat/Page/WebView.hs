@@ -21,10 +21,11 @@ instance HasWidget WebViewPage WebView where
 instance SinkMonad m => PageClass WebViewPage m where 
     new cb = do
         page <- liftIO webViewNew >>= return . WebViewPage
-        cb (\ui -> uriChanged ui (Page page))
+        cb (\ui _ -> uriChanged ui (Page page))
         sink <- getSink
-        _ <- liftIO $ getWidget page `on` loadFinished $ (\ _ -> sink $ cb (\ui -> uriChanged ui (Page page)))
-        _ <- liftIO $ getWidget page `on` loadFinished $ (\ _ -> sink $ cb (\ui -> changedTitle ui (Page page)))
+        _ <- liftIO $ getWidget page `on` loadFinished $ (\ _ -> sink $ cb (\ui _ -> uriChanged ui (Page page)))
+        _ <- liftIO $ getWidget page `on` loadFinished $ (\ _ -> sink $ cb (\ui _ -> changedTitle ui (Page page)))
+        _ <- liftIO $ getWidget page `on` webViewReady $ (do  sink $ cb (\ui bid -> embedPage ui bid (Page page)) ; return True; )
         return page
         
 

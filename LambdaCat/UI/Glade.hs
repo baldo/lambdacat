@@ -164,7 +164,7 @@ instance UIClass GladeUI GladeIO where
                                                , (Page (undefined :: PopplerPage), ["file:"])
                                                , (Page (undefined :: MPlayerPage), ["mms:"])
                                                ]
-                                mw' <- pageFromProtocol (update ui)  pageList (Just w) (Just uri)
+                                mw' <- pageFromProtocol (update ui bid)  pageList (Just w) (Just uri)
                                 case mw' of 
                                     -- TODO call an default error page
                                     Nothing -> return ()
@@ -190,8 +190,8 @@ instance UIClass GladeUI GladeIO where
         xmlGetToolButton :: GladeXML -> String -> GladeIO ToolButton
         xmlGetToolButton xml name = io $ xmlGetWidget xml castToToolButton name  
 
-    update ui f = do
-        f ui 
+    update ui bid f = do
+        f ui bid  
         return ()
 
     uriChanged ui page = do 

@@ -37,12 +37,12 @@ class MonadIO m => UIClass ui m where
     -- | Replace current title with the one from given page
     changedTitle :: ui -> Page m -> m ()
 
-    update :: ui -> CallBack ui m 
+    update :: ui -> BrowserID-> CallBack ui m 
 
     -- | The main loop for the UI.
     mainLoop :: ui -> m ()
 
-type CallBack ui m = (ui -> m ()) -> m ()
+type CallBack ui m = (ui -> BrowserID -> m ()) -> m ()
 
 class (Eq page, MonadIO m) => PageClass page m where
     -- | Creates a new page.
