@@ -4,6 +4,7 @@ module LambdaCat.UI.Glade where
 
 import LambdaCat.Browser
 import LambdaCat.Page
+import LambdaCat.Page.Cat
 import LambdaCat.Page.WebView
 import LambdaCat.Page.Poppler
 import LambdaCat.Page.MPlayer
@@ -166,6 +167,7 @@ instance UIClass GladeUI GladeIO where
                                 let pageList = [ (Page (undefined :: WebViewPage), ["http:","https:"])
                                                , (Page (undefined :: PopplerPage), ["file:"])
                                                , (Page (undefined :: MPlayerPage), ["mms:"])
+                                               , (Page (undefined :: CatPage), ["cat:"])
                                                ]
                                 Just w' <- pageFromProtocol (update ui)  pageList (Just w) (Just uri)
                                 replacePage ui bid w w'

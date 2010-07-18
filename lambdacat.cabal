@@ -18,6 +18,8 @@ Extra-Source-Files:
 
 Data-Files:
     lambdacat.glade
+    cats/kebab.jpg
+    cats/sheela.jpg
 
 Executable lambdacat
     Main-is: LambdaCat.hs
@@ -44,6 +46,7 @@ Library
         LambdaCat.Browser
         LambdaCat.Loadable
         LambdaCat.Page
+        LambdaCat.Page.Cat
         LambdaCat.Page.WebView
         LambdaCat.Page.MPlayer
         LambdaCat.Page.Poppler
