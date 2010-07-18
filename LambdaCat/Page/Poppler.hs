@@ -60,10 +60,12 @@ instance MonadIO m => PageClass PopplerPage m where
 
         return popplerPage
 
-    load PopplerPage { pageArea = area,  pageDocument = mdoc } uri = liftIO $ do
+    load PopplerPage { pageArea = area,  pageDocument = mdoc, pageURI = muri } uri = liftIO $ do
         doc <- liftM (fromMaybe (error "Error opening pdf file.")) (documentNewFromFile uriString Nothing)
         _ <-  takeMVar mdoc
         putMVar mdoc (Just doc)
+        _ <- takeMVar muri
+        putMVar muri uri
         widgetQueueDraw area 
      where uriString = uriToString id uri ""
 

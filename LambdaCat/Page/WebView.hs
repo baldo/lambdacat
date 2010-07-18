@@ -24,6 +24,7 @@ instance SinkMonad m => PageClass WebViewPage m where
         cb (\ui -> uriChanged ui (Page page))
         sink <- getSink
         _ <- liftIO $ getWidget page `on` loadFinished $ (\ _ -> sink $ cb (\ui -> uriChanged ui (Page page)))
+        _ <- liftIO $ getWidget page `on` loadFinished $ (\ _ -> sink $ cb (\ui -> changedTitle ui (Page page)))
         return page
         
 
