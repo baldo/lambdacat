@@ -90,26 +90,38 @@ viewerDraw viewer = do
   pN <- liftIO $ readMVar $ pageNumber viewer
   mayBeDoc <- liftIO $ takeMVar $ pageDocument viewer-- TODO replace with takeMVar
   (winWidth, winHeight) <- liftIO $ widgetGetSize scroll
+  hCurrent <- liftIO $ adjustmentGetValue =<< scrolledWindowGetHAdjustment scroll
+  vCurrent <- liftIO $ adjustmentGetValue =<< scrolledWindowGetVAdjustment scroll
   case mayBeDoc of
     Nothing -> return ()
     (Just doc) -> do
         frameWin  <- liftIO $ widgetGetDrawWindow area 
 
-        positions <- liftIO $ fitPage doc pN 2 (fromIntegral winWidth,fromIntegral winHeight)
+        positions <- liftIO $ continue fitPage doc pN 2 (fromIntegral winWidth,fromIntegral winHeight)
         let widgetWidth = foldr (\ (_,_,(x0,_),(w,_)) m -> m `max` (x0 + w)) 0 positions
         let widgetHeight = foldr (\ (_,_,(_,y0),(_,h)) m -> m `max` (y0 + h)) 0 positions
         liftIO $ widgetSetSizeRequest area (truncate widgetWidth) (truncate widgetHeight)
-
-        mapM_ (\ (page,scal,(x0,y0),(x1,y1)) -> liftIO $ renderWithDrawable frameWin $ do 
+        
+        mapM_ (\ (page,scal,p@(x0,y0),s@(x1,y1)) -> liftIO $ renderWithDrawable frameWin $ do
             setSourceRGB 1.0 1.0 1.0
             rectangle x0 y0 x1 y1 
             fill
-            translate x0 y0
-            scale scal scal
-            pageRender page
+            if  shouldDraw (p,s) ((hCurrent,vCurrent),(fromIntegral winWidth,fromIntegral winHeight))
+              then do 
+                translate x0 y0
+                scale scal scal
+                pageRender page
+              else 
+                return () 
+                
             ) positions
   liftIO $ putMVar (pageDocument viewer) mayBeDoc
 
+
+shouldDraw :: (Point,Point) -> (Point,Point) -> Bool
+shouldDraw ((x0,y0),(w0,h0)) ((x1,y1),(w1,h1)) =
+    (y0 >= y1 && y0 <= y1 + h1)
+    || (y0 + h0 >= y1 && y0 + h0 <= y1 + h1)
 
 fitPage :: PagePositioner 
 fitPage doc currentPage count (winWidth,winHeight) = do
@@ -132,3 +144,18 @@ fitPage doc currentPage count (winWidth,winHeight) = do
                 y0 = fromIntegral $  0 `max` floor ( (winHeight - drawHeight) / 2)
             return $ (page,scaleX,(x0 + leftSide,y0),(drawWidth,drawHeight)):lst
          ) [] pages
+
+continue :: PagePositioner -> PagePositioner 
+continue f doc currentPage count win = do
+    nfit <- f doc currentPage count win 
+    let normalFit = reverse nfit
+    numOfPages <- documentGetNPages doc
+    pages <- mapM (documentGetPage doc) [0..numOfPages - 1]
+    let height = foldr (\ (_,_,_,(_,h)) m -> h `max` m) 0 normalFit  
+    foldM (\ lst page -> do
+            let current    = length lst `mod` count
+                iteration  = length lst `div` count
+                upperLine  = (height + 10) * (fromIntegral iteration)
+                (_,sc,(x0,y0),size) = normalFit !! current
+            return $ (page,sc,(x0,y0+upperLine),size):lst
+          ) [] pages
