@@ -7,13 +7,11 @@ module LambdaCat.Page.Poppler
 import LambdaCat.Page hiding (Page)
 
 import Control.Concurrent
-import Control.Monad.Trans
 import Data.Typeable
 import Graphics.UI.Gtk hiding (Point)
 import Graphics.UI.Gtk.Poppler.Document hiding (PageClass)
 import Graphics.UI.Gtk.Poppler.Page 
 import Network.URI
-import Data.Maybe
 import Control.Monad
 import Graphics.Rendering.Cairo
 
@@ -38,8 +36,8 @@ type PagePositioner = Document  -- ^ Document that should be layouted
 instance HasWidget PopplerPage ScrolledWindow where
     getWidget = pageScrollable
 
-instance MonadIO m => PageClass PopplerPage m where 
-    new _ = liftIO $ do
+instance PageClass PopplerPage where 
+    new _ = do
         area <- drawingAreaNew
         scrollWindow <- scrolledWindowNew Nothing Nothing
         doc <- newMVar Nothing
@@ -60,7 +58,7 @@ instance MonadIO m => PageClass PopplerPage m where
 
         return popplerPage
 
-    load PopplerPage { pageArea = area,  pageDocument = mdoc, pageURI = muri } uri = liftIO $ do
+    load PopplerPage { pageArea = area,  pageDocument = mdoc, pageURI = muri } uri = do
         mDoc <- documentNewFromFile uriString Nothing
         case mDoc of
             Nothing ->do
@@ -77,11 +75,11 @@ instance MonadIO m => PageClass PopplerPage m where
 
     getCurrentURI page = do 
         let mURI = (pageURI page)
-        liftIO $ withMVar mURI return
+        withMVar mURI return
  
     getCurrentTitle page = do 
         let mDoc = (pageDocument page)
-        liftIO $ withMVar mDoc $ \ m -> case m of
+        withMVar mDoc $ \ m -> case m of
                 (Just d) -> get d documentTitle
                 _ -> return ""
 
@@ -89,20 +87,20 @@ viewerDraw :: PopplerPage -> EventM EExpose ()
 viewerDraw viewer = do
   let area = pageArea viewer
       scroll = pageScrollable viewer
-  pN       <- liftIO $ readMVar $ pageNumber viewer
+  pN <- liftIO $ readMVar $ pageNumber viewer
   mayBeDoc <- liftIO $ takeMVar $ pageDocument viewer-- TODO replace with takeMVar
   (winWidth, winHeight) <- liftIO $ widgetGetSize scroll
   case mayBeDoc of
     Nothing -> return ()
-    (Just doc) -> liftIO $ do
-        frameWin  <- widgetGetDrawWindow area 
+    (Just doc) -> do
+        frameWin  <- liftIO $ widgetGetDrawWindow area 
 
-        positions <- fitPage doc pN 2 (fromIntegral winWidth,fromIntegral winHeight)
+        positions <- liftIO $ fitPage doc pN 2 (fromIntegral winWidth,fromIntegral winHeight)
         let widgetWidth = foldr (\ (_,_,(x0,_),(w,_)) m -> m `max` (x0 + w)) 0 positions
         let widgetHeight = foldr (\ (_,_,(_,y0),(_,h)) m -> m `max` (y0 + h)) 0 positions
-        widgetSetSizeRequest area (truncate widgetWidth) (truncate widgetHeight)
+        liftIO $ widgetSetSizeRequest area (truncate widgetWidth) (truncate widgetHeight)
 
-        mapM_ (\ (page,scal,(x0,y0),(x1,y1)) -> renderWithDrawable frameWin $ do 
+        mapM_ (\ (page,scal,(x0,y0),(x1,y1)) -> liftIO $ renderWithDrawable frameWin $ do 
             setSourceRGB 1.0 1.0 1.0
             rectangle x0 y0 x1 y1 
             fill

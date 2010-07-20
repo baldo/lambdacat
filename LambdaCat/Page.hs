@@ -5,7 +5,6 @@ module LambdaCat.Page
     , PageClass (..)
     , Page (..)
     , HasWidget (..)
-    , SinkMonad (..)
 
     , pageFromProtocol
     )
@@ -14,73 +13,69 @@ where
 import LambdaCat.Protocol
 import LambdaCat.Browser
 
-import Control.Monad.Trans
 import Data.Typeable
 import Network.URI
 import Graphics.UI.Gtk.Abstract.Widget
 
-class MonadIO m => UIClass ui m where
+class UIClass ui where
     -- | Initializes the UI and returns an UI handle.
-    init :: m ui
+    init :: IO ui
 
     -- | Creates the main UI widget for the browser (e.g. a window).
-    newBrowser :: ui -> m BrowserID
+    newBrowser :: ui -> IO BrowserID
 
     -- | Embed the page into the given browser.
-    embedPage :: ui -> BrowserID -> Page m -> m ()
+    embedPage :: ui -> BrowserID -> Page -> IO ()
 
-    replacePage :: ui -> BrowserID -> Page m -> Page m -> m ()
+    replacePage :: ui -> BrowserID -> Page -> Page -> IO ()
 
     -- | Checks if a page is child of this brower/ui
-    uriChanged   :: ui -> Page m -> m ()
+    uriChanged   :: ui -> Page -> IO ()
 
     -- | Replace current title with the one from given page
-    changedTitle :: ui -> Page m -> m ()
+    changedTitle :: ui -> Page -> IO ()
 
-    update :: ui -> BrowserID-> CallBack ui m 
+    update :: ui -> BrowserID -> CallBack ui 
 
     -- | The main loop for the UI.
-    mainLoop :: ui -> m ()
+    mainLoop :: ui -> IO ()
 
-type CallBack ui m = (ui -> BrowserID -> m ()) -> m ()
+type CallBack ui = (ui -> BrowserID -> IO ()) -> IO ()
 
-class (Eq page, MonadIO m) => PageClass page m where
+class Eq page => PageClass page where
     -- | Creates a new page.
-    new :: (UIClass ui m) => CallBack ui m -> m page
+    new :: UIClass ui => CallBack ui -> IO page
 
     -- | Some uri functions
-    load :: page -> URI -> m Bool
+    load :: page -> URI -> IO Bool
 
     -- |
-    back, forward, stop, reload :: page -> m ()
+    back, forward, stop, reload :: page -> IO ()
     back _ = return ()
     forward _ = return ()
     stop _ = return ()
     reload _ = return ()
 
     -- | generic informations on a page
-    getCurrentURI :: page -> m URI
-    getCurrentTitle :: page -> m String
+    getCurrentURI :: page -> IO URI
+    getCurrentTitle :: page -> IO String
 
     -- |
-    getBackHistory, getForwardHistory :: page -> m [URI]
+    getBackHistory, getForwardHistory :: page -> IO [URI]
     getBackHistory _ = return []
     getForwardHistory _ = return []
 
 class WidgetClass w => HasWidget hw w | hw -> w where
     getWidget :: hw -> w
 
-class MonadIO m => SinkMonad m where
-    getSink :: (MonadIO m') => m (m a -> m' a)
+data Page = forall hw w . (Typeable hw, HasWidget hw w, PageClass hw) => Page hw
 
-data Page m = forall hw w . (Typeable hw, HasWidget hw w, PageClass hw m) => Page hw
-
-instance MonadIO m => Eq (Page m) where
+instance Eq Page where
     (Page p1) == (Page p2)
         | p1 `eqType` p2 = cast p1 == Just p2
         | otherwise      = False
 
-instance MonadIO m => PageClass (Page m) m where
+instance PageClass Page where
     new = return (error "Can't create existential quantificated datatype")
 
     load (Page p) = load p
@@ -99,13 +94,13 @@ instance MonadIO m => PageClass (Page m) m where
 eqType :: (Typeable a, Typeable b) => a -> b -> Bool
 eqType a b = typeOf a == typeOf b
 
-eqPageType :: Page m1 -> Page m2 -> Bool
+eqPageType :: Page -> Page -> Bool
 eqPageType (Page p1) (Page p2) = p1 `eqType` p2
 
-createPage :: (MonadIO m, PageClass p m,UIClass ui m) => p -> CallBack ui m -> m p
+createPage :: (PageClass p,UIClass ui) => p -> CallBack ui -> IO p
 createPage _ = new
 
-pageFromProtocol :: (MonadIO m,UIClass u m) => CallBack u m -> [(Page m, [Protocol])] -> Maybe (Page m) -> Maybe URI -> m (Maybe (Page m))
+pageFromProtocol :: UIClass u => CallBack u -> [(Page, [Protocol])] -> Maybe Page -> Maybe URI -> IO (Maybe Page)
 pageFromProtocol _  _  _  Nothing    = return Nothing
 pageFromProtocol _  [] _  _          = return Nothing
 pageFromProtocol cb ps mp (Just uri) = do
@@ -121,7 +116,7 @@ pageFromProtocol cb ps mp (Just uri) = do
     where
         protocol = uriScheme uri
 
-        lookupProtocol :: MonadIO m => [(Page m, [Protocol])] -> m (Maybe (Page m))
+        lookupProtocol :: [(Page, [Protocol])] -> IO (Maybe Page)
         lookupProtocol [] = return Nothing
         lookupProtocol ((page, protos) : plist)
             | protocol `elem` protos = return $ Just page

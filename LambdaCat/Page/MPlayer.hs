@@ -10,7 +10,6 @@ import Prelude hiding (sin)
 import Data.Typeable
 import Graphics.UI.Gtk
 import Control.Monad
-import Control.Monad.Trans
 import Network.URI
 import Control.Concurrent
 import System.IO hiding (stdin, stdout, stderr)
@@ -33,37 +32,37 @@ data Handles = Handles
 instance HasWidget MPlayerPage Socket where
     getWidget = mplayerSocket
 
-instance MonadIO m => PageClass MPlayerPage m where
-    new _ = liftIO $ do
+instance PageClass MPlayerPage where
+    new _ = do
         socket   <- socketNew
         mHandles <- newMVar Nothing
         mURI     <- newMVar nullURI
 
         return $ MPlayerPage { mplayerSocket = socket, mplayerHandles = mHandles, mplayerURI = mURI }
 
-    load page@MPlayerPage { mplayerSocket = socket } uri = liftIO $ do
+    load page@MPlayerPage { mplayerSocket = socket } uri = do
         mplayerCommand page $ "quit"
-        handles <- liftIO $ spawnMPlayer socket uri
+        handles <- spawnMPlayer socket uri
         updateHandles page $ Just handles 
         return True
 
     getCurrentURI = flip withURI return
     getCurrentTitle = flip withURI (return . (flip (uriToString id) ""))
 
-withHandles :: MonadIO m => MPlayerPage -> (Handles -> m ()) -> m ()
+withHandles :: MPlayerPage -> (Handles -> IO ()) -> IO ()
 withHandles MPlayerPage { mplayerHandles = mHandles } f = do
-    mh <- liftIO $ takeMVar mHandles
+    mh <- takeMVar mHandles
     maybe (return ()) f mh
-    liftIO $ putMVar mHandles (mh)
+    putMVar mHandles (mh)
 
-updateHandles :: MonadIO m => MPlayerPage -> Maybe Handles -> m ()
-updateHandles MPlayerPage { mplayerHandles = mHandles } mh = liftIO $ modifyMVar_ mHandles (\_ -> return mh)
+updateHandles :: MPlayerPage -> Maybe Handles -> IO ()
+updateHandles MPlayerPage { mplayerHandles = mHandles } mh = modifyMVar_ mHandles (\_ -> return mh)
 
-withURI :: MonadIO m => MPlayerPage -> (URI -> m a) -> m a
+withURI :: MPlayerPage -> (URI -> IO a) -> IO a
 withURI MPlayerPage { mplayerURI = mURI } f = do
-    uri <- liftIO $ takeMVar mURI
+    uri <- takeMVar mURI
     r <- f uri
-    liftIO $ putMVar mURI uri 
+    putMVar mURI uri 
     return r
 
 toHandles :: (Handle, Handle, Handle, a) -> Handles

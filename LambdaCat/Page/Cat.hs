@@ -11,7 +11,6 @@ import LambdaCat.Page.WebView
 import Paths_lambdacat
 
 import Control.Concurrent
-import Control.Monad.Trans
 import Data.Typeable
 import Graphics.UI.Gtk.WebKit.WebView
 import Network.URI
@@ -25,19 +24,18 @@ data CatPage = CatPage
 instance HasWidget CatPage WebView where
     getWidget = getWidget . webViewPage
 
-instance SinkMonad m => PageClass CatPage m where 
+instance PageClass CatPage where 
     new cb = do
         wvpage <- new cb
-        uri <- liftIO $ newMVar nullURI
+        uri <- newMVar nullURI
         return $ CatPage { webViewPage = wvpage, catUri = uri }
 
     load page uri = do
-        _ <- liftIO $ swapMVar (catUri page) uri
-        curi <- liftIO $ catToFileURI uri
+        _ <- swapMVar (catUri page) uri
+        curi <- catToFileURI uri
         load (webViewPage page) curi
 
-    getCurrentURI CatPage { catUri = curi } = liftIO $
-        readMVar curi
+    getCurrentURI CatPage { catUri = curi } = readMVar curi
 
     getCurrentTitle = getCurrentTitle . webViewPage
 

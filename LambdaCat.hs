@@ -22,28 +22,25 @@ main = do
     let uri = if null args
               then "http://www.haskell.org"
               else  head args
-    runGladeIO $ do
-        ui <- UI.init :: GladeIO GladeUI
-        browser <- UI.newBrowser ui :: GladeIO BrowserID
-        let pageList = [ (Page.Page (undefined :: WebViewPage), ["http:","https:"])
-                       , (Page.Page (undefined :: PopplerPage), ["file:"])
-                       , (Page.Page (undefined :: MPlayerPage), ["mms:"])
-                       , (Page.Page (undefined :: CatPage), ["cat:"])
-                       ]
-        mpage <- Page.pageFromProtocol (UI.update ui browser) pageList Nothing (parseURI uri)
-        case mpage of
-            (Just page) -> do
-                UI.embedPage ui browser page
-                Page.load page (fromJust $ parseURI uri)
-                return ()
-            Nothing     -> return ()
-        mpage2 <- Page.pageFromProtocol (UI.update ui browser ) pageList Nothing (parseURI uri)
-        case mpage2 of
-            (Just page) -> do
-                UI.embedPage ui browser page
-                Page.load page (fromJust $ parseURI uri)
-                return ()
-            Nothing     -> return ()
-
-        -- page <- Page.new :: GladeIO WebView
-        UI.mainLoop ui
+    ui <- UI.init :: IO GladeUI
+    browser <- UI.newBrowser ui :: IO BrowserID
+    let pageList = [ (Page.Page (undefined :: WebViewPage), ["http:","https:"])
+                   , (Page.Page (undefined :: PopplerPage), ["file:"])
+                   , (Page.Page (undefined :: MPlayerPage), ["mms:"])
+                   , (Page.Page (undefined :: CatPage), ["cat:"])
+                   ]
+    mpage <- Page.pageFromProtocol (UI.update ui browser) pageList Nothing (parseURI uri)
+    case mpage of
+        (Just page) -> do
+            UI.embedPage ui browser page
+            Page.load page (fromJust $ parseURI uri)
+            return ()
+        Nothing     -> return ()
+    mpage2 <- Page.pageFromProtocol (UI.update ui browser ) pageList Nothing (parseURI uri)
+    case mpage2 of
+        (Just page) -> do
+            UI.embedPage ui browser page
+            Page.load page (fromJust $ parseURI uri)
+            return ()
+        Nothing     -> return ()
+    UI.mainLoop ui

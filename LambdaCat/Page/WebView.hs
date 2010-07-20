@@ -6,7 +6,6 @@ module LambdaCat.Page.WebView
 
 import LambdaCat.Page
 
-import Control.Monad.Trans
 import Data.Typeable
 import Graphics.UI.Gtk.WebKit.WebView
 import Graphics.UI.Gtk
@@ -18,22 +17,27 @@ newtype WebViewPage = WebViewPage { unWebViewPage :: WebView }
 instance HasWidget WebViewPage WebView where
     getWidget = unWebViewPage
 
-instance SinkMonad m => PageClass WebViewPage m where 
+instance PageClass WebViewPage where 
     new cb = do
-        page <- liftIO webViewNew >>= return . WebViewPage
+        page <- webViewNew >>= return . WebViewPage
         cb (\ui _ -> uriChanged ui (Page page))
-        sink <- getSink
-        _ <- liftIO $ getWidget page `on` loadFinished $ (\ _ -> sink $ cb (\ui _ -> uriChanged ui (Page page)))
-        _ <- liftIO $ getWidget page `on` loadFinished $ (\ _ -> sink $ cb (\ui _ -> changedTitle ui (Page page)))
-        _ <- liftIO $ getWidget page `on` webViewReady $ (do  sink $ cb (\ui bid -> embedPage ui bid (Page page)) ; return True; )
+        let widget = getWidget page 
+        _ <- widget `on` loadFinished  $ (\ _ -> cb (\ui _ -> uriChanged ui (Page page)))
+        _ <- widget `on` loadFinished  $ (\ _ -> cb (\ui _ -> changedTitle ui (Page page)))
+        _ <- widget `on` createWebView $ (\ _ -> createNew >>= return . unWebViewPage)
         return page
+      where createNew :: IO WebViewPage
+            createNew = do
+                page <- new cb
+                cb (\ ui bid -> embedPage ui bid (Page page))
+                return page 
         
 
-    load page uri = liftIO $ webViewLoadUri (unWebViewPage page) uriString >> return True
+    load page uri =  webViewLoadUri (unWebViewPage page) uriString >> return True
         where uriString = uriToString id uri ""
 
     getCurrentURI page = do 
-        muri <- liftIO.webViewGetUri.unWebViewPage $ page
+        muri <- webViewGetUri.unWebViewPage $ page
         case muri of
             Just uri -> case parseURI uri of 
                 Just x -> return x
@@ -41,12 +45,12 @@ instance SinkMonad m => PageClass WebViewPage m where
             _ -> return nullURI
 
     getCurrentTitle page = do
-        mTitle <- liftIO.webViewGetTitle.unWebViewPage $ page
+        mTitle <- webViewGetTitle.unWebViewPage $ page
         case mTitle of
             Just title -> return title
             _ -> return ""
 
-    back    = liftIO . webViewGoBack . unWebViewPage
-    forward = liftIO . webViewGoForward . unWebViewPage
-    stop    = liftIO . webViewStopLoading . unWebViewPage
-    reload  = liftIO . webViewReload . unWebViewPage
+    back    =  webViewGoBack . unWebViewPage
+    forward =  webViewGoForward . unWebViewPage
+    stop    =  webViewStopLoading . unWebViewPage
+    reload  =  webViewReload . unWebViewPage

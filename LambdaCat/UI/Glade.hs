@@ -14,14 +14,13 @@ import Paths_lambdacat
 import Graphics.UI.Gtk
 import Graphics.UI.Gtk.Glade
 import Control.Concurrent.MVar
-import Control.Monad.Reader
 import Network.URI
 
 import qualified Data.Map as Map
 import Data.Map (Map)
 
 data GladeUI = GladeUI 
-   { browsers  :: MVar (Map BrowserID (GladeBrowser,Map TabID (Page GladeIO)))
+   { browsers  :: MVar (Map BrowserID (GladeBrowser,Map TabID Page))
    }
 
 data GladeBrowser = GladeBrowser 
@@ -33,84 +32,79 @@ data GladeBrowser = GladeBrowser
 instance Show GladeBrowser where
     show _ = "GladeBrowser"
 
-type GladeIO = IO 
-
 type TabID = Int
 
-runGladeIO :: GladeIO a -> IO a
-runGladeIO = id
-
-addBrowser :: GladeUI -> GladeBrowser -> GladeIO BrowserID
+addBrowser :: GladeUI -> GladeBrowser -> IO BrowserID
 addBrowser ui g = do
     let bs = browsers ui
     bid <- newBrowserID
-    liftIO $ modifyMVar_ bs (return . Map.insert bid (g,Map.empty))
+    modifyMVar_ bs (return . Map.insert bid (g,Map.empty))
     return bid
 
 -- | Add a page to the browser identified by BrowserID, if there
 -- is already an page with given TabID then the page gets replaced.
-addPageToBrowser :: GladeUI -> BrowserID -> TabID -> Page GladeIO ->  GladeIO ()
+addPageToBrowser :: GladeUI -> BrowserID -> TabID -> Page ->  IO ()
 addPageToBrowser ui bid tid page = 
-  liftIO $ modifyMVar_ (browsers ui) (return . Map.update (\ (bw,pages) -> Just (bw,Map.insert tid page pages)) bid)
+  modifyMVar_ (browsers ui) (return . Map.update (\ (bw,pages) -> Just (bw,Map.insert tid page pages)) bid)
 
-removePageFromBrowser :: GladeUI -> BrowserID -> Page GladeIO -> GladeIO()
+removePageFromBrowser :: GladeUI -> BrowserID -> Page -> IO ()
 removePageFromBrowser ui bid page = 
-    liftIO $ modifyMVar_ (browsers ui) (return . Map.update (\ (bw,pages) -> Just (bw,Map.filter (/=page) pages)) bid)
+  modifyMVar_ (browsers ui) (return . Map.update (\ (bw,pages) -> Just (bw,Map.filter (/=page) pages)) bid)
 
 
-replacePageInBrowser :: GladeUI -> BrowserID -> Page GladeIO -> Page GladeIO -> GladeIO ()
+replacePageInBrowser :: GladeUI -> BrowserID -> Page -> Page -> IO ()
 replacePageInBrowser ui bid oldpage newpage = do
-    liftIO $ modifyMVar_ (browsers ui) (return . Map.update (\ (bw,pages) -> Just (bw,Map.map replace pages)) bid)
-  where replace :: Page GladeIO -> Page GladeIO
+    modifyMVar_ (browsers ui) (return . Map.update (\ (bw,pages) -> Just (bw,Map.map replace pages)) bid)
+  where replace :: Page -> Page 
         replace page | page == oldpage = newpage
                      | otherwise       = page 
 
-countTabsInBrowser :: GladeUI -> BrowserID -> GladeIO Int
+countTabsInBrowser :: GladeUI -> BrowserID -> IO Int
 countTabsInBrowser ui bid =
-    liftIO $ withMVar (browsers ui) (return . size . Map.lookup bid)
+    withMVar (browsers ui) (return . size . Map.lookup bid)
   where size (Just (_,m)) = Map.size m
         size Nothing  = 0
 
-getTabIDForPage :: GladeUI -> BrowserID -> Page GladeIO -> GladeIO (Maybe Int) 
+getTabIDForPage :: GladeUI -> BrowserID -> Page -> IO (Maybe Int) 
 getTabIDForPage ui bid page = 
-    liftIO $ withMVar (browsers ui) (return . selectTabID . Map.lookup bid)
+    withMVar (browsers ui) (return . selectTabID . Map.lookup bid)
   where selectTabID Nothing      = Nothing
         selectTabID (Just (_,m)) = Map.foldWithKey 
             (\ k page' s -> case s of 
                 o@(Just _) -> o
                 Nothing -> if page == page' then (Just k) else Nothing ) Nothing m
 
-getPageFromBrowser :: GladeUI -> BrowserID -> TabID -> GladeIO (Maybe (Page GladeIO))
+getPageFromBrowser :: GladeUI -> BrowserID -> TabID -> IO (Maybe Page)
 getPageFromBrowser ui bid tid =
-    liftIO $ withMVar (browsers ui) (return . getPage . Map.lookup bid)
+    withMVar (browsers ui) (return . getPage . Map.lookup bid)
   where getPage (Just (_,m)) = Map.lookup tid m
         getPage Nothing = Nothing 
 
-removeBrowser :: GladeUI -> BrowserID -> GladeIO ()
-removeBrowser ui bid = liftIO $ modifyMVar_ (browsers ui) (return . Map.delete bid)
+removeBrowser :: GladeUI -> BrowserID -> IO ()
+removeBrowser ui bid = modifyMVar_ (browsers ui) (return . Map.delete bid)
 
-getBrowser :: GladeUI -> BrowserID -> GladeIO (Maybe GladeBrowser)
+getBrowser :: GladeUI -> BrowserID -> IO (Maybe GladeBrowser)
 getBrowser ui bid =  do
     let bs = browsers ui
     -- TODO error handling
-    b <- liftIO $ withMVar bs (return . Map.lookup bid)
+    b <- withMVar bs (return . Map.lookup bid)
     case b of 
         (Just x) -> return $ Just (fst x)
         Nothing  -> return Nothing 
 
-getBrowserPages :: GladeUI -> BrowserID -> GladeIO [Page GladeIO]
+getBrowserPages :: GladeUI -> BrowserID -> IO [Page]
 getBrowserPages ui bid = do 
     let bs = browsers ui
     -- TODO error handling
-    mPages  <- liftIO $ withMVar bs (return . Map.lookup bid)
+    mPages  <- withMVar bs (return . Map.lookup bid)
     case mPages of 
         Just b -> return $ Map.elems (snd  b)
         Nothing -> return [] 
 
-getBrowserByPage :: GladeUI -> Page GladeIO -> GladeIO (Maybe (BrowserID,GladeBrowser))
+getBrowserByPage :: GladeUI -> Page -> IO (Maybe (BrowserID,GladeBrowser))
 getBrowserByPage ui page = do
     let bs = browsers ui 
-    liftIO $ withMVar bs (return . Map.foldWithKey findBrowser Nothing)
+    withMVar bs (return . Map.foldWithKey findBrowser Nothing)
  where findBrowser _ _ x@(Just _) = x
        findBrowser bid (browser,pMap) Nothing =
             let page' = Map.filter (== page) pMap
@@ -118,32 +112,24 @@ getBrowserByPage ui page = do
              then Nothing
              else Just (bid,browser)
 
-io :: IO a -> GladeIO a
-io = liftIO
-
-gtkOn :: GObjectClass self => (self -> IO () -> IO (ConnectId self)) -> self -> GladeIO () -> GladeIO (ConnectId self) 
-gtkOn onFunc widget func = do 
-    sink <- getSink 
-    io $ onFunc widget $ sink func
-
-instance UIClass GladeUI GladeIO where
+instance UIClass GladeUI where
     init = do
-     _ <- io initGUI  
-     b <- io $ newMVar Map.empty 
+     _ <- initGUI  
+     b <- newMVar Map.empty 
      return GladeUI { browsers = b} 
 
     newBrowser ui = do 
-        fpath <- io $ getDataFileName "lambdacat.glade"
-        Just xml <- io $ xmlNew fpath
-        window <- io $ xmlGetWidget xml castToWindow "browserWindow"
-        notebook <- io $ xmlGetWidget xml castToNotebook "pageNoteBook"
+        fpath    <- getDataFileName "lambdacat.glade"
+        Just xml <- xmlNew fpath
+        window   <- xmlGetWidget xml castToWindow "browserWindow"
+        notebook <- xmlGetWidget xml castToNotebook "pageNoteBook"
 
         let browser = GladeBrowser { gladeXml = xml, gladeWindow = window, pageContainer = notebook }
         bid <- addBrowser ui browser 
         -- General / Events ---------------------------------------------------
-        _ <- io $ onDestroy window mainQuit
-        _ <- io $ notebook `on`  switchPage $ \ newActive -> do
-            mPage <- io $ getPageFromBrowser ui bid newActive
+        _ <- onDestroy window mainQuit
+        _ <- notebook `on`  switchPage $ \ newActive -> do
+            mPage <- getPageFromBrowser ui bid newActive
             case mPage of
                 Nothing  -> return ()
                 (Just p) -> do 
@@ -151,16 +137,15 @@ instance UIClass GladeUI GladeIO where
                     changedTitle ui p 
 
         -- Toolbar / Events ---------------------------------------------------
-        let onTBC w a = gtkOn onToolButtonClicked w a >> return ()
         pageBack <- xmlGetToolButton xml "pageBack"
-        onTBC pageBack (pageAction notebook bid back)
+        onToolButtonClicked pageBack (pageAction notebook bid back)
         pageForward <- xmlGetToolButton xml "pageForward"
-        onTBC pageForward (pageAction notebook bid forward)
+        onToolButtonClicked pageForward (pageAction notebook bid forward)
         pageReload <- xmlGetToolButton xml "pageReload"
-        onTBC pageReload (pageAction notebook bid reload)
-        pageURI <- io $ xmlGetWidget xml castToEntry "pageURI"
-        _ <- gtkOn onEntryActivate pageURI $ do
-            text <- io $ entryGetText pageURI
+        onToolButtonClicked pageReload (pageAction notebook bid reload)
+        pageURI <- xmlGetWidget xml castToEntry "pageURI"
+        _ <- onEntryActivate pageURI  $ do
+            text <- entryGetText pageURI
             case parseURI text of
               Just uri ->
                 pageAction notebook bid (\ w -> do
@@ -179,11 +164,11 @@ instance UIClass GladeUI GladeIO where
                                         return ()
                                 )
               Nothing -> return ()
-        io $ widgetShowAll window
+        widgetShowAll window
         return bid 
 
      where 
-        pageAction :: Notebook -> BrowserID -> (Page GladeIO -> GladeIO a) -> GladeIO ()
+        pageAction :: Notebook -> BrowserID -> (Page -> IO a) -> IO ()
         pageAction notebook bid f = do
             -- TODO select correct page
             tid <- notebookGetCurrentPage notebook
@@ -192,8 +177,8 @@ instance UIClass GladeUI GladeIO where
                 Just p  -> f p >> return ()
                 Nothing -> return ()
 
-        xmlGetToolButton :: GladeXML -> String -> GladeIO ToolButton
-        xmlGetToolButton xml name = io $ xmlGetWidget xml castToToolButton name  
+        xmlGetToolButton :: GladeXML -> String -> IO ToolButton
+        xmlGetToolButton xml name = xmlGetWidget xml castToToolButton name  
 
     update ui bid f = do
         f ui bid  
@@ -203,9 +188,9 @@ instance UIClass GladeUI GladeIO where
         p <- getBrowserByPage ui page
         case p of
           Just (_,GladeBrowser { gladeXml = xml }) -> do
-            pageURI <- liftIO $ xmlGetWidget xml castToEntry "pageURI"
+            pageURI <- xmlGetWidget xml castToEntry "pageURI"
             uri <- getCurrentURI page 
-            liftIO $ entrySetText pageURI (uriString uri)
+            entrySetText pageURI (uriString uri)
           Nothing  -> return ()
       where uriString uri = uriToString id uri ""
     
@@ -219,31 +204,30 @@ instance UIClass GladeUI GladeIO where
                 case mTid of
                     Nothing  -> return ()
                     Just tid -> do
-                        notebook <- io $ xmlGetWidget xml castToNotebook "pageNoteBook"
-                        mTab <- io $ notebookGetNthPage notebook tid 
+                        notebook <- xmlGetWidget xml castToNotebook "pageNoteBook"
+                        mTab <- notebookGetNthPage notebook tid 
                         case mTab of 
-                            (Just tab) -> io $ notebookSetTabLabelText notebook tab title 
+                            (Just tab) -> notebookSetTabLabelText notebook tab title 
                             Nothing    -> return ()
-                window <- io $ xmlGetWidget xml castToWindow "browserWindow"
-                io $ set window [ windowTitle := title ] 
+                window <- xmlGetWidget xml castToWindow "browserWindow"
+                set window [ windowTitle := title ] 
 
     replacePage ui bid oldpage page@(Page hasWidget) = do
         bool <- getBrowser ui bid  
         case bool of 
           Just (GladeBrowser { gladeXml = xml }) -> do
             let widget = getWidget hasWidget
-            noteBook <- io $ xmlGetWidget xml castToNotebook "pageNoteBook"
+            noteBook <- xmlGetWidget xml castToNotebook "pageNoteBook"
             -- Replace page in container
             maybeTabID <- getTabIDForPage ui bid oldpage
             case maybeTabID of 
               Just tabID -> do
-                io $ do
-                    -- tabID <- notebookGetCurrentPage noteBook
-                    (Just scroll) <- notebookGetNthPage noteBook tabID
-                    let scrolledWindow =  castToScrolledWindow scroll
-                    mapM_ (containerRemove scrolledWindow) =<< containerGetChildren scrolledWindow 
-                    containerAdd scrolledWindow widget
-                    widgetShowAll widget
+                -- tabID <- notebookGetCurrentPage noteBook
+                (Just scroll) <- notebookGetNthPage noteBook tabID
+                let scrolledWindow =  castToScrolledWindow scroll
+                mapM_ (containerRemove scrolledWindow) =<< containerGetChildren scrolledWindow 
+                containerAdd scrolledWindow widget
+                widgetShowAll widget
                 -- Replace page in state/model
                 replacePageInBrowser ui bid oldpage page
                 return ()
@@ -255,16 +239,13 @@ instance UIClass GladeUI GladeIO where
         case bool of 
           Just (GladeBrowser { gladeXml = xml }) -> do
             let widget = getWidget hasWidget
-            noteBook  <- io $ xmlGetWidget xml castToNotebook "pageNoteBook"
-            scrolledWindow <- io $ scrolledWindowNew Nothing Nothing
-            io $ containerAdd scrolledWindow widget 
-            newTabID  <- io $ notebookAppendPage noteBook scrolledWindow "Foo"
+            noteBook  <- xmlGetWidget xml castToNotebook "pageNoteBook"
+            scrolledWindow <- scrolledWindowNew Nothing Nothing
+            containerAdd scrolledWindow widget 
+            newTabID  <- notebookAppendPage noteBook scrolledWindow "Foo"
             widgetShowAll noteBook
             addPageToBrowser ui bid newTabID page
             return ()
           Nothing -> return ()
 
-    mainLoop _ = io mainGUI
-
-instance SinkMonad GladeIO where
-    getSink = return liftIO 
+    mainLoop _ = mainGUI

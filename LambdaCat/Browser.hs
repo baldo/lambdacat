@@ -6,7 +6,6 @@ module LambdaCat.Browser
     )
 where
 
-import Control.Monad.Trans
 import Control.Concurrent.MVar
 import System.IO.Unsafe
 
@@ -16,8 +15,8 @@ newtype BrowserID = BrowserID Int
 nextID :: MVar BrowserID
 nextID = unsafePerformIO $ newMVar (BrowserID 0)
 
-newBrowserID :: MonadIO m => m BrowserID
-newBrowserID = liftIO $ do 
+newBrowserID :: IO BrowserID
+newBrowserID = do 
     i <- takeMVar nextID
     putMVar nextID (i + 1)
     return i 
