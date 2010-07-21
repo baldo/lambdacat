@@ -5,14 +5,14 @@ module LambdaCat.Page.Poppler
     ) where
 
 import LambdaCat.Page hiding (Page)
+import LambdaCat.Page.Poppler.PageLayout
 
 import Control.Concurrent
 import Data.Typeable
 import Graphics.UI.Gtk hiding (Point)
-import Graphics.UI.Gtk.Poppler.Document hiding (PageClass)
+import Graphics.UI.Gtk.Poppler.Document hiding (PageClass,PageLayout)
 import Graphics.UI.Gtk.Poppler.Page 
 import Network.URI
-import Control.Monad
 import Graphics.Rendering.Cairo
 
 
@@ -20,18 +20,13 @@ data PopplerPage = PopplerPage
     { pageArea     :: DrawingArea
     , pageScrollable :: ScrolledWindow
     , pageDocument :: MVar (Maybe Document)
+    , pageGeometry :: MVar (Maybe DocumentGeometry)
     , pageNumber   :: MVar Int 
     , pageURI      :: MVar URI
     }
   deriving (Eq, Typeable)
 
-type CurrentPage = Int
 type Point = (Double,Double)
-type PagePositioner = Document  -- ^ Document that should be layouted
-                    -> CurrentPage -- ^ Page which must be visible 
-                    -> Int -- ^ Number of pages shown
-                    -> Point -- ^ Size of the Screen
-                    -> IO [(Page,Double,Point,Point)] -- ^ Where should which page be drawn
 
 instance HasWidget PopplerPage ScrolledWindow where
     getWidget = pageScrollable
@@ -41,6 +36,7 @@ instance PageClass PopplerPage where
         area <- drawingAreaNew
         scrollWindow <- scrolledWindowNew Nothing Nothing
         doc <- newMVar Nothing
+        geo <- newMVar Nothing
         num <- newMVar 0
         uri <- newMVar nullURI
 
@@ -50,6 +46,7 @@ instance PageClass PopplerPage where
         let popplerPage = PopplerPage { pageArea = area
                                       , pageScrollable = scrollWindow
                                       , pageDocument = doc
+                                      , pageGeometry = geo
                                       , pageNumber = num 
                                       , pageURI = uri
                                       }
@@ -58,7 +55,7 @@ instance PageClass PopplerPage where
 
         return popplerPage
 
-    load PopplerPage { pageArea = area,  pageDocument = mdoc, pageURI = muri } uri = do
+    load PopplerPage { pageArea = area,  pageDocument = mdoc, pageGeometry = mGeo,  pageURI = muri } uri = do
         mDoc <- documentNewFromFile uriString Nothing
         case mDoc of
             Nothing ->do
@@ -69,6 +66,9 @@ instance PageClass PopplerPage where
                 putMVar mdoc (Just doc)
                 _ <- takeMVar muri
                 putMVar muri uri
+                _ <- takeMVar mGeo
+                geo <- (toDocumentGeometry doc)
+                putMVar mGeo (Just geo)
                 widgetQueueDraw area 
                 return True
      where uriString = uriToString id uri ""
@@ -96,25 +96,25 @@ viewerDraw viewer = do
     Nothing -> return ()
     (Just doc) -> do
         frameWin  <- liftIO $ widgetGetDrawWindow area 
+        Just geo  <- liftIO $ readMVar $ pageGeometry viewer
 
-        positions <- liftIO $ continue fitPage doc pN 2 (fromIntegral winWidth,fromIntegral winHeight)
-        let widgetWidth = foldr (\ (_,_,(x0,_),(w,_)) m -> m `max` (x0 + w)) 0 positions
-        let widgetHeight = foldr (\ (_,_,(_,y0),(_,h)) m -> m `max` (y0 + h)) 0 positions
+        let posLayout = continue (fitPage 2) pN (fromIntegral winWidth,fromIntegral winHeight) geo
+            (widgetWidth, widgetHeight) = pageLayoutSize posLayout
+        posPages <- liftIO $ fromPageLayout posLayout doc 
         liftIO $ widgetSetSizeRequest area (truncate widgetWidth) (truncate widgetHeight)
         
         mapM_ (\ (page,scal,p@(x0,y0),s@(x1,y1)) -> liftIO $ renderWithDrawable frameWin $ do
-            setSourceRGB 1.0 1.0 1.0
-            rectangle x0 y0 x1 y1 
-            fill
-            if  shouldDraw (p,s) ((hCurrent,vCurrent),(fromIntegral winWidth,fromIntegral winHeight))
+           if  shouldDraw (p,s) ((hCurrent,vCurrent),(fromIntegral winWidth,fromIntegral winHeight))
               then do 
+                setSourceRGB 1.0 1.0 1.0
+                rectangle x0 y0 x1 y1 
+                fill
                 translate x0 y0
                 scale scal scal
                 pageRender page
               else 
                 return () 
-                
-            ) positions
+            ) posPages
   liftIO $ putMVar (pageDocument viewer) mayBeDoc
 
 
@@ -122,40 +122,3 @@ shouldDraw :: (Point,Point) -> (Point,Point) -> Bool
 shouldDraw ((x0,y0),(w0,h0)) ((x1,y1),(w1,h1)) =
     (y0 >= y1 && y0 <= y1 + h1)
     || (y0 + h0 >= y1 && y0 + h0 <= y1 + h1)
-
-fitPage :: PagePositioner 
-fitPage doc currentPage count (winWidth,winHeight) = do
-    numOfPages <- documentGetNPages doc
-    let cPosNum   = currentPage `mod` count
-        firstPage = currentPage - cPosNum
-        lastPage  = numOfPages `min` firstPage + count - 1 
-        pageSpace = fromIntegral $ floor $ winWidth / fromIntegral count :: Double 
-    pages <- mapM (documentGetPage doc) [firstPage..lastPage]
-    foldM (\ lst page -> do
-            (pageWidth,pageHeight) <- pageGetSize page
-            let leftSide  = fromIntegral (length lst )  * pageSpace
-                rightSide = leftSide + pageSpace `min` winWidth
-                drawHeight = if leftSide + (winHeight / pageHeight) * pageWidth > rightSide
-                             then (pageSpace / pageWidth) * pageHeight
-                             else winHeight - 5
-                scaleX = drawHeight / pageHeight
-                drawWidth = pageWidth * scaleX
-                x0 = fromIntegral $  0 `max` floor ( (pageSpace - drawWidth) / 2)
-                y0 = fromIntegral $  0 `max` floor ( (winHeight - drawHeight) / 2)
-            return $ (page,scaleX,(x0 + leftSide,y0),(drawWidth,drawHeight)):lst
-         ) [] pages
-
-continue :: PagePositioner -> PagePositioner 
-continue f doc currentPage count win = do
-    nfit <- f doc currentPage count win 
-    let normalFit = reverse nfit
-    numOfPages <- documentGetNPages doc
-    pages <- mapM (documentGetPage doc) [0..numOfPages - 1]
-    let height = foldr (\ (_,_,_,(_,h)) m -> h `max` m) 0 normalFit  
-    foldM (\ lst page -> do
-            let current    = length lst `mod` count
-                iteration  = length lst `div` count
-                upperLine  = (height + 10) * (fromIntegral iteration)
-                (_,sc,(x0,y0),size) = normalFit !! current
-            return $ (page,sc,(x0,y0+upperLine),size):lst
-          ) [] pages
