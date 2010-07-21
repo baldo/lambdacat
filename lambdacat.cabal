@@ -50,6 +50,7 @@ Library
         LambdaCat.Page.WebView
         LambdaCat.Page.MPlayer
         LambdaCat.Page.Poppler
+        LambdaCat.Page.Poppler.PageLayout
         LambdaCat.UI.Glade
         LambdaCat.Protocol
 
