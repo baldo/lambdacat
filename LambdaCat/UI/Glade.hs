@@ -5,6 +5,7 @@ module LambdaCat.UI.Glade where
 import LambdaCat.Browser
 import LambdaCat.Page
 import LambdaCat.Page.Cat
+import LambdaCat.Configure (lambdaCatConf,LambdaCatConf (..))
 import LambdaCat.Page.WebView
 import LambdaCat.Page.Poppler
 import LambdaCat.Page.MPlayer
@@ -149,12 +150,7 @@ instance UIClass GladeUI where
             case parseURI text of
               Just uri ->
                 pageAction notebook bid (\ w -> do
-                                let pageList = [ (Page (undefined :: WebViewPage), ["http:","https:"])
-                                               , (Page (undefined :: PopplerPage), ["file:"])
-                                               , (Page (undefined :: MPlayerPage), ["mms:"])
-                                               , (Page (undefined :: CatPage), ["cat:"])
-                                               ]
-                                mw' <- pageFromProtocol (update ui bid)  pageList (Just w) (Just uri)
+                                mw' <- pageFromProtocol (update ui bid)  (pageList lambdaCatConf) (Just w) (Just uri)
                                 case mw' of 
                                     -- TODO call an default error page
                                     Nothing -> return ()

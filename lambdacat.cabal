@@ -44,6 +44,7 @@ Library
 
     Exposed-Modules:
         LambdaCat.Browser
+        LambdaCat.Configure
         LambdaCat.Loadable
         LambdaCat.Page
         LambdaCat.Page.Cat
