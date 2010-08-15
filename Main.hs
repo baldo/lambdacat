@@ -3,8 +3,5 @@ module Main
     ) where
 
 import LambdaCat
-import GHC.Paths ( ghc )
 
-main = do 
-    putStrLn ghc
-    lambdacat defaultConfig
+main = lambdacat defaultConfig
