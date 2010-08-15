@@ -22,7 +22,7 @@ Data-Files:
     cats/sheela.jpg
 
 Executable lambdacat
-    Main-is: LambdaCat.hs
+    Main-is: Main.hs
 
 Library
     Build-Depends:
@@ -37,12 +37,15 @@ Library
         poppler == 0.11.*,
         network == 2.2.*,
         containers == 0.3.*,
-        process == 1.0.*
+        process == 1.0.*,
+        dyre == 0.8.*,
+        ghc-paths 
 
     Ghc-Options:
         -O2 -Wall -threaded
 
     Exposed-Modules:
+        LambdaCat
         LambdaCat.Browser
         LambdaCat.Configure
         LambdaCat.Loadable

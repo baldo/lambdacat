@@ -1,31 +1,37 @@
-module Main
-    ( main )
+module LambdaCat
+    ( lambdacat
+    , defaultConfig
+    )
 where
 
-import LambdaCat.UI.Glade
---import qualified LambdaCat.UI as UI
 import LambdaCat.Browser
+import LambdaCat.Configure
+import LambdaCat.Page.Cat
+import LambdaCat.Page.MPlayer
+import LambdaCat.Page.Poppler
+import LambdaCat.Page.WebView
+import LambdaCat.UI.Glade
 import qualified LambdaCat.Page as Page
 import qualified LambdaCat.Page as UI
-import LambdaCat.Page.Cat
-import LambdaCat.Page.WebView
-import LambdaCat.Page.Poppler
-import LambdaCat.Page.MPlayer
-import LambdaCat.Configure
+
+import Data.Maybe
+import qualified Config.Dyre as Dyre
 import Graphics.UI.Gtk.WebKit.WebView
 import Network.URI
 import System
-import Data.Maybe
 
-main :: IO ()
-main = do
-    setLCC LambdaCatConf 
-        { pageList = [ (Page.Page (undefined :: WebViewPage), ["http:","https:"])
-                   , (Page.Page (undefined :: PopplerPage), ["file:"])
-                   , (Page.Page (undefined :: MPlayerPage), ["mms:"])
-                   , (Page.Page (undefined :: CatPage), ["cat:"])
-                   ]
-        }
+defaultConfig :: LambdaCatConf
+defaultConfig = LambdaCatConf 
+    { pageList = [ (Page.Page (undefined :: WebViewPage), ["http:","https:"])
+                 , (Page.Page (undefined :: PopplerPage), ["file:"])
+                 , (Page.Page (undefined :: MPlayerPage), ["mms:"])
+                 , (Page.Page (undefined :: CatPage), ["cat:"])
+                 ]
+    }
+
+mainCat :: LambdaCatConf -> IO ()
+mainCat cfg = do
+    setLCC cfg
     args <- getArgs
     let uri = if null args
               then "http://www.haskell.org"
@@ -47,3 +53,9 @@ main = do
             return ()
         Nothing     -> return ()
     UI.mainLoop ui
+
+lambdacat = Dyre.wrapMain $ Dyre.defaultParams 
+    { Dyre.projectName = "lambdacat"
+    , Dyre.realMain    = mainCat
+    , Dyre.showError   = \ c s -> c
+    }
