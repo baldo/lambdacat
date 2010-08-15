@@ -33,25 +33,20 @@ mainCat :: LambdaCatConf -> IO ()
 mainCat cfg = do
     setLCC cfg
     args <- getArgs
-    let uri = if null args
-              then "http://www.haskell.org"
-              else  head args
+    let uris = if null args
+               then ["http://www.haskell.org"]
+               else args
     ui <- UI.init :: IO GladeUI
     browser <- UI.newBrowser ui :: IO BrowserID
-    mpage <- Page.pageFromProtocol (UI.update ui browser) (pageList lambdaCatConf) Nothing (parseURI uri)
-    case mpage of
-        (Just page) -> do
-            UI.embedPage ui browser page
-            Page.load page (fromJust $ parseURI uri)
-            return ()
-        Nothing     -> return ()
-    mpage2 <- Page.pageFromProtocol (UI.update ui browser ) (pageList lambdaCatConf) Nothing (parseURI uri)
-    case mpage2 of
-        (Just page) -> do
-            UI.embedPage ui browser page
-            Page.load page (fromJust $ parseURI uri)
-            return ()
-        Nothing     -> return ()
+    mapM_ (\ uri -> do
+        mpage <- Page.pageFromProtocol (UI.update ui browser) (pageList lambdaCatConf) Nothing (parseURI uri)
+        case mpage of
+            (Just page) -> do
+                UI.embedPage ui browser page
+                Page.load page (fromJust $ parseURI uri)
+                return ()
+            Nothing     -> return ()
+        ) uris
     UI.mainLoop ui
 
 lambdacat = Dyre.wrapMain $ Dyre.defaultParams 
