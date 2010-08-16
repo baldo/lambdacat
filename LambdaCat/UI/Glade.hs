@@ -203,7 +203,7 @@ instance UIClass GladeUI where
                         notebook <- xmlGetWidget xml castToNotebook "pageNoteBook"
                         mTab <- notebookGetNthPage notebook tid 
                         case mTab of 
-                            (Just tab) -> notebookSetTabLabelText notebook tab title 
+                            (Just tab) -> return () --notebookSetTabLabelText notebook tab title 
                             Nothing    -> return ()
                 window <- xmlGetWidget xml castToWindow "browserWindow"
                 set window [ windowTitle := title ] 
@@ -238,10 +238,21 @@ instance UIClass GladeUI where
             noteBook  <- xmlGetWidget xml castToNotebook "pageNoteBook"
             scrolledWindow <- scrolledWindowNew Nothing Nothing
             containerAdd scrolledWindow widget 
-            newTabID  <- notebookAppendPage noteBook scrolledWindow "Foo"
+            newTabID  <- notebookAppendPage noteBook scrolledWindow "(No Title)"
+            labelWidget <- tabWidget (notebookRemovePage noteBook newTabID)
+            notebookSetTabLabel noteBook scrolledWindow labelWidget
             widgetShowAll noteBook
             addPageToBrowser ui bid newTabID page
             return ()
           Nothing -> return ()
+      where tabWidget closeCallback = do
+                hbox  <- hBoxNew False 1
+                label <- labelNew (Just "YEHA") 
+                boxPackStartDefaults hbox label
+                button <- toolButtonNewFromStock stockClose
+                boxPackEndDefaults hbox button
+                button `onToolButtonClicked` closeCallback
+                widgetShowAll hbox
+                return hbox
 
     mainLoop _ = mainGUI
