@@ -2,6 +2,8 @@
 
 module LambdaCat.Page.WebView 
     ( WebViewPage
+
+    , webViewPage
     ) where
 
 import LambdaCat.Page
@@ -16,6 +18,9 @@ newtype WebViewPage = WebViewPage { unWebViewPage :: WebView }
 
 instance HasWidget WebViewPage WebView where
     getWidget = unWebViewPage
+
+webViewPage :: Page 
+webViewPage = Page (undefined :: WebViewPage)
 
 instance PageClass WebViewPage where 
     new cb = do

@@ -2,9 +2,12 @@
 
 module LambdaCat.Page.Poppler 
     ( PopplerPage
+    
+    , popplerPage 
     ) where
 
-import LambdaCat.Page hiding (Page)
+import qualified LambdaCat.Page as Page
+import LambdaCat.Page hiding (Page) 
 import LambdaCat.Page.Poppler.PageLayout
 
 import Control.Concurrent
@@ -25,6 +28,9 @@ data PopplerPage = PopplerPage
     , pageURI      :: MVar URI
     }
   deriving (Eq, Typeable)
+
+popplerPage :: Page.Page
+popplerPage = Page.Page (undefined :: PopplerPage)
 
 type Point = (Double,Double)
 

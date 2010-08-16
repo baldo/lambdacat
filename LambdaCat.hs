@@ -22,10 +22,10 @@ import System
 
 defaultConfig :: LambdaCatConf
 defaultConfig = LambdaCatConf 
-    { pageList = [ (Page.Page (undefined :: WebViewPage), ["http:","https:"])
-                 , (Page.Page (undefined :: PopplerPage), ["file:"])
-                 , (Page.Page (undefined :: MPlayerPage), ["mms:"])
-                 , (Page.Page (undefined :: CatPage), ["cat:"])
+    { pageList = [ (webViewPage , ["http:","https:"])
+                 , (popplerPage , ["file:"])
+                 , (mplayerPage , ["mms:"])
+                 , (catPage     , ["cat:"])
                  ]
     }
 

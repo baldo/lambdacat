@@ -2,9 +2,11 @@
 
 module LambdaCat.Page.MPlayer
     ( MPlayerPage
+    
+    , mplayerPage
     ) where
 
-import LambdaCat.Page hiding (Page)
+import LambdaCat.Page
 
 import Prelude hiding (sin)
 import Data.Typeable
@@ -21,6 +23,9 @@ data MPlayerPage = MPlayerPage
     , mplayerURI     :: MVar URI
     }
   deriving (Eq, Typeable)
+
+mplayerPage :: Page
+mplayerPage = Page (undefined :: MPlayerPage)
 
 data Handles = Handles
     { stdin  :: Handle

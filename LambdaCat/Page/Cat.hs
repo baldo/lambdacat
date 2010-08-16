@@ -1,12 +1,14 @@
 {-# LANGUAGE DeriveDataTypeable, FlexibleInstances, MultiParamTypeClasses #-}
 
 module LambdaCat.Page.Cat
-    ( CatPage
+    ( CatPage 
+
+    , catPage
     )
 where
 
 import LambdaCat.Page
-import LambdaCat.Page.WebView
+import LambdaCat.Page.WebView ( WebViewPage )
 
 import Paths_lambdacat
 
@@ -20,6 +22,9 @@ data CatPage = CatPage
     , catUri :: MVar URI
     }
   deriving (Eq, Typeable)
+
+catPage :: Page
+catPage = Page (undefined :: CatPage)
 
 instance HasWidget CatPage WebView where
     getWidget = getWidget . webViewPage
