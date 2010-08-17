@@ -31,8 +31,10 @@ defaultConfig = LambdaCatConf
                  ]
     }
 
-mainCat :: LambdaCatConf -> IO ()
-mainCat cfg = do
+mainCat :: (Maybe String, LambdaCatConf) -> IO ()
+mainCat (e, cfg) = do
+    maybe (return ()) error e
+
     setLCC cfg
     args <- getArgs
     let uris = if null args
@@ -51,10 +53,13 @@ mainCat cfg = do
         ) uris
     UI.mainLoop ui
 
-lambdacat = Dyre.wrapMain $ Dyre.defaultParams 
+lambdacat :: LambdaCatConf -> IO ()
+lambdacat cfg = Dyre.wrapMain dparams (Nothing, cfg)
+
+dparams = Dyre.defaultParams 
     { Dyre.projectName = "lambdacat"
     , Dyre.realMain    = mainCat
-    , Dyre.showError   = \ c s -> c
+    , Dyre.showError   = \ (_, c) s -> (Just s, c)
 #ifdef DEBUG
     , Dyre.ghcOpts     = ["-eventlog", "-threaded"]
 #endif
