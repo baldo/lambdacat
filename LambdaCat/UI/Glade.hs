@@ -255,6 +255,8 @@ instance UIClass GladeUI where
                 button <- buttonNew
                 widgetSetName button "tab-close-button"
 
+                fav <- imageNewFromStock stockJustifyCenter IconSizeMenu
+
                 img <- imageNewFromStock stockClose IconSizeMenu
 
                 set button
@@ -264,6 +266,7 @@ instance UIClass GladeUI where
 
                 button `onClicked` closeCallback
 
+                boxPackStart hbox fav PackGrow 0
                 boxPackStart hbox label PackGrow 0
                 boxPackStart hbox button PackNatural 0
 
