@@ -81,6 +81,12 @@ Library
 
     Extensions:
         CPP,
+        DeriveDataTypeable,
+        ExistentialQuantification,
+        FlexibleInstances,
         FunctionalDependencies,
-        MultiParamTypeClasses
+        GeneralizedNewtypeDeriving,
+        MultiParamTypeClasses,
+        RankNTypes,
+        TypeSynonymInstances
 
