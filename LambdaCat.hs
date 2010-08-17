@@ -1,3 +1,5 @@
+{-# LANGUAGE CPP #-}
+
 module LambdaCat
     ( lambdacat
     , defaultConfig
@@ -53,4 +55,7 @@ lambdacat = Dyre.wrapMain $ Dyre.defaultParams
     { Dyre.projectName = "lambdacat"
     , Dyre.realMain    = mainCat
     , Dyre.showError   = \ c s -> c
+#ifdef DEBUG
+    , Dyre.ghcOpts     = ["-eventlog", "-threaded"]
+#endif
     }

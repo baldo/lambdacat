@@ -21,8 +21,21 @@ Data-Files:
     cats/kebab.jpg
     cats/sheela.jpg
 
+Flag Debug
+    Description: Enable some debugging and profiling stuff.
+    Default:     False
+
 Executable lambdacat
     Main-is: Main.hs
+
+    if flag(debug)
+        Ghc-Options:
+            -O2 -Wall -threaded -eventlog
+        Cpp-Options: 
+            -DDEBUG
+    else
+        Ghc-Options:
+            -O2 -Wall -threaded
 
 Library
     Build-Depends:
@@ -40,8 +53,14 @@ Library
         process == 1.0.*,
         dyre >= 0.8.5 && < 0.9
 
-    Ghc-Options:
-        -O2 -Wall -threaded
+    if flag(debug)
+        Ghc-Options:
+            -O2 -Wall -threaded -eventlog
+        Cpp-Options: 
+            -DDEBUG
+    else
+        Ghc-Options:
+            -O2 -Wall -threaded
 
     Exposed-Modules:
         LambdaCat
@@ -61,6 +80,7 @@ Library
         Paths_lambdacat
 
     Extensions:
+        CPP,
         FunctionalDependencies,
         MultiParamTypeClasses
 
