@@ -120,6 +120,9 @@ instance UIClass GladeUI where
      return GladeUI { browsers = b} 
 
     newBrowser ui = do 
+        spath    <- getDataFileName "lambdacat.gtkrc"
+        rcParse spath
+
         fpath    <- getDataFileName "lambdacat.glade"
         Just xml <- xmlNew fpath
         window   <- xmlGetWidget xml castToWindow "browserWindow"
@@ -246,12 +249,24 @@ instance UIClass GladeUI where
             return ()
           Nothing -> return ()
       where tabWidget closeCallback = do
-                hbox  <- hBoxNew False 1
+                hbox  <- hBoxNew False 3
                 label <- labelNew (Just "YEHA") 
-                boxPackStartDefaults hbox label
-                button <- toolButtonNewFromStock stockClose
-                boxPackEndDefaults hbox button
-                button `onToolButtonClicked` closeCallback
+
+                button <- buttonNew
+                widgetSetName button "tab-close-button"
+
+                img <- imageNewFromStock stockClose IconSizeMenu
+
+                set button
+                    [ buttonRelief := ReliefNone
+                    , buttonImage  := img
+                    ]
+
+                button `onClicked` closeCallback
+
+                boxPackStart hbox label PackGrow 0
+                boxPackStart hbox button PackNatural 0
+
                 widgetShowAll hbox
                 return hbox
 

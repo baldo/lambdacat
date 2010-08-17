@@ -18,6 +18,7 @@ Extra-Source-Files:
 
 Data-Files:
     lambdacat.glade
+    lambdacat.gtkrc
     cats/kebab.jpg
     cats/sheela.jpg
 
