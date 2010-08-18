@@ -52,7 +52,8 @@ Library
         network == 2.2.*,
         containers == 0.3.*,
         process == 1.0.*,
-        dyre >= 0.8.5 && < 0.9
+        dyre >= 0.8.5 && < 0.9,
+        cmdargs == 0.2.*
 
     if flag(debug)
         Ghc-Options:
@@ -67,6 +68,7 @@ Library
         LambdaCat
         LambdaCat.Browser
         LambdaCat.Configure
+        LambdaCat.CmdArgs
         LambdaCat.Loadable
         LambdaCat.Page
         LambdaCat.Page.Cat

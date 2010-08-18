@@ -8,6 +8,7 @@ where
 
 import LambdaCat.Browser
 import LambdaCat.Configure
+import LambdaCat.CmdArgs
 import LambdaCat.Page.Cat
 import LambdaCat.Page.MPlayer
 import LambdaCat.Page.Poppler
@@ -17,10 +18,13 @@ import qualified LambdaCat.Page as Page
 import qualified LambdaCat.Page as UI
 
 import Data.Maybe
-import qualified Config.Dyre as Dyre
+import Config.Dyre
+import Config.Dyre.Compile
+import Control.Monad
 import Graphics.UI.Gtk.WebKit.WebView
 import Network.URI
 import System
+import System.IO
 
 defaultConfig :: LambdaCatConf
 defaultConfig = LambdaCatConf 
@@ -36,10 +40,11 @@ mainCat (e, cfg) = do
     maybe (return ()) error e
 
     setLCC cfg
-    args <- getArgs
-    let uris = if null args
-               then ["http://www.haskell.org"]
-               else args
+    args <- getCmdArgs
+
+    let us = if null $ uris args
+             then ["http://www.haskell.org"]
+             else uris args
     ui <- UI.init :: IO GladeUI
     browser <- UI.newBrowser ui :: IO BrowserID
     mapM_ (\ uri -> do
@@ -50,17 +55,30 @@ mainCat (e, cfg) = do
                 Page.load page (fromJust $ parseURI uri)
                 return ()
             Nothing     -> return ()
-        ) uris
+        ) us
     UI.mainLoop ui
 
 lambdacat :: LambdaCatConf -> IO ()
-lambdacat cfg = Dyre.wrapMain dparams (Nothing, cfg)
+lambdacat cfg = do
+    args <- getCmdArgs
 
-dparams = Dyre.defaultParams 
-    { Dyre.projectName = "lambdacat"
-    , Dyre.realMain    = mainCat
-    , Dyre.showError   = \ (_, c) s -> (Just s, c)
+    if recompile args
+        then do
+            customCompile dparams
+            me <- getErrorString dparams
+            case me of
+                Just e  -> do
+                    hPutStrLn stderr e
+                    exitFailure
+                Nothing -> return ()
+        else wrapMain dparams (Nothing, cfg)
+
+dparams :: Params (Maybe String, LambdaCatConf)
+dparams = defaultParams 
+    { projectName = "lambdacat"
+    , realMain    = mainCat
+    , showError   = \ (_, c) s -> (Just s, c)
 #ifdef DEBUG
-    , Dyre.ghcOpts     = ["-eventlog", "-threaded"]
+    , ghcOpts     = ["-eventlog", "-threaded"]
 #endif
     }
