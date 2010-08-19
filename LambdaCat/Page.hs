@@ -22,12 +22,12 @@ class UIClass ui where
     init :: IO ui
 
     -- | Creates the main UI widget for the browser (e.g. a window).
-    newBrowser :: ui -> IO BrowserID
+    newBrowser :: ui -> IO BrowserId
 
     -- | Embed the page into the given browser.
-    embedPage :: ui -> BrowserID -> Page -> IO ()
+    embedPage :: ui -> BrowserId -> Page -> IO ()
 
-    replacePage :: ui -> BrowserID -> Page -> Page -> IO ()
+    replacePage :: ui -> BrowserId -> Page -> Page -> IO ()
 
     -- | Checks if a page is child of this brower/ui
     uriChanged   :: ui -> Page -> IO ()
@@ -35,12 +35,12 @@ class UIClass ui where
     -- | Replace current title with the one from given page
     changedTitle :: ui -> Page -> IO ()
 
-    update :: ui -> BrowserID -> CallBack ui 
+    update :: ui -> BrowserId -> CallBack ui 
 
     -- | The main loop for the UI.
     mainLoop :: ui -> IO ()
 
-type CallBack ui = (ui -> BrowserID -> IO ()) -> IO ()
+type CallBack ui = (ui -> BrowserId -> IO ()) -> IO ()
 
 class Eq page => PageClass page where
     -- | Creates a new page.

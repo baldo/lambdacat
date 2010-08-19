@@ -1,22 +1,23 @@
 {-# LANGUAGE MultiParamTypeClasses, ExistentialQuantification, FlexibleInstances, GeneralizedNewtypeDeriving #-}
 
 module LambdaCat.Browser
-    ( BrowserID
-    , newBrowserID
+    ( BrowserId
+
+    , newBrowserId
     )
 where
 
 import Control.Concurrent.MVar
 import System.IO.Unsafe
 
-newtype BrowserID = BrowserID Int
+newtype BrowserId = BrowserId Int
     deriving (Eq,Show,Ord,Num)
 
-nextID :: MVar BrowserID
-nextID = unsafePerformIO $ newMVar (BrowserID 0)
+nextId :: MVar BrowserId
+nextId = unsafePerformIO $ newMVar (BrowserId 0)
 
-newBrowserID :: IO BrowserID
-newBrowserID = do 
-    i <- takeMVar nextID
-    putMVar nextID (i + 1)
+newBrowserId :: IO BrowserId
+newBrowserId = do 
+    i <- takeMVar nextId
+    putMVar nextId (i + 1)
     return i 

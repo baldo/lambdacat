@@ -46,7 +46,7 @@ mainCat (e, cfg) = do
              then ["http://www.haskell.org"]
              else uris args
     ui <- UI.init :: IO GladeUI
-    browser <- UI.newBrowser ui :: IO BrowserID
+    browser <- UI.newBrowser ui :: IO BrowserId
     mapM_ (\ uri -> do
         mpage <- Page.pageFromProtocol (UI.update ui browser) (pageList lambdaCatConf) Nothing (parseURI uri)
         case mpage of
