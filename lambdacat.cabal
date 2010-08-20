@@ -77,6 +77,8 @@ Library
         LambdaCat.Page.Poppler
         LambdaCat.Page.Poppler.PageLayout
         LambdaCat.UI.Glade
+        LambdaCat.UI.Glade.PersistentTabId
+        LambdaCat.UI.Glade.BrowserManager
         LambdaCat.Protocol
 
     Other-Modules:
