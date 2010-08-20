@@ -20,8 +20,6 @@ import qualified LambdaCat.Page as UI
 import Data.Maybe
 import Config.Dyre
 import Config.Dyre.Compile
-import Control.Monad
-import Graphics.UI.Gtk.WebKit.WebView
 import Network.URI
 import System
 import System.IO
@@ -52,7 +50,7 @@ mainCat (e, cfg) = do
         case mpage of
             (Just page) -> do
                 UI.embedPage ui browser page
-                Page.load page (fromJust $ parseURI uri)
+                _ <- Page.load page (fromJust $ parseURI uri)
                 return ()
             Nothing     -> return ()
         ) us

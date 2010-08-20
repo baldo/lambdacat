@@ -4,11 +4,7 @@ module LambdaCat.UI.Glade where
 
 import LambdaCat.Browser
 import LambdaCat.Page
-import LambdaCat.Page.Cat
 import LambdaCat.Configure (lambdaCatConf,LambdaCatConf (..))
-import LambdaCat.Page.WebView
-import LambdaCat.Page.Poppler
-import LambdaCat.Page.MPlayer
 
 import LambdaCat.UI.Glade.PersistentTabId 
 import LambdaCat.UI.Glade.BrowserManager
@@ -17,11 +13,8 @@ import Paths_lambdacat
 
 import Graphics.UI.Gtk
 import Graphics.UI.Gtk.Glade
-import Control.Concurrent.MVar
 import Network.URI
 
-import qualified Data.Map as Map
-import Data.Map (Map)
 
 data GladeUI = GladeUI 
    { browsers  :: BrowserManager
