@@ -73,6 +73,8 @@ instance UIClass GladeUI where
                                         return ()
                                 )
               Nothing -> return ()
+        menuItemQuit <- xmlGetWidget xml castToMenuItem "menuItemQuit"
+        onActivateLeaf menuItemQuit mainQuit 
         widgetShowAll window
         return bid 
 

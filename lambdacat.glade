@@ -19,7 +19,7 @@
                   <widget class="GtkMenu" id="menu1">
                     <property name="visible">True</property>
                     <child>
-                      <widget class="GtkImageMenuItem" id="imagemenuitem5">
+                      <widget class="GtkImageMenuItem" id="menuItemQuit">
                         <property name="label">gtk-quit</property>
                         <property name="visible">True</property>
                         <property name="use_underline">True</property>
