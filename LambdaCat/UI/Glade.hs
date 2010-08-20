@@ -42,13 +42,13 @@ instance UIClass GladeUI where
         _ <- notebook `on`  switchPage $ \ newActive -> do
             -- we assert that there is a container in a tab
             (Just container) <- notebookGetNthPage notebook newActive
-            (Just tabId) <- get (castToWidget container) containerTabId
-            mPage <- getPageFromBrowser (browsers ui) bid tabId
-            case mPage of
-                Nothing  -> return ()
-                Just (_,p) -> do 
-                    uriChanged ui p
-                    changedTitle ui p 
+            withContainerId (castToContainer container) $ \ tabId -> do
+                mPage <- getPageFromBrowser (browsers ui) bid tabId
+                case mPage of
+                    Nothing  -> return ()
+                    Just (_,p) -> do 
+                        uriChanged ui p
+                        changedTitle ui p 
 
         -- Toolbar / Events ---------------------------------------------------
         pageBack <- xmlGetToolButton xml "pageBack"
@@ -82,11 +82,11 @@ instance UIClass GladeUI where
             -- TODO select correct page
             tid <- notebookGetCurrentPage notebook
             Just container <- notebookGetNthPage notebook tid 
-            (Just tabId) <- get (castToWidget container) containerTabId
-            mPage <- getPageFromBrowser (browsers ui) bid tabId
-            case mPage of
-                Just (_,p) -> f p >> return ()
-                Nothing -> return ()
+            withContainerId (castToContainer container) $ \ tabId -> do
+                mPage <- getPageFromBrowser (browsers ui) bid tabId
+                case mPage of
+                    Just (_,p) -> f p >> return ()
+                    Nothing -> return ()
 
         xmlGetToolButton :: GladeXML -> String -> IO ToolButton
         xmlGetToolButton xml name = xmlGetWidget xml castToToolButton name  
@@ -155,7 +155,7 @@ instance UIClass GladeUI where
             containerAdd scrolledWindow widget 
 
             tabId <- genNewId
-            set (castToWidget scrolledWindow) [ containerTabId := Just tabId ]
+            setContainerId scrolledWindow tabId
 
             _tabId <- notebookAppendPage noteBook scrolledWindow "(No Title)"
             labelWidget <- tabWidget (do 
