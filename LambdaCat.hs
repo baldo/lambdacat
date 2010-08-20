@@ -10,6 +10,7 @@ import LambdaCat.Browser
 import LambdaCat.Configure
 import LambdaCat.CmdArgs
 import LambdaCat.Page.Cat
+import LambdaCat.Page.About
 import LambdaCat.Page.MPlayer
 import LambdaCat.Page.Poppler
 import LambdaCat.Page.WebView
@@ -30,6 +31,7 @@ defaultConfig = LambdaCatConf
                  , (popplerPage , ["file:"])
                  , (mplayerPage , ["mms:"])
                  , (catPage     , ["cat:"])
+                 , (aboutPage   , ["about:"])
                  ]
     }
 

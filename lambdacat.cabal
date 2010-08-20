@@ -21,6 +21,7 @@ Data-Files:
     lambdacat.gtkrc
     cats/kebab.jpg
     cats/sheela.jpg
+    about/blank.html
 
 Flag Debug
     Description: Enable some debugging and profiling stuff.
@@ -71,6 +72,7 @@ Library
         LambdaCat.CmdArgs
         LambdaCat.Loadable
         LambdaCat.Page
+        LambdaCat.Page.About
         LambdaCat.Page.Cat
         LambdaCat.Page.WebView
         LambdaCat.Page.MPlayer
