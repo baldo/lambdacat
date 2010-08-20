@@ -161,9 +161,15 @@ instance UIClass GladeUI where
 
             _tabId <- notebookAppendPage noteBook scrolledWindow "(No Title)"
             labelWidget <- tabWidget (do 
-                removeTabId <- get noteBook (notebookChildPosition scrolledWindow)
-                notebookRemovePage noteBook removeTabId
-                -- TODO remove page from map
+                removeTId <- get noteBook (notebookChildPosition scrolledWindow)
+                notebookRemovePage noteBook removeTId
+                withContainerId scrolledWindow $ \ removeTabId -> do 
+                    -- we assume that any existing tab should have a page in it.
+                    Just (_,removePage) <- getPageFromBrowser (browsers ui) bid removeTabId
+                    removePageFromBrowser (browsers ui) bid removePage
+                    -- TODO we should have a function to inform the page about
+                    -- the fact he isn't used anymore.
+                    -- destroy removePage
                 )
             notebookSetTabLabel noteBook scrolledWindow labelWidget
             widgetShowAll noteBook
