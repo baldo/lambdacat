@@ -7,6 +7,7 @@ module LambdaCat.Page.WebView
     ) where
 
 import LambdaCat.Page
+import LambdaCat.Configure
 
 import Data.Typeable
 import Graphics.UI.Gtk.WebKit.WebView
@@ -67,7 +68,14 @@ instance PageClass WebViewPage where
         --  _ <- widget `on` iconLoaded
         --  _ <- widget `on` redo
         --  _ <- widget `on` undo
-        _ <- widget `on` mimeTypePolicyDecisionRequested $ \ wf nr str wp -> (putStrLn $ "Mime:" ++ str) >> return False 
+        _ <- widget `on` mimeTypePolicyDecisionRequested $ \ wf nr mime wp -> do 
+            putStrLn $ "Mime: " ++ mime
+            maybePage <- pageFromMimeType cb mime (mimeList lambdaCatConf)
+            case maybePage of 
+                Just newPage -> do
+                    cb (\ ui bid -> replacePage ui bid (Page page) newPage)
+                    return True
+                Nothing -> return False
         --  _ <- widget `on` moveCursor
         --  _ <- widget `on` navigationPolicyDecisionRequested
         --  _ <- widget `on` newWindowPolicyDecisionRequested
