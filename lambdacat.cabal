@@ -54,6 +54,7 @@ Library
         containers == 0.3.*,
         process == 1.0.*,
         dyre >= 0.8.5 && < 0.9,
+        filepath, directory ,
         cmdargs == 0.2.*
 
     if flag(debug)

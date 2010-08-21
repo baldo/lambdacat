@@ -10,8 +10,11 @@ import LambdaCat.Page
 
 import Data.Typeable
 import Graphics.UI.Gtk.WebKit.WebView
+import Graphics.UI.Gtk.WebKit.Download
 import Graphics.UI.Gtk
 import Network.URI
+import System.Directory 
+import System.FilePath
 
 newtype WebViewPage = WebViewPage { unWebViewPage :: WebView }
   deriving (Eq, Typeable)
@@ -30,6 +33,48 @@ instance PageClass WebViewPage where
         _ <- widget `on` loadFinished  $ (\ _ -> cb (\ui _ -> uriChanged ui (Page page)))
         _ <- widget `on` loadFinished  $ (\ _ -> cb (\ui _ -> changedTitle ui (Page page)))
         _ <- widget `on` createWebView $ (\ _ -> createNew >>= return . unWebViewPage)
+        
+        _ <- widget `on` downloadRequested $ \ download -> do
+            (Just uri) <- downloadGetUri download
+            dest <- getDownloadDestinationURI uri
+            putStrLn $ "Download " ++ uri ++ " to " ++ dest
+            downloadSetDestinationUri download dest
+            return True
+        
+        _ <- widget `on` loadCommitted   $ \ _ -> return ()
+        _ <- widget `on` progressChanged $ \ progress -> putStrLn $ "Progress:" ++ (show progress)
+        _ <- widget `on` loadError $ \ _ err _ -> putStrLn err >> return False
+        _ <- widget `on` titleChanged $ \ _ newTitle -> putStrLn newTitle
+        --  _ <- widget `on` hoveringOverLink $ \ a b -> putStrLn $ a ++ " --> " ++ b -- segfaults included
+        _ <- widget `on` webViewReady $ putStrLn "Yay, I am ready" >> return True 
+        _ <- widget `on` closeWebView $ putStrLn "CloseMe" >> return True
+        --  _ <- widget `on` consoleMessage ...
+        --  _ <- widget `on` copyClipboard
+        --  _ <- widget `on` cutClipboard
+        --  _ <- widget `on` pasteClipboard
+        --  _ <- widget `on` populatePopup
+        --  _ <- widget `on` printRequested
+        --  _ <- widget `on` scriptAlert
+        --  _ <- widget `on` scriptConfirm
+        --  _ <- widget `on` scriptPrompt
+        _ <- widget `on` statusBarTextChanged $ \ str -> putStrLn $ "Status:" ++ str 
+        --  _ <- widget `on` selectAll
+        --  _ <- widget `on` selectionChanged
+        --  _ <- widget `on` setScrollAdjustments
+        --  _ <- widget `on` databaseQuotaExceeded
+        --  _ <- widget `on` documentLoadFinished
+        --  _ <- widget `on` downloadRequested
+        --  _ <- widget `on` iconLoaded
+        --  _ <- widget `on` redo
+        --  _ <- widget `on` undo
+        _ <- widget `on` mimeTypePolicyDecisionRequested $ \ wf nr str wp -> (putStrLn $ "Mime:" ++ str) >> return False 
+        --  _ <- widget `on` moveCursor
+        --  _ <- widget `on` navigationPolicyDecisionRequested
+        --  _ <- widget `on` newWindowPolicyDecisionRequested
+        --  _ <- widget `on` resourceRequestStarting
+        --  _ <- widget `on` geolocationPolicyDecisionCancelled
+        --  _ <- widget `on` geolocationPolicyDecisionRequested
+
         return page
       where createNew :: IO WebViewPage
             createNew = do
@@ -59,3 +104,11 @@ instance PageClass WebViewPage where
     forward =  webViewGoForward . unWebViewPage
     stop    =  webViewStopLoading . unWebViewPage
     reload  =  webViewReload . unWebViewPage
+
+
+getDownloadDestinationURI :: String -> IO String
+getDownloadDestinationURI uri = do
+    appDir <- getAppUserDataDirectory "lambdacat"
+    let webCache =  appDir </>  "webView"
+    createDirectoryIfMissing True webCache
+    return $ "file://" ++ webCache </> (makeValid.filter isUnreserved) (escapeURIString isUnreserved uri)
