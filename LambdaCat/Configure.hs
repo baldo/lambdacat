@@ -11,6 +11,7 @@ import LambdaCat.Protocol
 
 data LambdaCatConf = LambdaCatConf 
     { pageList :: [(Page,[Protocol])]
+    , mimeList :: [(Page,[String])]
     }
 
 cfgIORef :: IORef LambdaCatConf

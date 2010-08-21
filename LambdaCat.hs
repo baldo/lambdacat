@@ -33,6 +33,7 @@ defaultConfig = LambdaCatConf
                  , (catPage     , ["cat:"])
                  , (aboutPage   , ["about:"])
                  ]
+    , mimeList = [(popplerPage , ["application/pdf"])] 
     }
 
 mainCat :: (Maybe String, LambdaCatConf) -> IO ()
