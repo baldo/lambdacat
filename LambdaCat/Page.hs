@@ -6,7 +6,10 @@ module LambdaCat.Page
     , Page (..)
     , HasWidget (..)
 
+    , canHandleMimeType
+    , pageConstructorsFromMimeType
     , pageFromProtocol
+    , pageFromMimeType
     )
 where
 
@@ -122,3 +125,16 @@ pageFromProtocol cb ps mp (Just uri) = do
             | protocol `elem` protos = return $ Just page
             | otherwise              = lookupProtocol plist
 
+canHandleMimeType :: String -> [(Page,[String])] -> Bool
+canHandleMimeType mt = not . null .  pageConstructorsFromMimeType mt
+
+pageConstructorsFromMimeType :: String -> [(Page,[String])] -> [Page]
+pageConstructorsFromMimeType mt = concatMap (\ (p,lst) -> [p | elem mt lst]) 
+
+pageFromMimeType :: UIClass u => CallBack u -> String -> [(Page,[String])] -> IO (Maybe Page)
+pageFromMimeType cb mimeType mimeList = do
+    let constructors = pageConstructorsFromMimeType mimeType mimeList
+    if not $ null constructors 
+        then case (head constructors) of
+                (Page page) ->  createPage page cb >>= return . Just . Page
+        else return Nothing
