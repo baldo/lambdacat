@@ -25,19 +25,28 @@ Data-Files:
 
 Flag Debug
     Description: Enable some debugging and profiling stuff.
+                 (Don't use in combination with flag Release.)
     Default:     False
+
+Flag Release
+    Description: Reduce build messages and build even if warnings arise.
+    Default:     True
 
 Executable lambdacat
     Main-is: Main.hs
 
-    if flag(debug)
+    if flag(release)
         Ghc-Options:
-            -O2 -Wall -threaded -eventlog
-        Cpp-Options:
-            -DDEBUG
+            -O2 -Wnot -threaded
     else
-        Ghc-Options:
-            -O2 -Wall -threaded
+        if flag(debug)
+            Ghc-Options:
+                -O2 -Wall -threaded -eventlog
+            Cpp-Options:
+                -DDEBUG
+        else
+            Ghc-Options:
+                -O2 -Wall -threaded
 
 Library
     Build-Depends:
@@ -58,14 +67,18 @@ Library
         directory,
         cmdargs == 0.2.*
 
-    if flag(debug)
+    if flag(release)
         Ghc-Options:
-            -O2 -Wall -threaded -eventlog
-        Cpp-Options:
-            -DDEBUG
+            -O2 -Wnot -eventlog
     else
-        Ghc-Options:
-            -O2 -Wall -threaded -Werror
+        if flag(debug)
+            Ghc-Options:
+                -O2 -Wall -eventlog
+            Cpp-Options:
+                -DDEBUG
+        else
+            Ghc-Options:
+                -O2 -Wall -Werror
 
     Exposed-Modules:
         LambdaCat
