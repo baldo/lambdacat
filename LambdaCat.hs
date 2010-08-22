@@ -25,15 +25,21 @@ import Network.URI
 import System
 import System.IO
 
+defaultURIModifier :: URI -> URI
+defaultURIModifier uri
+    | not $ null $ uriScheme uri = uri
+    | otherwise                  = uri { uriScheme = "http:", uriPath = "//" ++ uriPath uri }
+
 defaultConfig :: LambdaCatConf
 defaultConfig = LambdaCatConf 
-    { pageList = [ (webViewPage , ["http:","https:"])
-                 , (popplerPage , ["file:"])
-                 , (mplayerPage , ["mms:"])
-                 , (catPage     , ["cat:"])
-                 , (aboutPage   , ["about:"])
-                 ]
-    , mimeList = [(popplerPage , ["application/pdf"])] 
+    { uriModifier = defaultURIModifier
+    , pageList    = [ (webViewPage , ["http:","https:"])
+                  , (popplerPage , ["file:"])
+                  , (mplayerPage , ["mms:"])
+                  , (catPage     , ["cat:"])
+                  , (aboutPage   , ["about:"])
+                  ]
+    , mimeList    = [(popplerPage , ["application/pdf"])] 
     }
 
 mainCat :: (Maybe String, LambdaCatConf) -> IO ()
@@ -49,11 +55,11 @@ mainCat (e, cfg) = do
     ui <- UI.init :: IO GladeUI
     browser <- UI.newBrowser ui :: IO BrowserId
     mapM_ (\ uri -> do
-        mpage <- Page.pageFromProtocol (UI.update ui browser) (pageList lambdaCatConf) Nothing (parseURI uri)
+        mpage <- Page.pageFromProtocol (UI.update ui browser) (uriModifier lambdaCatConf) (pageList lambdaCatConf) Nothing (parseURIReference uri)
         case mpage of
-            (Just page) -> do
+            (Just (page, uri')) -> do
                 UI.embedPage ui browser page
-                _ <- Page.load page (fromJust $ parseURI uri)
+                _ <- Page.load page uri'
                 return ()
             Nothing     -> return ()
         ) us

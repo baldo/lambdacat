@@ -103,21 +103,26 @@ eqPageType (Page p1) (Page p2) = p1 `eqType` p2
 createPage :: (PageClass p,UIClass ui) => p -> CallBack ui -> IO p
 createPage _ = new
 
-pageFromProtocol :: UIClass u => CallBack u -> [(Page, [Protocol])] -> Maybe Page -> Maybe URI -> IO (Maybe Page)
-pageFromProtocol _  _  _  Nothing    = return Nothing
-pageFromProtocol _  [] _  _          = return Nothing
-pageFromProtocol cb ps mp (Just uri) = do
+pageFromProtocol :: UIClass u => CallBack u -> (URI -> URI) -> [(Page, [Protocol])] -> Maybe Page -> Maybe URI -> IO (Maybe (Page, URI))
+pageFromProtocol _  _  _  _  Nothing    = return Nothing
+pageFromProtocol _  _  [] _  _          = return Nothing
+pageFromProtocol cb um ps mp (Just uri) = do
     mp' <- lookupProtocol ps
 
     case (mp, mp') of
         (_,       Nothing       ) -> return Nothing
-        (Nothing, Just (Page p')) -> createPage p' cb >>= return . Just . Page
-        (Just (Page p), Just (Page p'))
-            | p `eqType` p' -> return mp
-            | otherwise     -> createPage p' cb >>= return . Just . Page
+        (Nothing, Just (Page p')) -> do
+            rp <- createPage p' cb
+            return $ Just (Page rp, uri')
+        (Just (Page p), Just (Page p')) 
+            | p `eqType` p' -> return $ Just (Page p, uri')
+            | otherwise     -> do
+                rp <- createPage p' cb
+                return $ Just (Page rp, uri')
 
     where
-        protocol = uriScheme uri
+        uri' = um uri
+        protocol = uriScheme uri'
 
         lookupProtocol :: [(Page, [Protocol])] -> IO (Maybe Page)
         lookupProtocol [] = return Nothing

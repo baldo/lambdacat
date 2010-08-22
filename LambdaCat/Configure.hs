@@ -6,12 +6,15 @@ module LambdaCat.Configure
 
 import Data.IORef
 import Foreign
+import Network.URI
+
 import LambdaCat.Page (Page (..))
 import LambdaCat.Protocol 
 
 data LambdaCatConf = LambdaCatConf 
-    { pageList :: [(Page,[Protocol])]
-    , mimeList :: [(Page,[String])]
+    { uriModifier :: URI -> URI
+    , pageList    :: [(Page,[Protocol])]
+    , mimeList    :: [(Page,[String])]
     }
 
 cfgIORef :: IORef LambdaCatConf

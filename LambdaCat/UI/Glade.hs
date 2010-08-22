@@ -60,16 +60,16 @@ instance UIClass GladeUI where
         pageURI <- xmlGetWidget xml castToEntry "pageURI"
         _ <- onEntryActivate pageURI  $ do
             text <- entryGetText pageURI
-            case parseURI text of
+            case parseURIReference text of
               Just uri ->
                 pageAction notebook bid (\ w -> do
-                                mw' <- pageFromProtocol (update ui bid)  (pageList lambdaCatConf) (Just w) (Just uri)
+                                mw' <- pageFromProtocol (update ui bid) (uriModifier lambdaCatConf) (pageList lambdaCatConf) (Just w) (Just uri)
                                 case mw' of 
                                     -- TODO call an default error page
                                     Nothing -> return ()
-                                    Just w' -> do
+                                    Just (w', uri') -> do
                                         replacePage ui bid w w'
-                                        load w' uri
+                                        load w' uri'
                                         return ()
                                 )
               Nothing -> return ()
