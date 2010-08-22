@@ -57,28 +57,37 @@ instance UIClass GladeUI where
         _ <- onToolButtonClicked pageForward (pageAction notebook bid forward)
         pageReload <- xmlGetToolButton xml "pageReload"
         _ <- onToolButtonClicked pageReload (pageAction notebook bid reload)
+        pageHome <- xmlGetToolButton xml "pageHome"
+        _ <- onToolButtonClicked pageHome $
+                pageAction notebook bid $
+                    loadAction (homeURI lambdaCatConf) bid
         pageURI <- xmlGetWidget xml castToEntry "pageURI"
         _ <- onEntryActivate pageURI  $ do
             text <- entryGetText pageURI
             case parseURIReference text of
-              Just uri ->
-                pageAction notebook bid (\ w -> do
-                                mw' <- pageFromProtocol (update ui bid) (uriModifier lambdaCatConf) (pageList lambdaCatConf) (Just w) (Just uri)
-                                case mw' of
-                                    -- TODO call an default error page
-                                    Nothing -> return ()
-                                    Just (w', uri') -> do
-                                        replacePage ui bid w w'
-                                        _ <- load w' uri'
-                                        return ()
-                                )
-              Nothing -> return ()
+                Just uri -> pageAction notebook bid $ loadAction uri bid
+                Nothing  -> return ()
         menuItemQuit <- xmlGetWidget xml castToMenuItem "menuItemQuit"
         _ <- onActivateLeaf menuItemQuit mainQuit
         widgetShowAll window
         return bid
 
      where
+        loadAction :: URI -> BrowserId -> Page -> IO ()
+        loadAction uri bid w = do
+            mw' <- pageFromProtocol (update ui bid)
+                                    (uriModifier lambdaCatConf)
+                                    (pageList lambdaCatConf)
+                                    (Just w)
+                                    (Just uri)
+            case mw' of
+                -- TODO call an default error page
+                Nothing -> return ()
+                Just (w', uri') -> do
+                    replacePage ui bid w w'
+                    _ <- load w' uri'
+                    return ()
+
         pageAction :: Notebook -> BrowserId -> (Page -> IO a) -> IO ()
         pageAction notebook bid f = do
             -- TODO select correct page

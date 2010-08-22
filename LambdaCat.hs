@@ -3,6 +3,7 @@
 module LambdaCat
     ( lambdacat
     , defaultConfig
+    , LambdaCatConf (..)
     )
 where
 
@@ -20,6 +21,7 @@ import qualified LambdaCat.Page as UI
 
 import Config.Dyre
 import Config.Dyre.Compile
+import Data.Maybe
 import Network.URI
 import System
 import System.IO
@@ -44,6 +46,7 @@ defaultConfig = LambdaCatConf
                     , (aboutPage  , ["about:"])
                     ]
     , mimeList    = [(popplerPage , ["application/pdf"])]
+    , homeURI     = fromJust $ parseURI "http://www.haskell.org"
     }
 
 mainCat :: (Maybe String, LambdaCatConf) -> IO ()
@@ -54,7 +57,7 @@ mainCat (e, cfg) = do
     args <- getCmdArgs
 
     let us = if null $ uris args
-             then ["http://www.haskell.org"]
+             then [show $ homeURI cfg]
              else uris args
     ui <- UI.init :: IO GladeUI
     browser <- UI.newBrowser ui :: IO BrowserId

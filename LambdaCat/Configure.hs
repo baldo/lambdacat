@@ -15,6 +15,7 @@ data LambdaCatConf = LambdaCatConf
     { uriModifier :: URI -> URI
     , pageList    :: [(Page, [Protocol])]
     , mimeList    :: [(Page, [String])]
+    , homeURI     :: URI
     }
 
 cfgIORef :: IORef LambdaCatConf
