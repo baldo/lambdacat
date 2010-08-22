@@ -22,6 +22,7 @@ Data-Files:
     cats/kebab.jpg
     cats/sheela.jpg
     about/blank.html
+    about/info.html
 
 Flag Debug
     Description: Enable some debugging and profiling stuff.

@@ -68,20 +68,22 @@ instance UIClass GladeUI where
                 Just uri -> pageAction notebook bid $ loadAction uri bid
                 Nothing  -> return ()
         addTab <- xmlGetToolButton xml "addTab"
-        _ <- onToolButtonClicked addTab $ newBlankPage bid >> return ()
+        _ <- onToolButtonClicked addTab $ newPage bid (parseURI "about:blank") >> return ()
         menuItemQuit <- xmlGetWidget xml castToMenuItem "menuItemQuit"
         _ <- onActivateLeaf menuItemQuit mainQuit
+        menuItemInfo <- xmlGetWidget xml castToMenuItem "menuItemInfo"
+        _ <- onActivateLeaf menuItemInfo $ newPage bid (parseURI "about:info") >> return ()
         widgetShowAll window
         return bid
 
      where
-        newBlankPage :: BrowserId -> IO (Maybe Page)
-        newBlankPage bid = do
+        newPage :: BrowserId -> Maybe URI -> IO (Maybe Page)
+        newPage bid uri = do
             mw <- pageFromProtocol (update ui bid)
                                    (uriModifier lambdaCatConf)
                                    (pageList lambdaCatConf)
                                    Nothing
-                                   (parseURI "about:blank")
+                                   uri
             case mw of
                 -- TODO call an default error page
                 Nothing -> return Nothing
@@ -118,10 +120,10 @@ instance UIClass GladeUI where
                             Just (_, p) -> f p >> return ()
                             Nothing -> return ()
                 Nothing -> do
-                    mp <- newBlankPage bid
+                    mp <- newPage bid $ parseURI "about:blank"
                     case mp of
                         Just p -> do
-                            f p
+                            _ <- f p
                             return ()
                         Nothing ->
                             return ()
