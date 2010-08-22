@@ -28,17 +28,22 @@ import System.IO
 defaultURIModifier :: URI -> URI
 defaultURIModifier uri
     | not $ null $ uriScheme uri = uri
-    | otherwise                  = uri { uriScheme = "http:", uriPath = "//" ++ uriPath uri }
+    | otherwise                  =
+        let p = case show uri of
+                    ('/' : _) -> "file://"
+                    _         -> "http://"
+            Just uri' = parseURI $ p ++ show uri
+        in  uri'
 
 defaultConfig :: LambdaCatConf
 defaultConfig = LambdaCatConf 
     { uriModifier = defaultURIModifier
     , pageList    = [ (webViewPage , ["http:","https:"])
-                  , (popplerPage , ["file:"])
-                  , (mplayerPage , ["mms:"])
-                  , (catPage     , ["cat:"])
-                  , (aboutPage   , ["about:"])
-                  ]
+                    , (popplerPage , ["file:"])
+                    , (mplayerPage , ["mms:"])
+                    , (catPage     , ["cat:"])
+                    , (aboutPage   , ["about:"])
+                    ]
     , mimeList    = [(popplerPage , ["application/pdf"])] 
     }
 
