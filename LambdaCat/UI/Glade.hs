@@ -67,6 +67,21 @@ instance UIClass GladeUI where
             case parseURIReference text of
                 Just uri -> pageAction notebook bid $ loadAction uri bid
                 Nothing  -> return ()
+        addTab <- xmlGetToolButton xml "addTab"
+        _ <- onToolButtonClicked addTab $ do
+            mw <- pageFromProtocol (update ui bid)
+                                   (uriModifier lambdaCatConf)
+                                   (pageList lambdaCatConf)
+                                   Nothing
+                                   (parseURI "about:blank")
+            case mw of
+                -- TODO call an default error page
+                Nothing -> return ()
+                Just (w, uri') -> do
+                    embedPage ui bid w
+                    _ <- load w uri'
+                    return ()
+
         menuItemQuit <- xmlGetWidget xml castToMenuItem "menuItemQuit"
         _ <- onActivateLeaf menuItemQuit mainQuit
         widgetShowAll window

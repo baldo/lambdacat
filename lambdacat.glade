@@ -153,6 +153,18 @@
               </packing>
             </child>
             <child>
+              <widget class="GtkToolButton" id="addTab">
+                <property name="visible">True</property>
+                <property name="label" translatable="yes">add tab</property>
+                <property name="use_underline">True</property>
+                <property name="stock_id">gtk-add</property>
+              </widget>
+              <packing>
+                <property name="expand">False</property>
+                <property name="homogeneous">True</property>
+              </packing>
+            </child>
+            <child>
               <widget class="GtkToolItem" id="toolbutton3">
                 <property name="visible">True</property>
                 <child>
