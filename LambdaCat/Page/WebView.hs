@@ -1,6 +1,6 @@
 {-# LANGUAGE DeriveDataTypeable, FlexibleInstances, MultiParamTypeClasses #-}
 
-module LambdaCat.Page.WebView 
+module LambdaCat.Page.WebView
     ( WebViewPage
 
     , webViewPage
@@ -14,7 +14,7 @@ import Graphics.UI.Gtk.WebKit.WebView
 import Graphics.UI.Gtk.WebKit.Download
 import Graphics.UI.Gtk
 import Network.URI
-import System.Directory 
+import System.Directory
 import System.FilePath
 
 newtype WebViewPage = WebViewPage { unWebViewPage :: WebView }
@@ -23,31 +23,31 @@ newtype WebViewPage = WebViewPage { unWebViewPage :: WebView }
 instance HasWidget WebViewPage WebView where
     getWidget = unWebViewPage
 
-webViewPage :: Page 
+webViewPage :: Page
 webViewPage = Page (undefined :: WebViewPage)
 
-instance PageClass WebViewPage where 
+instance PageClass WebViewPage where
     new cb = do
         page <- webViewNew >>= return . WebViewPage
         cb (\ui _ -> uriChanged ui (Page page))
-        let widget = getWidget page 
+        let widget = getWidget page
         _ <- widget `on` loadFinished  $ (\ _ -> cb (\ui _ -> uriChanged ui (Page page)))
         _ <- widget `on` loadFinished  $ (\ _ -> cb (\ui _ -> changedTitle ui (Page page)))
         _ <- widget `on` createWebView $ (\ _ -> createNew >>= return . unWebViewPage)
-        
+
         _ <- widget `on` downloadRequested $ \ download -> do
             (Just uri) <- downloadGetUri download
             dest <- getDownloadDestinationURI uri
             putStrLn $ "Download " ++ uri ++ " to " ++ dest
             downloadSetDestinationUri download dest
             return True
-        
+
         _ <- widget `on` loadCommitted   $ \ _ -> return ()
-        _ <- widget `on` progressChanged $ \ progress -> putStrLn $ "Progress:" ++ (show progress)
+        _ <- widget `on` progressChanged $ \ p -> putStrLn $ "Progress:" ++ (show p)
         _ <- widget `on` loadError $ \ _ err _ -> putStrLn err >> return False
         _ <- widget `on` titleChanged $ \ _ newTitle -> putStrLn newTitle
         --  _ <- widget `on` hoveringOverLink $ \ a b -> putStrLn $ a ++ " --> " ++ b -- segfaults included
-        _ <- widget `on` webViewReady $ putStrLn "Yay, I am ready" >> return True 
+        _ <- widget `on` webViewReady $ putStrLn "Yay, I am ready" >> return True
         _ <- widget `on` closeWebView $ putStrLn "CloseMe" >> return True
         --  _ <- widget `on` consoleMessage ...
         --  _ <- widget `on` copyClipboard
@@ -58,7 +58,7 @@ instance PageClass WebViewPage where
         --  _ <- widget `on` scriptAlert
         --  _ <- widget `on` scriptConfirm
         --  _ <- widget `on` scriptPrompt
-        _ <- widget `on` statusBarTextChanged $ \ str -> putStrLn $ "Status:" ++ str 
+        _ <- widget `on` statusBarTextChanged $ \ str -> putStrLn $ "Status:" ++ str
         --  _ <- widget `on` selectAll
         --  _ <- widget `on` selectionChanged
         --  _ <- widget `on` setScrollAdjustments
@@ -68,10 +68,10 @@ instance PageClass WebViewPage where
         --  _ <- widget `on` iconLoaded
         --  _ <- widget `on` redo
         --  _ <- widget `on` undo
-        _ <- widget `on` mimeTypePolicyDecisionRequested $ \ wf nr mime wp -> do 
+        _ <- widget `on` mimeTypePolicyDecisionRequested $ \ _wf _nr mime _wp -> do
             putStrLn $ "Mime: " ++ mime
             maybePage <- pageFromMimeType cb mime (mimeList lambdaCatConf)
-            case maybePage of 
+            case maybePage of
                 Just newPage -> do
                     cb (\ ui bid -> replacePage ui bid (Page page) newPage)
                     return True
@@ -88,16 +88,16 @@ instance PageClass WebViewPage where
             createNew = do
                 page <- new cb
                 cb (\ ui bid -> embedPage ui bid (Page page))
-                return page 
-        
+                return page
+
 
     load page uri =  webViewLoadUri (unWebViewPage page) uriString >> return True
         where uriString = uriToString id uri ""
 
-    getCurrentURI page = do 
+    getCurrentURI page = do
         muri <- webViewGetUri.unWebViewPage $ page
         case muri of
-            Just uri -> case parseURI uri of 
+            Just uri -> case parseURI uri of
                 Just x -> return x
                 _ -> return nullURI
             _ -> return nullURI

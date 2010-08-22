@@ -11,13 +11,13 @@ import Control.Concurrent.MVar
 import System.IO.Unsafe
 
 newtype BrowserId = BrowserId Int
-    deriving (Eq,Show,Ord,Num)
+    deriving (Eq, Show, Ord, Num)
 
 nextId :: MVar BrowserId
 nextId = unsafePerformIO $ newMVar (BrowserId 0)
 
 newBrowserId :: IO BrowserId
-newBrowserId = do 
+newBrowserId = do
     i <- takeMVar nextId
     putMVar nextId (i + 1)
-    return i 
+    return i

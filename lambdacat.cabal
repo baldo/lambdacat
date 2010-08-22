@@ -1,7 +1,7 @@
 Name:          lambdacat
 Version:       0.0
 Stability:     Alpha
-Synopsis:      Webkit Browser 
+Synopsis:      Webkit Browser
 Description:   A Browser based on WebKit, concepted to be easy to use and
                extendable
 License:       BSD3
@@ -10,7 +10,7 @@ Build-Type:    Simple
 Author:        Andreas Baldeau, Daniel Ehlers
 Maintainer:    Andreas Baldeau, Daniel Ehlers
 Category:      User Interfaces
-Tested-With:   GHC == 6.12.1
+Tested-With:   GHC == 6.12.3
 Cabal-Version: >= 1.2.3
 
 Extra-Source-Files:
@@ -25,19 +25,28 @@ Data-Files:
 
 Flag Debug
     Description: Enable some debugging and profiling stuff.
+                 (Don't use in combination with flag Release.)
     Default:     False
+
+Flag Release
+    Description: Reduce build messages and build even if warnings arise.
+    Default:     True
 
 Executable lambdacat
     Main-is: Main.hs
 
-    if flag(debug)
+    if flag(release)
         Ghc-Options:
-            -O2 -Wall -threaded -eventlog
-        Cpp-Options: 
-            -DDEBUG
+            -O2 -Wnot -threaded
     else
-        Ghc-Options:
-            -O2 -Wall -threaded
+        if flag(debug)
+            Ghc-Options:
+                -O2 -Wall -threaded -eventlog
+            Cpp-Options:
+                -DDEBUG
+        else
+            Ghc-Options:
+                -O2 -Wall -threaded
 
 Library
     Build-Depends:
@@ -46,7 +55,7 @@ Library
         mtl >= 1.1 && < 1.2,
         glib == 0.11.*,
         gtk >= 0.11 && < 0.12,
-        glade >= 0.11 && < 0.12, 
+        glade >= 0.11 && < 0.12,
         cairo == 0.11.*,
         webkit >= 0.11 && < 0.12,
         poppler == 0.11.*,
@@ -54,17 +63,22 @@ Library
         containers == 0.3.*,
         process == 1.0.*,
         dyre >= 0.8.5 && < 0.9,
-        filepath, directory ,
+        filepath,
+        directory,
         cmdargs == 0.2.*
 
-    if flag(debug)
+    if flag(release)
         Ghc-Options:
-            -O2 -Wall -threaded -eventlog
-        Cpp-Options: 
-            -DDEBUG
+            -O2 -Wnot -eventlog
     else
-        Ghc-Options:
-            -O2 -Wall -threaded
+        if flag(debug)
+            Ghc-Options:
+                -O2 -Wall -eventlog
+            Cpp-Options:
+                -DDEBUG
+        else
+            Ghc-Options:
+                -O2 -Wall -Werror
 
     Exposed-Modules:
         LambdaCat

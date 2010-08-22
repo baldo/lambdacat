@@ -131,9 +131,33 @@
             <child>
               <widget class="GtkToolButton" id="pageReload">
                 <property name="visible">True</property>
-                <property name="label" translatable="yes">toolbutton1</property>
+                <property name="label" translatable="yes">reload</property>
                 <property name="use_underline">True</property>
                 <property name="stock_id">gtk-refresh</property>
+              </widget>
+              <packing>
+                <property name="expand">False</property>
+                <property name="homogeneous">True</property>
+              </packing>
+            </child>
+            <child>
+              <widget class="GtkToolButton" id="pageHome">
+                <property name="visible">True</property>
+                <property name="label" translatable="yes">home</property>
+                <property name="use_underline">True</property>
+                <property name="stock_id">gtk-home</property>
+              </widget>
+              <packing>
+                <property name="expand">False</property>
+                <property name="homogeneous">True</property>
+              </packing>
+            </child>
+            <child>
+              <widget class="GtkToolButton" id="addTab">
+                <property name="visible">True</property>
+                <property name="label" translatable="yes">add tab</property>
+                <property name="use_underline">True</property>
+                <property name="stock_id">gtk-add</property>
               </widget>
               <packing>
                 <property name="expand">False</property>
@@ -154,7 +178,6 @@
               </widget>
               <packing>
                 <property name="expand">True</property>
-                <property name="homogeneous">True</property>
               </packing>
             </child>
             <child>

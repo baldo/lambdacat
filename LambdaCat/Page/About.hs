@@ -1,5 +1,5 @@
 {-# LANGUAGE DeriveDataTypeable, FlexibleInstances, MultiParamTypeClasses #-}
-module LambdaCat.Page.About 
+module LambdaCat.Page.About
     ( AboutPage
 
     , aboutPage
@@ -11,23 +11,23 @@ import LambdaCat.Page.WebView ( WebViewPage )
 import Paths_lambdacat
 
 import Control.Concurrent.MVar
-import Data.Typeable 
+import Data.Typeable
 import Graphics.UI.Gtk.WebKit.WebView
 import Network.URI
 
-data AboutPage = AboutPage 
+data AboutPage = AboutPage
     { webViewPage :: WebViewPage
     , aboutUri :: MVar URI
     }
-  deriving (Eq,Typeable)
+  deriving (Eq, Typeable)
 
 aboutPage :: Page
 aboutPage = Page (undefined :: AboutPage)
 
 instance HasWidget AboutPage WebView where
-    getWidget = getWidget . webViewPage 
+    getWidget = getWidget . webViewPage
 
-instance PageClass AboutPage where 
+instance PageClass AboutPage where
     new cb = do
         wvpage <- new cb
         uri <- newMVar nullURI

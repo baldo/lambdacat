@@ -1,4 +1,4 @@
-module LambdaCat.Configure 
+module LambdaCat.Configure
     ( LambdaCatConf (..)
     , lambdaCatConf
     , setLCC
@@ -6,12 +6,16 @@ module LambdaCat.Configure
 
 import Data.IORef
 import Foreign
-import LambdaCat.Page (Page (..))
-import LambdaCat.Protocol 
+import Network.URI
 
-data LambdaCatConf = LambdaCatConf 
-    { pageList :: [(Page,[Protocol])]
-    , mimeList :: [(Page,[String])]
+import LambdaCat.Page (Page (..))
+import LambdaCat.Protocol
+
+data LambdaCatConf = LambdaCatConf
+    { uriModifier :: URI -> URI
+    , pageList    :: [(Page, [Protocol])]
+    , mimeList    :: [(Page, [String])]
+    , homeURI     :: URI
     }
 
 cfgIORef :: IORef LambdaCatConf

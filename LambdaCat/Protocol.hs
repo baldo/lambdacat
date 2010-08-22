@@ -1,5 +1,5 @@
-module LambdaCat.Protocol 
-    ( Protocol 
-    ) where 
+module LambdaCat.Protocol
+    ( Protocol
+    ) where
 
 type Protocol = String
