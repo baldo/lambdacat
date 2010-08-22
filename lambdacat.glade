@@ -131,7 +131,7 @@
             <child>
               <widget class="GtkToolButton" id="pageReload">
                 <property name="visible">True</property>
-                <property name="label" translatable="yes">toolbutton1</property>
+                <property name="label" translatable="yes">reload</property>
                 <property name="use_underline">True</property>
                 <property name="stock_id">gtk-refresh</property>
               </widget>
@@ -154,7 +154,6 @@
               </widget>
               <packing>
                 <property name="expand">True</property>
-                <property name="homogeneous">True</property>
               </packing>
             </child>
             <child>
