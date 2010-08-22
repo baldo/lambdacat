@@ -10,7 +10,7 @@ Build-Type:    Simple
 Author:        Andreas Baldeau, Daniel Ehlers
 Maintainer:    Andreas Baldeau, Daniel Ehlers
 Category:      User Interfaces
-Tested-With:   GHC == 6.12.1
+Tested-With:   GHC == 6.12.3
 Cabal-Version: >= 1.2.3
 
 Extra-Source-Files:
