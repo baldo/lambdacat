@@ -2,7 +2,7 @@
 
 module LambdaCat.Page.MPlayer
     ( MPlayerPage
-    
+
     , mplayerPage
     ) where
 
@@ -48,7 +48,7 @@ instance PageClass MPlayerPage where
     load page@MPlayerPage { mplayerSocket = socket } uri = do
         mplayerCommand page $ "quit"
         handles <- spawnMPlayer socket uri
-        updateHandles page $ Just handles 
+        updateHandles page $ Just handles
         return True
 
     getCurrentURI = flip withURI return
@@ -67,7 +67,7 @@ withURI :: MPlayerPage -> (URI -> IO a) -> IO a
 withURI MPlayerPage { mplayerURI = mURI } f = do
     uri <- takeMVar mURI
     r <- f uri
-    putMVar mURI uri 
+    putMVar mURI uri
     return r
 
 toHandles :: (Handle, Handle, Handle, a) -> Handles

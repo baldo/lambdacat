@@ -38,7 +38,7 @@ class UIClass ui where
     -- | Replace current title with the one from given page
     changedTitle :: ui -> Page -> IO ()
 
-    update :: ui -> BrowserId -> CallBack ui 
+    update :: ui -> BrowserId -> CallBack ui
 
     -- | The main loop for the UI.
     mainLoop :: ui -> IO ()
@@ -88,7 +88,7 @@ instance PageClass Page where
     stop (Page p) = stop p
     reload (Page p) = reload p
 
-    getCurrentURI (Page p)   = getCurrentURI p 
+    getCurrentURI (Page p)   = getCurrentURI p
     getCurrentTitle (Page p) = getCurrentTitle p
 
     getBackHistory (Page p) = getBackHistory p
@@ -97,10 +97,12 @@ instance PageClass Page where
 eqType :: (Typeable a, Typeable b) => a -> b -> Bool
 eqType a b = typeOf a == typeOf b
 
+{- Unused for now. Maybe remove later.
 eqPageType :: Page -> Page -> Bool
 eqPageType (Page p1) (Page p2) = p1 `eqType` p2
+-}
 
-createPage :: (PageClass p,UIClass ui) => p -> CallBack ui -> IO p
+createPage :: (PageClass p, UIClass ui) => p -> CallBack ui -> IO p
 createPage _ = new
 
 pageFromProtocol :: UIClass u => CallBack u -> (URI -> URI) -> [(Page, [Protocol])] -> Maybe Page -> Maybe URI -> IO (Maybe (Page, URI))
@@ -114,7 +116,7 @@ pageFromProtocol cb um ps mp (Just uri) = do
         (Nothing, Just (Page p')) -> do
             rp <- createPage p' cb
             return $ Just (Page rp, uri')
-        (Just (Page p), Just (Page p')) 
+        (Just (Page p), Just (Page p'))
             | p `eqType` p' -> return $ Just (Page p, uri')
             | otherwise     -> do
                 rp <- createPage p' cb
@@ -130,16 +132,17 @@ pageFromProtocol cb um ps mp (Just uri) = do
             | protocol `elem` protos = return $ Just page
             | otherwise              = lookupProtocol plist
 
-canHandleMimeType :: String -> [(Page,[String])] -> Bool
+canHandleMimeType :: String -> [(Page, [String])] -> Bool
 canHandleMimeType mt = not . null .  pageConstructorsFromMimeType mt
 
-pageConstructorsFromMimeType :: String -> [(Page,[String])] -> [Page]
-pageConstructorsFromMimeType mt = concatMap (\ (p,lst) -> [p | elem mt lst]) 
+pageConstructorsFromMimeType :: String -> [(Page, [String])] -> [Page]
+pageConstructorsFromMimeType mt = concatMap (\ (p, lst) -> [p | elem mt lst])
 
-pageFromMimeType :: UIClass u => CallBack u -> String -> [(Page,[String])] -> IO (Maybe Page)
+pageFromMimeType :: UIClass u => CallBack u -> String -> [(Page, [String])] -> IO (Maybe Page)
 pageFromMimeType cb mimeType mimeList = do
     let constructors = pageConstructorsFromMimeType mimeType mimeList
-    if not $ null constructors 
+    if not $ null constructors
         then case (head constructors) of
                 (Page page) ->  createPage page cb >>= return . Just . Page
         else return Nothing
+

@@ -1,7 +1,7 @@
 Name:          lambdacat
 Version:       0.0
 Stability:     Alpha
-Synopsis:      Webkit Browser 
+Synopsis:      Webkit Browser
 Description:   A Browser based on WebKit, concepted to be easy to use and
                extendable
 License:       BSD3
@@ -33,7 +33,7 @@ Executable lambdacat
     if flag(debug)
         Ghc-Options:
             -O2 -Wall -threaded -eventlog
-        Cpp-Options: 
+        Cpp-Options:
             -DDEBUG
     else
         Ghc-Options:
@@ -46,7 +46,7 @@ Library
         mtl >= 1.1 && < 1.2,
         glib == 0.11.*,
         gtk >= 0.11 && < 0.12,
-        glade >= 0.11 && < 0.12, 
+        glade >= 0.11 && < 0.12,
         cairo == 0.11.*,
         webkit >= 0.11 && < 0.12,
         poppler == 0.11.*,
@@ -54,17 +54,18 @@ Library
         containers == 0.3.*,
         process == 1.0.*,
         dyre >= 0.8.5 && < 0.9,
-        filepath, directory ,
+        filepath,
+        directory,
         cmdargs == 0.2.*
 
     if flag(debug)
         Ghc-Options:
             -O2 -Wall -threaded -eventlog
-        Cpp-Options: 
+        Cpp-Options:
             -DDEBUG
     else
         Ghc-Options:
-            -O2 -Wall -threaded
+            -O2 -Wall -threaded -Werror
 
     Exposed-Modules:
         LambdaCat

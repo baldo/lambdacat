@@ -12,7 +12,6 @@ where
 import Paths_lambdacat
 
 import Data.Version
-import System
 import System.Console.CmdArgs hiding (cmdArgs, CmdArgs)
 import qualified System.Console.CmdArgs as CA
 

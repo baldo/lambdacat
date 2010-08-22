@@ -18,7 +18,6 @@ import LambdaCat.UI.Glade
 import qualified LambdaCat.Page as Page
 import qualified LambdaCat.Page as UI
 
-import Data.Maybe
 import Config.Dyre
 import Config.Dyre.Compile
 import Network.URI
@@ -36,15 +35,15 @@ defaultURIModifier uri
         in  uri'
 
 defaultConfig :: LambdaCatConf
-defaultConfig = LambdaCatConf 
+defaultConfig = LambdaCatConf
     { uriModifier = defaultURIModifier
-    , pageList    = [ (webViewPage , ["http:","https:"])
-                    , (popplerPage , ["file:"])
-                    , (mplayerPage , ["mms:"])
-                    , (catPage     , ["cat:"])
-                    , (aboutPage   , ["about:"])
+    , pageList    = [ (webViewPage, ["http:", "https:"])
+                    , (popplerPage, ["file:"])
+                    , (mplayerPage, ["mms:"])
+                    , (catPage    , ["cat:"])
+                    , (aboutPage  , ["about:"])
                     ]
-    , mimeList    = [(popplerPage , ["application/pdf"])] 
+    , mimeList    = [(popplerPage , ["application/pdf"])]
     }
 
 mainCat :: (Maybe String, LambdaCatConf) -> IO ()
@@ -86,7 +85,7 @@ lambdacat cfg = do
         else wrapMain dparams (Nothing, cfg)
 
 dparams :: Params (Maybe String, LambdaCatConf)
-dparams = defaultParams 
+dparams = defaultParams
     { projectName = "lambdacat"
     , realMain    = mainCat
     , showError   = \ (_, c) s -> (Just s, c)

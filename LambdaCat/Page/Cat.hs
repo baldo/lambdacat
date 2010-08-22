@@ -1,7 +1,7 @@
 {-# LANGUAGE DeriveDataTypeable, FlexibleInstances, MultiParamTypeClasses #-}
 
 module LambdaCat.Page.Cat
-    ( CatPage 
+    ( CatPage
 
     , catPage
     )
@@ -29,7 +29,7 @@ catPage = Page (undefined :: CatPage)
 instance HasWidget CatPage WebView where
     getWidget = getWidget . webViewPage
 
-instance PageClass CatPage where 
+instance PageClass CatPage where
     new cb = do
         wvpage <- new cb
         uri <- newMVar nullURI
