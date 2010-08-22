@@ -68,7 +68,15 @@ instance UIClass GladeUI where
                 Just uri -> pageAction notebook bid $ loadAction uri bid
                 Nothing  -> return ()
         addTab <- xmlGetToolButton xml "addTab"
-        _ <- onToolButtonClicked addTab $ do
+        _ <- onToolButtonClicked addTab $ newBlankPage bid >> return ()
+        menuItemQuit <- xmlGetWidget xml castToMenuItem "menuItemQuit"
+        _ <- onActivateLeaf menuItemQuit mainQuit
+        widgetShowAll window
+        return bid
+
+     where
+        newBlankPage :: BrowserId -> IO (Maybe Page)
+        newBlankPage bid = do
             mw <- pageFromProtocol (update ui bid)
                                    (uriModifier lambdaCatConf)
                                    (pageList lambdaCatConf)
@@ -76,18 +84,12 @@ instance UIClass GladeUI where
                                    (parseURI "about:blank")
             case mw of
                 -- TODO call an default error page
-                Nothing -> return ()
+                Nothing -> return Nothing
                 Just (w, uri') -> do
                     embedPage ui bid w
                     _ <- load w uri'
-                    return ()
+                    return $ Just w
 
-        menuItemQuit <- xmlGetWidget xml castToMenuItem "menuItemQuit"
-        _ <- onActivateLeaf menuItemQuit mainQuit
-        widgetShowAll window
-        return bid
-
-     where
         loadAction :: URI -> BrowserId -> Page -> IO ()
         loadAction uri bid w = do
             mw' <- pageFromProtocol (update ui bid)
@@ -107,12 +109,22 @@ instance UIClass GladeUI where
         pageAction notebook bid f = do
             -- TODO select correct page
             tid <- notebookGetCurrentPage notebook
-            Just container <- notebookGetNthPage notebook tid
-            withContainerId (castToContainer container) $ \ tabId -> do
-                mPage <- getPageFromBrowser (browsers ui) bid tabId
-                case mPage of
-                    Just (_, p) -> f p >> return ()
-                    Nothing -> return ()
+            mcontainer <- notebookGetNthPage notebook tid
+            case mcontainer of
+                Just container -> do
+                    withContainerId (castToContainer container) $ \ tabId -> do
+                        mPage <- getPageFromBrowser (browsers ui) bid tabId
+                        case mPage of
+                            Just (_, p) -> f p >> return ()
+                            Nothing -> return ()
+                Nothing -> do
+                    mp <- newBlankPage bid
+                    case mp of
+                        Just p -> do
+                            f p
+                            return ()
+                        Nothing ->
+                            return ()
 
         xmlGetToolButton :: GladeXML -> String -> IO ToolButton
         xmlGetToolButton xml name = xmlGetWidget xml castToToolButton name
