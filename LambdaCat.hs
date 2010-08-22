@@ -39,13 +39,55 @@ defaultURIModifier uri
 defaultConfig :: LambdaCatConf
 defaultConfig = LambdaCatConf
     { uriModifier = defaultURIModifier
-    , pageList    = [ (webViewPage, ["http:", "https:"])
+    , pageList    = [ (webViewPage, ["http:", "https:", "file:"])
                     , (popplerPage, ["file:"])
-                    , (mplayerPage, ["mms:"])
+                    , (mplayerPage, ["mms:", "http:", "file:"])
                     , (catPage    , ["cat:"])
                     , (aboutPage  , ["about:"])
                     ]
-    , mimeList    = [(popplerPage , ["application/pdf"])]
+    , mimeList    = [ (popplerPage, ["application/pdf"])
+                    , (mplayerPage, [ "application/asx"
+                                    , "application/ogg"
+                                    , "application/x-flac"
+                                    , "application/x-mplayer2"
+                                    , "application/x-ogg"
+                                    , "application/x-quicktimeplayer"
+                                    , "audio/mp3"
+                                    , "audio/mpeg"
+                                    , "audio/mpeg-url"
+                                    , "audio/mpeg2"
+                                    , "audio/mpeg3"
+                                    , "audio/mpegurl"
+                                    , "audio/x-flac"
+                                    , "audio/x-mp3"
+                                    , "audio/x-mpeg"
+                                    , "audio/x-mpeg-url"
+                                    , "audio/x-mpeg2"
+                                    , "audio/x-mpeg3"
+                                    , "audio/x-mpegurl"
+                                    , "audio/x-ms-wax"
+                                    , "audio/x-ms-wma"
+                                    , "audio/x-ogg"
+                                    , "audio/x-scpls"
+                                    , "image/x-macpaint"
+                                    , "video/fli"
+                                    , "video/mp4"
+                                    , "video/msvideo"
+                                    , "video/ogg"
+                                    , "video/quicktime"
+                                    , "video/theora"
+                                    , "video/x-fli"
+                                    , "video/x-ms-asf"
+                                    , "video/x-ms-asf-plugin"
+                                    , "video/x-ms-wm"
+                                    , "video/x-ms-wmv"
+                                    , "video/x-ms-wvx"
+                                    , "video/x-msvideo"
+                                    , "video/x-ogg"
+                                    , "video/x-quicktime"
+                                    , "video/x-theora"
+                                    ])
+                    ]
     , homeURI     = fromJust $ parseURI "http://www.haskell.org"
     }
 
