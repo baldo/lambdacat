@@ -6,8 +6,11 @@ module LambdaCat.Page.WebView
     , webViewPage
     ) where
 
+import Prelude hiding (log)
+
 import LambdaCat.Page
 import LambdaCat.Configure
+import LambdaCat.Utils
 
 import Data.Typeable
 import Graphics.UI.Gtk.WebKit.WebView
@@ -38,17 +41,17 @@ instance PageClass WebViewPage where
         _ <- widget `on` downloadRequested $ \ download -> do
             (Just uri) <- downloadGetUri download
             dest <- getDownloadDestinationURI uri
-            putStrLn $ "Download " ++ uri ++ " to " ++ dest
+            log putStrLn $ "Download " ++ uri ++ " to " ++ dest
             downloadSetDestinationUri download dest
             return True
 
         _ <- widget `on` loadCommitted   $ \ _ -> return ()
-        _ <- widget `on` progressChanged $ \ p -> putStrLn $ "Progress:" ++ (show p)
-        _ <- widget `on` loadError $ \ _ err _ -> putStrLn err >> return False
-        _ <- widget `on` titleChanged $ \ _ newTitle -> putStrLn newTitle
-        --  _ <- widget `on` hoveringOverLink $ \ a b -> putStrLn $ a ++ " --> " ++ b -- segfaults included
-        _ <- widget `on` webViewReady $ putStrLn "Yay, I am ready" >> return True
-        _ <- widget `on` closeWebView $ putStrLn "CloseMe" >> return True
+        _ <- widget `on` progressChanged $ \ p -> log putStrLn $ "Progress:" ++ (show p)
+        _ <- widget `on` loadError $ \ _ err _ -> log putStrLn err >> return False
+        _ <- widget `on` titleChanged $ \ _ newTitle -> log putStrLn newTitle
+        --  _ <- widget `on` hoveringOverLink $ \ a b -> log putStrLn $ a ++ " --> " ++ b -- segfaults included
+        _ <- widget `on` webViewReady $ log putStrLn "Yay, I am ready" >> return True
+        _ <- widget `on` closeWebView $ log putStrLn "CloseMe" >> return True
         --  _ <- widget `on` consoleMessage ...
         --  _ <- widget `on` copyClipboard
         --  _ <- widget `on` cutClipboard
@@ -58,7 +61,7 @@ instance PageClass WebViewPage where
         --  _ <- widget `on` scriptAlert
         --  _ <- widget `on` scriptConfirm
         --  _ <- widget `on` scriptPrompt
-        _ <- widget `on` statusBarTextChanged $ \ str -> putStrLn $ "Status:" ++ str
+        _ <- widget `on` statusBarTextChanged $ \ str -> log putStrLn $ "Status:" ++ str
         --  _ <- widget `on` selectAll
         --  _ <- widget `on` selectionChanged
         --  _ <- widget `on` setScrollAdjustments
@@ -69,7 +72,7 @@ instance PageClass WebViewPage where
         --  _ <- widget `on` redo
         --  _ <- widget `on` undo
         _ <- widget `on` mimeTypePolicyDecisionRequested $ \ _wf _nr mime _wp -> do
-            putStrLn $ "Mime: " ++ mime
+            log putStrLn $ "Mime: " ++ mime
             maybePage <- pageFromMimeType cb mime (mimeList lambdaCatConf)
             case maybePage of
                 Just newPage -> do

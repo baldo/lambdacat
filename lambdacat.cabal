@@ -26,7 +26,6 @@ Data-Files:
 
 Flag Debug
     Description: Enable some debugging and profiling stuff.
-                 (Don't use in combination with flag Release.)
     Default:     False
 
 Flag Release
@@ -37,9 +36,6 @@ Executable lambdacat
     Main-is: Main.hs
 
     if flag(release)
-        Ghc-Options:
-            -O2 -Wnot -threaded
-    else
         if flag(debug)
             Ghc-Options:
                 -O2 -Wall -threaded -eventlog
@@ -47,7 +43,16 @@ Executable lambdacat
                 -DDEBUG
         else
             Ghc-Options:
-                -O2 -Wall -threaded
+                -O2 -Wnot -threaded
+    else
+        if flag(debug)
+            Ghc-Options:
+                -O2 -Wall -Werror -threaded -eventlog
+            Cpp-Options:
+                -DDEBUG
+        else
+            Ghc-Options:
+                -O2 -Wall -Werror -threaded
 
 Library
     Build-Depends:
@@ -69,12 +74,18 @@ Library
         cmdargs == 0.2.*
 
     if flag(release)
-        Ghc-Options:
-            -O2 -Wnot -eventlog
-    else
         if flag(debug)
             Ghc-Options:
                 -O2 -Wall -eventlog
+            Cpp-Options:
+                -DDEBUG
+        else
+            Ghc-Options:
+                -O2 -Wnot -eventlog
+    else
+        if flag(debug)
+            Ghc-Options:
+                -O2 -Wall -Werror -eventlog
             Cpp-Options:
                 -DDEBUG
         else
@@ -97,6 +108,7 @@ Library
         LambdaCat.UI.Glade
         LambdaCat.UI.Glade.PersistentTabId
         LambdaCat.UI.Glade.BrowserManager
+        LambdaCat.Utils
         LambdaCat.Protocol
 
     Other-Modules:
