@@ -60,6 +60,7 @@ cmdArgs = CmdArgs
                &= help "For internal use only, should be hidden in the future"
     }
     &= summary ("lambdacat " ++ showVersion version)
+    &= verbosity
 
 uris :: CmdArgs -> [String]
 uris ca = ouris ca ++ auris ca

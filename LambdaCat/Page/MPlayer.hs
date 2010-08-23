@@ -7,8 +7,9 @@ module LambdaCat.Page.MPlayer
     ) where
 
 import LambdaCat.Page
+import LambdaCat.Utils
 
-import Prelude hiding (sin)
+import Prelude hiding (log, sin)
 import Data.Typeable
 import Graphics.UI.Gtk
 import Control.Monad
@@ -78,7 +79,7 @@ spawnMPlayer socket uri = do
     widgetShowAll socket
     wid <- liftM fromNativeWindowId $ socketGetId socket
     let commandLine = "mplayer " ++ uriToString id uri "" ++ " -gui -idle -slave -wid " ++ show (wid :: Int)
-    print commandLine
+    log print commandLine
     tHandles <- runInteractiveCommand commandLine
     let handles = toHandles tHandles
     _ <- forkIO $ monitor handles stdout
@@ -94,5 +95,5 @@ mplayerCommand page cmd = do
 
 monitor :: Handles -> (Handles -> Handle) -> IO ()
 monitor handles f = do
-    hGetLine (f handles) >>= putStrLn
+    hGetLine (f handles) >>= log putStrLn
     monitor handles f

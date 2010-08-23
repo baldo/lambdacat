@@ -97,6 +97,7 @@ Library
         LambdaCat.UI.Glade
         LambdaCat.UI.Glade.PersistentTabId
         LambdaCat.UI.Glade.BrowserManager
+        LambdaCat.Utils
         LambdaCat.Protocol
 
     Other-Modules:

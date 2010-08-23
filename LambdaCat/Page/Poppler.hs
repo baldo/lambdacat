@@ -9,6 +9,7 @@ module LambdaCat.Page.Poppler
 import qualified LambdaCat.Page as Page
 import LambdaCat.Page hiding (Page)
 import LambdaCat.Page.Poppler.PageLayout
+import LambdaCat.Utils
 
 import Control.Concurrent
 import Data.Typeable
@@ -65,7 +66,7 @@ instance PageClass PopplerPage where
         mDoc <- documentNewFromFile uriString Nothing
         case mDoc of
             Nothing ->do
-                putStrLn "Error opening pdf file"
+                info putStrLn "Error opening pdf file"
                 return False
             Just doc -> do
                 _ <-  takeMVar mdoc
