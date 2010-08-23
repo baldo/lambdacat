@@ -62,7 +62,7 @@ instance PageClass PopplerPage where
 
         return pPage
     
-    destroy p = return ()
+    destroy _ = return ()
 
     load PopplerPage { pageArea = area,  pageDocument = mdoc, pageGeometry = mGeo,  pageURI = muri } uri = do
         mDoc <- documentNewFromFile uriString Nothing

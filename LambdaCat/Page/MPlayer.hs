@@ -46,7 +46,7 @@ instance PageClass MPlayerPage where
 
         return $ MPlayerPage { mplayerSocket = socket, mplayerHandles = mHandles, mplayerURI = mURI }
     
-    destroy p = return ()
+    destroy _ = return ()
 
     load page@MPlayerPage { mplayerSocket = socket } uri = do
         mplayerCommand page $ "quit"
