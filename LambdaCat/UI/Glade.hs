@@ -213,9 +213,10 @@ instance UIClass GladeUI where
             addPageToBrowser (browsers ui) bid tabId img label (castToContainer scrolledWindow) page
             return ()
           Nothing -> return ()
+
       where tabWidget closeCallback = do
                 hbox  <- hBoxNew False 3
-                label <- labelNew (Just "YEHA")
+                label <- labelNew (Just "(Untitled)")
 
                 button <- buttonNew
                 widgetSetName button "tab-close-button"
