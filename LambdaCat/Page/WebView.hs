@@ -20,6 +20,7 @@ import Graphics.UI.Gtk.WebKit.WebView
 import Graphics.UI.Gtk.WebKit.WebFrame
 import Graphics.UI.Gtk.WebKit.Download
 import Graphics.UI.Gtk.WebKit.NetworkRequest
+import Graphics.UI.Gtk.WebKit.WebResource
 import Graphics.UI.Gtk
 import Network.URI
 import System.Directory
@@ -95,9 +96,18 @@ newWithPage page cb = do
     _ <- widget `on` documentLoadFinished $ \ wf -> do 
         uri <- webFrameGetUri wf
         $plog putStrLn $ "documentLoadFinished: " ++ (show uri)
-    -- _ <- widget `on` iconLoaded $ $plog putStrLn $ "Icon loaded" -- segfaults included 
-    -- _ <- widget `on` redo -- binding didn't match webkitgtk signal
-    -- _ <- widget `on` undo -- binding didn't match webkitgtk signal
+        wv <- webFrameGetWebView wf 
+        fav <- webViewGetIconUri wv
+        $plog putStrLn $ "favIconURI:" ++ (show fav)
+
+    _ <- widget `on` iconLoaded $ \ wv uri -> do 
+           putStrLn $ "Icon loaded" ++ uri
+    _ <- widget `on` redo $ \ wv -> do
+        uri <- webViewGetUri wv 
+        putStrLn $ "redo on " ++ (show uri)
+    _ <- widget `on` undo $ \ wv -> do
+        uri <- webViewGetUri wv 
+        putStrLn $ "undo on " ++ (show uri)
     _ <- widget `on` mimeTypePolicyDecisionRequested $ \ _wf nr mime _wp -> do
         $plog putStrLn $ "Mime: " ++ mime
         msuri <- networkRequestGetUri nr
@@ -116,9 +126,10 @@ newWithPage page cb = do
     --  _ <- widget `on` moveCursor
     --  _ <- widget `on` navigationPolicyDecisionRequested
     --  _ <- widget `on` newWindowPolicyDecisionRequested
-    {- _ <- widget `on` resourceRequestStarting $ \ wf wr nrequ nresp -> do
-        requestUri <- networkRequestGetUri nrequ 
-        putStrLn $ "ResourceRequest: " ++ (show requestUri) -} -- makeNewGObjectError / NullPointerProblem
+    _ <- widget `on` resourceRequestStarting $ \ wf wr nrequ nresp -> do
+        -- in this step we could begin with blocking of uri's
+        uri <- webResourceGetUri wr 
+        $plog putStrLn $ "resourceRequestStarting: " ++ uri
     --  _ <- widget `on` geolocationPolicyDecisionCancelled
     --  _ <- widget `on` geolocationPolicyDecisionRequested
 
