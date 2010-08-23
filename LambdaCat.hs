@@ -14,10 +14,12 @@ import LambdaCat.Page.About
 import LambdaCat.Page.MPlayer
 import LambdaCat.Page.Poppler
 import LambdaCat.Page.WebView
+import LambdaCat.Utils
 import LambdaCat.UI.Glade
 import qualified LambdaCat.Page as Page
 import qualified LambdaCat.Page as UI
 
+import Prelude hiding (log)
 import Config.Dyre
 import Config.Dyre.Compile
 import Data.Maybe
@@ -134,6 +136,7 @@ dparams =
             { projectName = "lambdacat"
             , realMain    = mainCat
             , showError   = \ (_, c) s -> (Just s, c)
+            , statusOut   = log putStrLn
             }
     in  if debug
             then dps { ghcOpts = ["-eventlog", "-threaded"] }
