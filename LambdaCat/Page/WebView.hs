@@ -14,7 +14,9 @@ import LambdaCat.Utils
 
 import Data.Typeable
 import Graphics.UI.Gtk.WebKit.WebView
+import Graphics.UI.Gtk.WebKit.WebFrame
 import Graphics.UI.Gtk.WebKit.Download
+import Graphics.UI.Gtk.WebKit.NetworkRequest
 import Graphics.UI.Gtk
 import Network.URI
 import System.Directory
@@ -66,11 +68,12 @@ instance PageClass WebViewPage where
         --  _ <- widget `on` selectionChanged
         --  _ <- widget `on` setScrollAdjustments
         --  _ <- widget `on` databaseQuotaExceeded
-        --  _ <- widget `on` documentLoadFinished
-        --  _ <- widget `on` downloadRequested
-        --  _ <- widget `on` iconLoaded
-        --  _ <- widget `on` redo
-        --  _ <- widget `on` undo
+        _ <- widget `on` documentLoadFinished $ \ wf -> do 
+            uri <- webFrameGetUri wf
+            log putStrLn $ "documentLoadFinished: " ++ (show uri)
+        -- _ <- widget `on` iconLoaded $ log putStrLn $ "Icon loaded" -- segfaults included 
+        -- _ <- widget `on` redo -- binding didn't match webkitgtk signal
+        -- _ <- widget `on` undo -- binding didn't match webkitgtk signal
         _ <- widget `on` mimeTypePolicyDecisionRequested $ \ _wf _nr mime _wp -> do
             log putStrLn $ "Mime: " ++ mime
             maybePage <- pageFromMimeType cb mime (mimeList lambdaCatConf)
@@ -82,7 +85,9 @@ instance PageClass WebViewPage where
         --  _ <- widget `on` moveCursor
         --  _ <- widget `on` navigationPolicyDecisionRequested
         --  _ <- widget `on` newWindowPolicyDecisionRequested
-        --  _ <- widget `on` resourceRequestStarting
+        {- _ <- widget `on` resourceRequestStarting $ \ wf wr nrequ nresp -> do
+            requestUri <- networkRequestGetUri nrequ 
+            putStrLn $ "ResourceRequest: " ++ (show requestUri) -} -- makeNewGObjectError / NullPointerProblem
         --  _ <- widget `on` geolocationPolicyDecisionCancelled
         --  _ <- widget `on` geolocationPolicyDecisionRequested
 
