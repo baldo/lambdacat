@@ -35,6 +35,8 @@ instance PageClass CatPage where
         uri <- newMVar nullURI
         return $ CatPage { webViewPage = wvpage, catUri = uri }
 
+    destroy cb = destroy (webViewPage cb) 
+
     load page uri = do
         _ <- swapMVar (catUri page) uri
         curi <- catToFileURI uri

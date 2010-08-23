@@ -32,6 +32,8 @@ instance PageClass AboutPage where
         wvpage <- new cb
         uri <- newMVar nullURI
         return $ AboutPage { webViewPage = wvpage, aboutUri = uri }
+    
+    destroy cb = destroy (webViewPage cb)
 
     load page uri = do
         _ <- swapMVar (aboutUri page) uri
