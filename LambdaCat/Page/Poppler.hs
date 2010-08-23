@@ -1,4 +1,4 @@
-{-# LANGUAGE DeriveDataTypeable, FlexibleInstances, MultiParamTypeClasses #-}
+{-# LANGUAGE DeriveDataTypeable, FlexibleInstances, MultiParamTypeClasses, TemplateHaskell #-}
 
 module LambdaCat.Page.Poppler
     ( PopplerPage
@@ -68,7 +68,7 @@ instance PageClass PopplerPage where
         mDoc <- documentNewFromFile uriString Nothing
         case mDoc of
             Nothing ->do
-                info putStrLn "Error opening pdf file"
+                $pinfo putStrLn "Error opening pdf file"
                 return False
             Just doc -> do
                 _ <-  takeMVar mdoc

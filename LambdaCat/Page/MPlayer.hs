@@ -1,4 +1,4 @@
-{-# LANGUAGE DeriveDataTypeable, FlexibleInstances, MultiParamTypeClasses #-}
+{-# LANGUAGE DeriveDataTypeable, FlexibleInstances, MultiParamTypeClasses, TemplateHaskell #-}
 
 module LambdaCat.Page.MPlayer
     ( MPlayerPage
@@ -81,7 +81,7 @@ spawnMPlayer socket uri = do
     widgetShowAll socket
     wid <- liftM fromNativeWindowId $ socketGetId socket
     let commandLine = "mplayer " ++ uriToString id uri "" ++ " -gui -idle -slave -wid " ++ show (wid :: Int)
-    log print commandLine
+    $plog print commandLine
     tHandles <- runInteractiveCommand commandLine
     let handles = toHandles tHandles
     _ <- forkIO $ monitor handles stdout
@@ -97,5 +97,5 @@ mplayerCommand page cmd = do
 
 monitor :: Handles -> (Handles -> Handle) -> IO ()
 monitor handles f = do
-    hGetLine (f handles) >>= log putStrLn
+    hGetLine (f handles) >>= $plog putStrLn
     monitor handles f

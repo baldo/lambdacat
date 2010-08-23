@@ -1,3 +1,5 @@
+{-# LANGUAGE TemplateHaskell #-}
+
 module LambdaCat
     ( lambdacat
     , defaultConfig
@@ -140,7 +142,7 @@ dparams =
             { projectName = "lambdacat"
             , realMain    = mainCat
             , showError   = \ (_, c) s -> (Just s, c)
-            , statusOut   = log putStrLn
+            , statusOut   = $plog putStrLn
             }
     in  if debug
             then dps { ghcOpts = ["-eventlog", "-threaded"] }

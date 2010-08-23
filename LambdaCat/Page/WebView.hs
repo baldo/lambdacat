@@ -1,4 +1,4 @@
-{-# LANGUAGE DeriveDataTypeable, FlexibleInstances, MultiParamTypeClasses #-}
+{-# LANGUAGE DeriveDataTypeable, FlexibleInstances, MultiParamTypeClasses, TemplateHaskell #-}
 
 module LambdaCat.Page.WebView
     ( WebViewPage
@@ -16,7 +16,7 @@ import Data.Typeable
 import Graphics.UI.Gtk.WebKit.WebView
 import Graphics.UI.Gtk.WebKit.WebFrame
 import Graphics.UI.Gtk.WebKit.Download
--- import Graphics.UI.Gtk.WebKit.NetworkRequest
+import Graphics.UI.Gtk.WebKit.NetworkRequest
 import Graphics.UI.Gtk
 import Network.URI
 import System.Directory
@@ -43,17 +43,17 @@ instance PageClass WebViewPage where
         _ <- widget `on` downloadRequested $ \ download -> do
             (Just uri) <- downloadGetUri download
             dest <- getDownloadDestinationURI uri
-            log putStrLn $ "Download " ++ uri ++ " to " ++ dest
+            $plog putStrLn $ "Download " ++ uri ++ " to " ++ dest
             downloadSetDestinationUri download dest
             return True
 
         _ <- widget `on` loadCommitted   $ \ _ -> return ()
-        _ <- widget `on` progressChanged $ \ p -> log putStrLn $ "Progress:" ++ (show p)
-        _ <- widget `on` loadError $ \ _ err _ -> log putStrLn err >> return False
-        _ <- widget `on` titleChanged $ \ _ newTitle -> log putStrLn newTitle
-        --  _ <- widget `on` hoveringOverLink $ \ a b -> log putStrLn $ a ++ " --> " ++ b -- segfaults included
-        _ <- widget `on` webViewReady $ log putStrLn "Yay, I am ready" >> return True
-        _ <- widget `on` closeWebView $ log putStrLn "CloseMe" >> return True
+        _ <- widget `on` progressChanged $ \ p -> $plog putStrLn $ "Progress:" ++ (show p)
+        _ <- widget `on` loadError $ \ _ err _ -> $plog putStrLn err >> return False
+        _ <- widget `on` titleChanged $ \ _ newTitle -> $plog putStrLn newTitle
+        --  _ <- widget `on` hoveringOverLink $ \ a b -> $plog putStrLn $ a ++ " --> " ++ b -- segfaults included
+        _ <- widget `on` webViewReady $ $plog putStrLn "Yay, I am ready" >> return True
+        _ <- widget `on` closeWebView $ $plog putStrLn "CloseMe" >> return True
         --  _ <- widget `on` consoleMessage ...
         --  _ <- widget `on` copyClipboard
         --  _ <- widget `on` cutClipboard
@@ -63,24 +63,32 @@ instance PageClass WebViewPage where
         --  _ <- widget `on` scriptAlert
         --  _ <- widget `on` scriptConfirm
         --  _ <- widget `on` scriptPrompt
-        _ <- widget `on` statusBarTextChanged $ \ str -> log putStrLn $ "Status:" ++ str
+        _ <- widget `on` statusBarTextChanged $ \ str -> $plog putStrLn $ "Status:" ++ str
         --  _ <- widget `on` selectAll
         --  _ <- widget `on` selectionChanged
         --  _ <- widget `on` setScrollAdjustments
         --  _ <- widget `on` databaseQuotaExceeded
         _ <- widget `on` documentLoadFinished $ \ wf -> do 
             uri <- webFrameGetUri wf
-            log putStrLn $ "documentLoadFinished: " ++ (show uri)
-        -- _ <- widget `on` iconLoaded $ log putStrLn $ "Icon loaded" -- segfaults included 
+            $plog putStrLn $ "documentLoadFinished: " ++ (show uri)
+        -- _ <- widget `on` iconLoaded $ $plog putStrLn $ "Icon loaded" -- segfaults included 
         -- _ <- widget `on` redo -- binding didn't match webkitgtk signal
         -- _ <- widget `on` undo -- binding didn't match webkitgtk signal
-        _ <- widget `on` mimeTypePolicyDecisionRequested $ \ _wf _nr mime _wp -> do
-            log putStrLn $ "Mime: " ++ mime
-            maybePage <- pageFromMimeType cb mime (mimeList lambdaCatConf)
-            case maybePage of
-                Just newPage -> do
-                    cb (\ ui bid -> replacePage ui bid (Page page) newPage)
-                    return True
+        _ <- widget `on` mimeTypePolicyDecisionRequested $ \ _wf nr mime _wp -> do
+            $plog putStrLn $ "Mime: " ++ mime
+            msuri <- networkRequestGetUri nr
+            case msuri of
+                Just suri -> do
+                    let Just uri = parseURI suri -- should'n fail
+                    maybePage <- pageFromMimeType cb mime (mimeList lambdaCatConf)
+                    case maybePage of
+                        Just newPage -> do
+                            $plog putStr "Mime: uri = "
+                            $plog print uri
+                            cb (\ ui bid -> replacePage ui bid (Page page) newPage)
+                            _ <- load newPage uri
+                            return True
+                        Nothing -> return False
                 Nothing -> return False
         --  _ <- widget `on` moveCursor
         --  _ <- widget `on` navigationPolicyDecisionRequested
