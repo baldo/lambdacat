@@ -61,6 +61,8 @@ instance PageClass PopplerPage where
         _ <- area `on` exposeEvent $ tryEvent $ viewerDraw pPage
 
         return pPage
+    
+    destroy p = return ()
 
     load PopplerPage { pageArea = area,  pageDocument = mdoc, pageGeometry = mGeo,  pageURI = muri } uri = do
         mDoc <- documentNewFromFile uriString Nothing

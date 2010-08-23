@@ -181,6 +181,7 @@ instance UIClass GladeUI where
                 widgetShowAll widget
                 -- Replace page in state/model
                 replacePageInBrowser (browsers ui) bid oldpage page
+                destroy oldpage
                 return ()
               Nothing -> return ()
           Nothing -> return ()
@@ -205,9 +206,7 @@ instance UIClass GladeUI where
                     -- we assume that any existing tab should have a page in it.
                     Just (_, removePage) <- getPageFromBrowser (browsers ui) bid removeTabId
                     removePageFromBrowser (browsers ui) bid removePage
-                    -- TODO we should have a function to inform the page about
-                    -- the fact he isn't used anymore.
-                    -- destroy removePage
+                    destroy removePage
                 )
             notebookSetTabLabel noteBook scrolledWindow labelWidget
             widgetShowAll noteBook
