@@ -24,7 +24,7 @@ module LambdaCat.UI.Glade.BrowserManager
     , getBrowserPages
     , getBrowserByPage
     , countTabsInBrowser
-    , getContainerForPage
+    , getLabelAndContainerForPage
     ) where
 
 import LambdaCat.Browser (BrowserId, newBrowserId)
@@ -145,8 +145,8 @@ getBrowserByPage (BM bm) page = do
              else Just (bid, browser)
 
 -- TODO unevil
-getContainerForPage :: BrowserManager -> BrowserId -> Page -> IO (Maybe Container)
-getContainerForPage (BM bm) bid page = do
+getLabelAndContainerForPage :: BrowserManager -> BrowserId -> Page -> IO (Maybe (TabLabel, Container))
+getLabelAndContainerForPage (BM bm) bid page = do
     withMVar bm $ \bs -> do
         let mb = Map.lookup bid bs
         $plog putStrLn ("getContainerForPage: page = " ++ show page)
@@ -154,6 +154,6 @@ getContainerForPage (BM bm) bid page = do
         return $ selectContainer $ mb
   where selectContainer Nothing       = Nothing
         selectContainer (Just (_, m)) = Map.foldWithKey
-            (\ _k (_, c, page') s -> case s of
+            (\ _k (tl, c, page') s -> case s of
                 o@(Just _) -> o
-                Nothing -> if page == page' then (Just c) else Nothing ) Nothing m
+                Nothing -> if page == page' then (Just (tl, c)) else Nothing ) Nothing m

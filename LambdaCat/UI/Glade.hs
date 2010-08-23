@@ -153,17 +153,11 @@ instance UIClass GladeUI where
             Nothing -> return ()
             Just (bid, GladeBrowser { gladeXml = xml}) -> do
                 title <- getCurrentTitle page
-                mContainer  <- getContainerForPage (browsers ui) bid page
-                case mContainer of
+                mLabel  <- getLabelAndContainerForPage (browsers ui) bid page
+                case mLabel of
                     Nothing  -> return ()
-                    Just _container -> do
-                        _notebook <- xmlGetWidget xml castToNotebook "pageNoteBook"
-                        {- mTab <- notebookGetNthPage notebook tid
-                        case mTab of
-                            (Just tab) -> return () --notebookSetTabLabelText notebook tab title
-                            Nothing    -> return ()
-                        -}
-                        -- TODO unyeha
+                    Just ((_img, label), _) -> do
+                        set label [ labelLabel := if null title then "(Untitled)" else title ]
                         return ()
                 window <- xmlGetWidget xml castToWindow "browserWindow"
                 set window [ windowTitle := title ]
@@ -177,10 +171,10 @@ instance UIClass GladeUI where
             _noteBook <- xmlGetWidget xml castToNotebook "pageNoteBook"
             -- Replace page in container
             $plog putStrLn ("replacePage bid: " ++ show bid)
-            maybeContainer <- getContainerForPage (browsers ui) bid oldpage
+            maybeContainer <- getLabelAndContainerForPage (browsers ui) bid oldpage
             $plog putStrLn ("replacePage container: " ++ show (isJust maybeContainer))
             case maybeContainer of
-              Just container -> do
+              Just (_, container) -> do
                 mapM_ (containerRemove container) =<< containerGetChildren container
                 containerAdd container widget
                 widgetShowAll widget
