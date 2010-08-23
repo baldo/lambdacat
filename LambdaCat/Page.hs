@@ -78,6 +78,9 @@ class WidgetClass w => HasWidget hw w | hw -> w where
 
 data Page = forall hw w . (Typeable hw, HasWidget hw w, PageClass hw) => Page hw
 
+instance Show Page where
+    show (Page p) = show $ typeOf p
+
 instance Eq Page where
     (Page p1) == (Page p2)
         | p1 `eqType` p2 = cast p1 == Just p2

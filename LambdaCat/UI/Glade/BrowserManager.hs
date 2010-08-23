@@ -1,3 +1,6 @@
+{-# LANGUAGE TemplateHaskell #-}
+{-# OPTIONS_GHC -fno-warn-orphans #-}
+
 module LambdaCat.UI.Glade.BrowserManager
     ( BrowserManager
     , GladeBrowser (..)
@@ -26,6 +29,7 @@ module LambdaCat.UI.Glade.BrowserManager
 
 import LambdaCat.Browser (BrowserId, newBrowserId)
 import LambdaCat.Page
+import LambdaCat.Utils
 import LambdaCat.UI.Glade.PersistentTabId (TabId)
 
 import Control.Concurrent.MVar
@@ -46,6 +50,9 @@ newtype BrowserManager = BM (MVar BrowserMap)
 
 type BrowserMap = Map BrowserId (GladeBrowser, TabMap)
 type TabMap = Map TabId (Container, Page)
+
+instance Show Container where
+    show _ = "Container"
 
 newBrowserManager :: IO BrowserManager
 newBrowserManager = do
@@ -129,9 +136,13 @@ getBrowserByPage (BM bm) page = do
 
 -- TODO unevil
 getContainerForPage :: BrowserManager -> BrowserId -> Page -> IO (Maybe Container)
-getContainerForPage (BM bm) bid page =
-    withMVar bm (return . selectContainer . Map.lookup bid)
-  where selectContainer Nothing      = Nothing
+getContainerForPage (BM bm) bid page = do
+    withMVar bm $ \bs -> do
+        let mb = Map.lookup bid bs
+        $plog putStrLn ("getContainerForPage: page = " ++ show page)
+        $plog putStrLn ("getContainerForPage: mb   = " ++ show mb)
+        return $ selectContainer $ mb
+  where selectContainer Nothing       = Nothing
         selectContainer (Just (_, m)) = Map.foldWithKey
             (\ _k (c, page') s -> case s of
                 o@(Just _) -> o

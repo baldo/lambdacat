@@ -1,4 +1,4 @@
-{-# LANGUAGE MultiParamTypeClasses, FlexibleInstances, TypeSynonymInstances, RankNTypes  #-}
+{-# LANGUAGE MultiParamTypeClasses, FlexibleInstances, TypeSynonymInstances, RankNTypes, TemplateHaskell #-}
 
 module LambdaCat.UI.Glade where
 
@@ -6,11 +6,13 @@ import LambdaCat.Browser
 import LambdaCat.Page
 import LambdaCat.Configure (lambdaCatConf, LambdaCatConf (..))
 
+import LambdaCat.Utils
 import LambdaCat.UI.Glade.PersistentTabId
 import LambdaCat.UI.Glade.BrowserManager
 
 import Paths_lambdacat
 
+import Data.Maybe
 import Graphics.UI.Gtk
 import Graphics.UI.Gtk.Glade
 import Network.URI
@@ -168,12 +170,15 @@ instance UIClass GladeUI where
 
     replacePage ui bid oldpage page@(Page hasWidget) = do
         bool <- getBrowser (browsers ui) bid
+        $plog putStrLn ("replacePage: " ++ show bool)
         case bool of
           Just (GladeBrowser { gladeXml = xml }) -> do
             let widget = getWidget hasWidget
             _noteBook <- xmlGetWidget xml castToNotebook "pageNoteBook"
             -- Replace page in container
+            $plog putStrLn ("replacePage bid: " ++ show bid)
             maybeContainer <- getContainerForPage (browsers ui) bid oldpage
+            $plog putStrLn ("replacePage container: " ++ show (isJust maybeContainer))
             case maybeContainer of
               Just container -> do
                 mapM_ (containerRemove container) =<< containerGetChildren container
@@ -188,6 +193,7 @@ instance UIClass GladeUI where
 
     embedPage ui bid page@(Page hasWidget) = do
         bool <- getBrowser (browsers ui) bid
+        $plog putStrLn ("embedPage: " ++ show bool)
         case bool of
           Just (GladeBrowser { gladeXml = xml }) -> do
             let widget = getWidget hasWidget
