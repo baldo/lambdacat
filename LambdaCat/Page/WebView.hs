@@ -90,6 +90,9 @@ instance PageClass WebViewPage where
                 cb (\ ui bid -> embedPage ui bid (Page page))
                 return page
 
+    destroy page = do
+        webViewLoadHtmlString (getWidget page) "text/html" ""
+        
 
     load page uri =  webViewLoadUri (unWebViewPage page) uriString >> return True
         where uriString = uriToString id uri ""
