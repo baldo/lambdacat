@@ -1,10 +1,11 @@
-{-# LANGUAGE FunctionalDependencies, MultiParamTypeClasses, ExistentialQuantification, FlexibleInstances, RankNTypes #-}
+{-# LANGUAGE DeriveDataTypeable, FunctionalDependencies, MultiParamTypeClasses, ExistentialQuantification, FlexibleInstances, RankNTypes #-}
 
 module LambdaCat.Page
     ( UIClass (..)
     , PageClass (..)
     , Page (..)
     , HasWidget (..)
+    , CallBack
 
     , canHandleMimeType
     , pageConstructorsFromMimeType
@@ -45,7 +46,7 @@ class UIClass ui where
 
 type CallBack ui = (ui -> BrowserId -> IO ()) -> IO ()
 
-class Eq page => PageClass page where
+class (Eq page, Typeable page) => PageClass page where
     -- | Creates a new page.
     new :: UIClass ui => CallBack ui -> IO page
 
@@ -77,6 +78,7 @@ class WidgetClass w => HasWidget hw w | hw -> w where
     getWidget :: hw -> w
 
 data Page = forall hw w . (Typeable hw, HasWidget hw w, PageClass hw) => Page hw
+  deriving Typeable
 
 instance Show Page where
     show (Page p) = show $ typeOf p

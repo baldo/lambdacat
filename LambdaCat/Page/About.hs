@@ -6,7 +6,7 @@ module LambdaCat.Page.About
     ) where
 
 import LambdaCat.Page
-import LambdaCat.Page.WebView ( WebViewPage )
+import LambdaCat.Page.WebView ( WebViewPage, newWrappablePage, newWithPage )
 
 import Paths_lambdacat
 
@@ -28,10 +28,13 @@ instance HasWidget AboutPage WebView where
     getWidget = getWidget . webViewPage
 
 instance PageClass AboutPage where
+-- TODO: nicer API please!
     new cb = do
-        wvpage <- new cb
         uri <- newMVar nullURI
-        return $ AboutPage { webViewPage = wvpage, aboutUri = uri }
+        wvpage <- newWrappablePage
+        let page = AboutPage { webViewPage = wvpage, aboutUri = uri }
+        newWithPage page cb
+        return page
     
     destroy cb = destroy (webViewPage cb)
 
