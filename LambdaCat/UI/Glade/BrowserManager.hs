@@ -49,10 +49,20 @@ instance Show GladeBrowser where
 newtype BrowserManager = BM (MVar BrowserMap)
 
 type BrowserMap = Map BrowserId (GladeBrowser, TabMap)
-type TabMap = Map TabId (Container, Page)
+type TabMap = Map TabId (TabLabel, Container, Page)
+type TabLabel = (Image, Label)
 
 instance Show Container where
     show _ = "Container"
+
+instance Show Image where
+    show _ = "Image"
+
+instance Show Label where
+    show _ = "Label"
+
+thrd :: (a, b, c) -> c
+thrd (_, _, c) = c
 
 newBrowserManager :: IO BrowserManager
 newBrowserManager = do
@@ -67,20 +77,20 @@ addBrowser (BM bm) g = do
 
 -- | Add a (container, page) to the browser identified by BrowserId, if there
 -- is already a page with given TabId then the page gets replaced.
-addPageToBrowser :: BrowserManager -> BrowserId -> TabId -> Container -> Page -> IO ()
-addPageToBrowser (BM bm) bid tid container page =
-  modifyMVar_ bm (return . Map.update (\ (bw, pages) -> Just (bw, Map.insert tid (container, page) pages)) bid)
+addPageToBrowser :: BrowserManager -> BrowserId -> TabId -> Image -> Label -> Container -> Page -> IO ()
+addPageToBrowser (BM bm) bid tid img lbl container page =
+  modifyMVar_ bm (return . Map.update (\ (bw, pages) -> Just (bw, Map.insert tid ((img, lbl), container, page) pages)) bid)
 
 removePageFromBrowser :: BrowserManager -> BrowserId -> Page -> IO ()
 removePageFromBrowser (BM bm) bid page =
-  modifyMVar_ bm (return . Map.update (\ (bw, pages) -> Just (bw, Map.filter ((/= page).snd) pages)) bid)
+  modifyMVar_ bm (return . Map.update (\ (bw, pages) -> Just (bw, Map.filter ((/= page).thrd) pages)) bid)
 
 replacePageInBrowser :: BrowserManager -> BrowserId -> Page -> Page -> IO ()
 replacePageInBrowser (BM bm) bid oldpage newpage = do
     modifyMVar_ bm (return . Map.update (\ (bw, pages) -> Just (bw, Map.map replace pages)) bid)
-  where replace :: (Container, Page) -> (Container, Page)
-        replace (container, page) | page == oldpage = (container, newpage)
-                                 | otherwise       = (container, page)
+  where replace :: (TabLabel, Container, Page) -> (TabLabel, Container, Page)
+        replace (tl, container, page) | page == oldpage = (tl, container, newpage)
+                                      | otherwise       = (tl, container, page)
 
 countTabsInBrowser :: BrowserManager -> BrowserId -> IO Int
 countTabsInBrowser (BM bm) bid =
@@ -99,7 +109,7 @@ getTabIdForPage (BM bm) bid page =
                 Nothing -> if page == page' then (Just k) else Nothing ) Nothing m
 -}
 
-getPageFromBrowser :: BrowserManager -> BrowserId -> TabId -> IO (Maybe (Container, Page))
+getPageFromBrowser :: BrowserManager -> BrowserId -> TabId -> IO (Maybe (TabLabel, Container, Page))
 getPageFromBrowser (BM bm) bid tid =
     withMVar bm (return . getPage . Map.lookup bid)
   where getPage (Just (_, m)) = Map.lookup tid m
@@ -116,12 +126,12 @@ getBrowser (BM bm) bid =  do
         (Just x) -> return $ Just (fst x)
         Nothing  -> return Nothing
 
-getBrowserPages :: BrowserManager -> BrowserId -> IO [(Container, Page)]
+getBrowserPages :: BrowserManager -> BrowserId -> IO [(TabLabel, Container, Page)]
 getBrowserPages (BM bm) bid = do
     -- TODO error handling
     mPages  <- withMVar bm (return . Map.lookup bid)
     case mPages of
-        Just b -> return $ Map.elems (snd  b)
+        Just b -> return $ Map.elems (snd b)
         Nothing -> return []
 
 getBrowserByPage :: BrowserManager -> Page -> IO (Maybe (BrowserId, GladeBrowser))
@@ -129,7 +139,7 @@ getBrowserByPage (BM bm) page = do
     withMVar bm (return . Map.foldWithKey findBrowser Nothing)
  where findBrowser _ _ x@(Just _) = x
        findBrowser bid (browser, pMap) Nothing =
-            let page' = Map.filter ((== page).snd) pMap
+            let page' = Map.filter ((== page).thrd) pMap
             in if Map.null page'
              then Nothing
              else Just (bid, browser)
@@ -144,6 +154,6 @@ getContainerForPage (BM bm) bid page = do
         return $ selectContainer $ mb
   where selectContainer Nothing       = Nothing
         selectContainer (Just (_, m)) = Map.foldWithKey
-            (\ _k (c, page') s -> case s of
+            (\ _k (_, c, page') s -> case s of
                 o@(Just _) -> o
                 Nothing -> if page == page' then (Just c) else Nothing ) Nothing m

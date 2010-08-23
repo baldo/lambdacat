@@ -48,7 +48,7 @@ instance UIClass GladeUI where
                 mPage <- getPageFromBrowser (browsers ui) bid tabId
                 case mPage of
                     Nothing  -> return ()
-                    Just (_, p) -> do
+                    Just (_, _, p) -> do
                         uriChanged ui p
                         changedTitle ui p
 
@@ -119,7 +119,7 @@ instance UIClass GladeUI where
                     withContainerId (castToContainer container) $ \ tabId -> do
                         mPage <- getPageFromBrowser (browsers ui) bid tabId
                         case mPage of
-                            Just (_, p) -> f p >> return ()
+                            Just (_, _, p) -> f p >> return ()
                             Nothing -> return ()
                 Nothing -> do
                     mp <- newPage bid $ parseURI "about:blank"
@@ -205,18 +205,18 @@ instance UIClass GladeUI where
             setContainerId scrolledWindow tabId
 
             _tabId <- notebookAppendPage noteBook scrolledWindow "(No Title)"
-            labelWidget <- tabWidget (do
+            (labelWidget, img, label) <- tabWidget (do
                 removeTId <- get noteBook (notebookChildPosition scrolledWindow)
                 notebookRemovePage noteBook removeTId
                 withContainerId scrolledWindow $ \ removeTabId -> do
                     -- we assume that any existing tab should have a page in it.
-                    Just (_, removePage) <- getPageFromBrowser (browsers ui) bid removeTabId
+                    Just (_, _, removePage) <- getPageFromBrowser (browsers ui) bid removeTabId
                     removePageFromBrowser (browsers ui) bid removePage
                     destroy removePage
                 )
             notebookSetTabLabel noteBook scrolledWindow labelWidget
             widgetShowAll noteBook
-            addPageToBrowser (browsers ui) bid tabId (castToContainer scrolledWindow) page
+            addPageToBrowser (browsers ui) bid tabId img label (castToContainer scrolledWindow) page
             return ()
           Nothing -> return ()
       where tabWidget closeCallback = do
@@ -242,6 +242,6 @@ instance UIClass GladeUI where
                 boxPackStart hbox button PackNatural 0
 
                 widgetShowAll hbox
-                return hbox
+                return (hbox, img, label)
 
     mainLoop _ = mainGUI
