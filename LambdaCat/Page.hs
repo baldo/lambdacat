@@ -143,6 +143,6 @@ pageFromMimeType cb mimeType mimeList = do
     let constructors = pageConstructorsFromMimeType mimeType mimeList
     if not $ null constructors
         then case (head constructors) of
-                (Page page) ->  createPage page cb >>= return . Just . Page
+                (Page page) -> createPage page cb >>= return . Just . Page
         else return Nothing
 

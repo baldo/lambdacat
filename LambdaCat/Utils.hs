@@ -1,5 +1,3 @@
-{-# LANGUAGE CPP #-}
-
 module LambdaCat.Utils
     ( info
     , log
@@ -7,16 +5,19 @@ module LambdaCat.Utils
 where
 
 import Prelude hiding (log)
-
-#ifndef DEBUG
+import Control.Monad
 import System.Console.CmdArgs.Verbosity
-#endif
+
+import Flags
+
+unlessQuiet :: IO () -> IO ()
+unlessQuiet f = do
+    v <- getVerbosity
+    when (v /= Quiet) f
 
 info, log :: (a -> IO ()) -> a -> IO ()
-#ifdef DEBUG
-info = id
-log  = id
-#else
-info f = whenNormal . f
-log  f = whenLoud   . f
-#endif
+info f | debug     = unlessQuiet . f
+       | otherwise = whenNormal . f
+log  f | debug     = unlessQuiet . f
+       | otherwise = whenLoud . f
+

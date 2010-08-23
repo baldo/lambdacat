@@ -39,8 +39,6 @@ Executable lambdacat
         if flag(debug)
             Ghc-Options:
                 -O2 -Wall -threaded -eventlog
-            Cpp-Options:
-                -DDEBUG
         else
             Ghc-Options:
                 -O2 -Wnot -threaded
@@ -48,8 +46,6 @@ Executable lambdacat
         if flag(debug)
             Ghc-Options:
                 -O2 -Wall -Werror -threaded -eventlog
-            Cpp-Options:
-                -DDEBUG
         else
             Ghc-Options:
                 -O2 -Wall -Werror -threaded
@@ -112,6 +108,7 @@ Library
         LambdaCat.Protocol
 
     Other-Modules:
+        Flags
         Paths_lambdacat
 
     Extensions:
@@ -124,4 +121,7 @@ Library
         MultiParamTypeClasses,
         RankNTypes,
         TypeSynonymInstances
+
+    Build-Tools:
+        cpphs
 

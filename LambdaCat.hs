@@ -1,5 +1,3 @@
-{-# LANGUAGE CPP #-}
-
 module LambdaCat
     ( lambdacat
     , defaultConfig
@@ -7,6 +5,7 @@ module LambdaCat
     )
 where
 
+import Flags
 import LambdaCat.Browser
 import LambdaCat.Configure
 import LambdaCat.CmdArgs
@@ -130,11 +129,12 @@ lambdacat cfg = do
         else wrapMain dparams (Nothing, cfg)
 
 dparams :: Params (Maybe String, LambdaCatConf)
-dparams = defaultParams
-    { projectName = "lambdacat"
-    , realMain    = mainCat
-    , showError   = \ (_, c) s -> (Just s, c)
-#ifdef DEBUG
-    , ghcOpts     = ["-eventlog", "-threaded"]
-#endif
-    }
+dparams =
+    let dps = defaultParams
+            { projectName = "lambdacat"
+            , realMain    = mainCat
+            , showError   = \ (_, c) s -> (Just s, c)
+            }
+    in  if debug
+            then dps { ghcOpts = ["-eventlog", "-threaded"] }
+            else dps
