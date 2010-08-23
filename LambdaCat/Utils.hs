@@ -44,7 +44,7 @@ pinfo = do
         (l, c) = loc_start loc
         pos    = fn ++ ":" ++ show l ++ ":" ++ show c ++ ": "
     if debug
-        then [| \f x -> putStr pos >> info f x |]
+        then [| \f -> info (\x -> putStr pos >> f x) |]
         else [| info |]
 
 plog :: Q Exp
@@ -54,6 +54,6 @@ plog = do
         (l, c) = loc_start loc
         pos    = fn ++ ":" ++ show l ++ ":" ++ show c ++ ": "
     if debug
-        then [| \f x -> putStr pos >> log f x |]
+        then [| \f -> log (\x -> putStr pos >> f x) |]
         else [| log |]
 
