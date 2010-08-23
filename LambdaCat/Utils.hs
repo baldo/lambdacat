@@ -24,17 +24,15 @@ unlessQuiet f = do
 $( if debug
        then [d| info :: (a -> IO ()) -> a -> IO ()
                 info f = unlessQuiet . f
-            |]
-       else [d| info :: (a -> IO ()) -> a -> IO ()
-                info f = whenNormal . f
-            |]
- )
 
-$( if debug
-       then [d| log :: (a -> IO ()) -> a -> IO ()
+                log :: (a -> IO ()) -> a -> IO ()
                 log f = unlessQuiet . f
             |]
-       else [d| log :: (a -> IO ()) -> a -> IO ()
+
+       else [d| info :: (a -> IO ()) -> a -> IO ()
+                info f = whenNormal . f
+
+                log :: (a -> IO ()) -> a -> IO ()
                 log f = whenLoud . f
             |]
  )
