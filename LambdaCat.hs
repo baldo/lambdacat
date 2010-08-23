@@ -46,7 +46,11 @@ defaultConfig = LambdaCatConf
                     , (catPage    , ["cat:"])
                     , (aboutPage  , ["about:"])
                     ]
-    , mimeList    = [ (popplerPage, ["application/pdf"])
+    , mimeList    = [ (popplerPage, [ "application/pdf"
+                                    , "application/x-pdf"
+                                    , "text/pdf"
+                                    , "text/x-pdf"
+                                    ])
                     , (mplayerPage, [ "application/asx"
                                     , "application/ogg"
                                     , "application/x-flac"
