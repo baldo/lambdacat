@@ -15,6 +15,8 @@ import Data.Version
 import System.Console.CmdArgs hiding (cmdArgs, CmdArgs)
 import qualified System.Console.CmdArgs as CA
 
+import System
+
 data CmdArgs = CmdArgs
     { recompile :: Bool
     , ouris     :: [String]
@@ -66,4 +68,7 @@ uris :: CmdArgs -> [String]
 uris ca = ouris ca ++ auris ca
 
 getCmdArgs :: IO CmdArgs
-getCmdArgs = CA.cmdArgs cmdArgs
+getCmdArgs = do
+    _ <- getArgs -- TODO: Get rid of this dirty hack.
+    CA.cmdArgs cmdArgs
+
