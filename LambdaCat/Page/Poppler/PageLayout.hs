@@ -35,7 +35,7 @@ toDocumentGeometry doc = do
     pages <- mapM (\ i -> do
                    page <-  PopplerDocument.documentGetPage doc i
                    return (i, page)
-                  ) [0..numOfPages - 1]
+                  ) [0 .. numOfPages - 1]
     foldM (\ m (i, page) -> do
             dim <- PopplerPage.pageGetSize page
             return $ Map.insert i dim m
@@ -58,8 +58,8 @@ documentSize
     -> DocumentGeometry
     -> (Double, Double)
 documentSize s m =
-    let fd = \f -> Map.fold f 0 m
-    in (fd (s.fst), fd (s.snd))
+    let fd = \ f -> Map.fold f 0 m
+    in (fd (s . fst), fd (s . snd))
 
 maxDocumentSize
     :: DocumentGeometry
@@ -89,7 +89,7 @@ fitPage count current (winWidth, winHeight) doc =
     let fP = current - (current `mod` count)
         lP  = documentGetNPages doc `min` fP + count - 1
         pageSpace = winWidth / (fromIntegral count)
-        pages     =  documentGetExistencePages [fP..lP] doc
+        pages     =  documentGetExistencePages [fP .. lP] doc
     in foldr (\ (nr, (pageWidth, pageHeight)) lst ->
             let leftSide  = fromIntegral (length lst )  * pageSpace
                 rightSide = leftSide + pageSpace `min` winWidth
@@ -100,14 +100,14 @@ fitPage count current (winWidth, winHeight) doc =
                 drawWidth = pageWidth * scaleX
                 x0 = 0 `max` ((pageSpace - drawWidth) / 2)
                 y0 = 0 `max` ((winHeight - drawHeight) / 2)
-            in (nr, scaleX, (x0 + leftSide, y0), (drawWidth, drawHeight)):lst
+            in (nr, scaleX, (x0 + leftSide, y0), (drawWidth, drawHeight)) : lst
          ) [] pages
 
 continue :: PageLayoutAlgorithm -> PageLayoutAlgorithm
 continue f current size doc =
     let normalFit   = reverse $ f current size doc
         numOfPages  = documentGetNPages doc
-        pages       = documentGetExistencePages [0..numOfPages - 1] doc
+        pages       = documentGetExistencePages [0 .. numOfPages - 1] doc
         (_, height) = maxPagesSize (map (\ (n, _, _, _) -> n) normalFit) doc
     in foldl (\ lst (nr, (_, _h)) ->
             let crt       = length lst `mod` length normalFit

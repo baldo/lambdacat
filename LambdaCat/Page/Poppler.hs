@@ -61,13 +61,13 @@ instance PageClass PopplerPage where
         _ <- area `on` exposeEvent $ tryEvent $ viewerDraw pPage
 
         return pPage
-    
+
     destroy _ = return ()
 
     load PopplerPage { pageArea = area,  pageDocument = mdoc, pageGeometry = mGeo,  pageURI = muri } uri = do
         mDoc <- documentNewFromFile uriString Nothing
         case mDoc of
-            Nothing ->do
+            Nothing -> do
                 $pinfo putStrLn "Error opening pdf file"
                 return False
             Just doc -> do
@@ -97,7 +97,7 @@ viewerDraw viewer = do
   let area = pageArea viewer
       scroll = pageScrollable viewer
   pN <- liftIO $ readMVar $ pageNumber viewer
-  mayBeDoc <- liftIO $ takeMVar $ pageDocument viewer-- TODO replace with takeMVar
+  mayBeDoc <- liftIO $ takeMVar $ pageDocument viewer -- TODO replace with takeMVar
   (winWidth, winHeight) <- liftIO $ widgetGetSize scroll
   hCurrent <- liftIO $ adjustmentGetValue =<< scrolledWindowGetHAdjustment scroll
   vCurrent <- liftIO $ adjustmentGetValue =<< scrolledWindowGetVAdjustment scroll

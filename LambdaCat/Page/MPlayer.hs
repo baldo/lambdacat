@@ -45,7 +45,7 @@ instance PageClass MPlayerPage where
         mURI     <- newMVar nullURI
 
         return $ MPlayerPage { mplayerSocket = socket, mplayerHandles = mHandles, mplayerURI = mURI }
-    
+
     destroy _ = return ()
 
     load page@MPlayerPage { mplayerSocket = socket } uri = do
@@ -64,7 +64,7 @@ withHandles MPlayerPage { mplayerHandles = mHandles } f = do
     putMVar mHandles (mh)
 
 updateHandles :: MPlayerPage -> Maybe Handles -> IO ()
-updateHandles MPlayerPage { mplayerHandles = mHandles } mh = modifyMVar_ mHandles (\_ -> return mh)
+updateHandles MPlayerPage { mplayerHandles = mHandles } mh = modifyMVar_ mHandles (\ _ -> return mh)
 
 withURI :: MPlayerPage -> (URI -> IO a) -> IO a
 withURI MPlayerPage { mplayerURI = mURI } f = do
@@ -90,7 +90,7 @@ spawnMPlayer socket uri = do
 
 mplayerCommand :: MPlayerPage -> String -> IO ()
 mplayerCommand page cmd = do
-    withHandles page $ \handles -> do
+    withHandles page $ \ handles -> do
         let sin = stdin handles
         hPutStrLn sin (cmd ++ "\n")
     return ()

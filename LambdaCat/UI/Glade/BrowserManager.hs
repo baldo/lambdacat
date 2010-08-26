@@ -75,15 +75,16 @@ addBrowser (BM bm) g = do
     modifyMVar_ bm (return . Map.insert bid (g, Map.empty))
     return bid
 
--- | Add a (container, page) to the browser identified by BrowserId, if there
--- is already a page with given TabId then the page gets replaced.
+{- | Add a (container, page) to the browser identified by BrowserId, if there
+     is already a page with given TabId then the page gets replaced.
+-}
 addPageToBrowser :: BrowserManager -> BrowserId -> TabId -> Image -> Label -> Container -> Page -> IO ()
 addPageToBrowser (BM bm) bid tid img lbl container page =
   modifyMVar_ bm (return . Map.update (\ (bw, pages) -> Just (bw, Map.insert tid ((img, lbl), container, page) pages)) bid)
 
 removePageFromBrowser :: BrowserManager -> BrowserId -> Page -> IO ()
 removePageFromBrowser (BM bm) bid page =
-  modifyMVar_ bm (return . Map.update (\ (bw, pages) -> Just (bw, Map.filter ((/= page).thrd) pages)) bid)
+  modifyMVar_ bm (return . Map.update (\ (bw, pages) -> Just (bw, Map.filter ((/= page) . thrd) pages)) bid)
 
 replacePageInBrowser :: BrowserManager -> BrowserId -> Page -> Page -> IO ()
 replacePageInBrowser (BM bm) bid oldpage newpage = do
@@ -139,7 +140,7 @@ getBrowserByPage (BM bm) page = do
     withMVar bm (return . Map.foldWithKey findBrowser Nothing)
  where findBrowser _ _ x@(Just _) = x
        findBrowser bid (browser, pMap) Nothing =
-            let page' = Map.filter ((== page).thrd) pMap
+            let page' = Map.filter ((== page) . thrd) pMap
             in if Map.null page'
              then Nothing
              else Just (bid, browser)
@@ -147,7 +148,7 @@ getBrowserByPage (BM bm) page = do
 -- TODO unevil
 getLabelAndContainerForPage :: BrowserManager -> BrowserId -> Page -> IO (Maybe (TabLabel, Container))
 getLabelAndContainerForPage (BM bm) bid page = do
-    withMVar bm $ \bs -> do
+    withMVar bm $ \ bs -> do
         let mb = Map.lookup bid bs
         $plog putStrLn ("getContainerForPage: page = " ++ show page)
         $plog putStrLn ("getContainerForPage: mb   = " ++ show mb)

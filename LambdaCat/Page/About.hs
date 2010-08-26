@@ -35,7 +35,7 @@ instance PageClass AboutPage where
         let page = AboutPage { webViewPage = wvpage, aboutUri = uri }
         newWithPage page cb
         return page
-    
+
     destroy cb = destroy (webViewPage cb)
 
     load page uri = do

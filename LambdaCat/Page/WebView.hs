@@ -41,10 +41,10 @@ newWrappablePage = webViewNew >>= return . WebViewPage
 
 newWithPage :: (UIClass ui, PageClass p, HasWidget p WebView) => p -> CallBack ui -> IO ()
 newWithPage page cb = do
-    cb (\ui _ -> uriChanged ui (Page page))
+    cb (\ ui _ -> uriChanged ui (Page page))
     let widget = getWidget page
-    _ <- widget `on` loadFinished  $ (\ _ -> cb (\ui _ -> uriChanged ui (Page page)))
-    _ <- widget `on` loadFinished  $ (\ _ -> cb (\ui _ -> changedTitle ui (Page page)))
+    _ <- widget `on` loadFinished  $ (\ _ -> cb (\ ui _ -> uriChanged ui (Page page)))
+    _ <- widget `on` loadFinished  $ (\ _ -> cb (\ ui _ -> changedTitle ui (Page page)))
     -- _ <- widget `on` createWebView $ (\ _ -> createNew >>= return . unWebViewPage)
 
     _ <- widget `on` downloadRequested $ \ download -> do
@@ -75,27 +75,27 @@ newWithPage page cb = do
                                                     return True
                                         _ -> return False
     _ <- widget `on` titleChanged $ \ _ newTitle -> $plog putStrLn newTitle
-    --  _ <- widget `on` hoveringOverLink $ \ a b -> $plog putStrLn $ a ++ " --> " ++ b -- segfaults included
+    -- _ <- widget `on` hoveringOverLink $ \ a b -> $plog putStrLn $ a ++ " --> " ++ b -- segfaults included
     _ <- widget `on` webViewReady $ $plog putStrLn "Yay, I am ready" >> return True
     _ <- widget `on` closeWebView $ $plog putStrLn "CloseMe" >> return True
-    --  _ <- widget `on` consoleMessage ...
-    --  _ <- widget `on` copyClipboard
-    --  _ <- widget `on` cutClipboard
-    --  _ <- widget `on` pasteClipboard
-    --  _ <- widget `on` populatePopup
-    --  _ <- widget `on` printRequested
-    --  _ <- widget `on` scriptAlert
-    --  _ <- widget `on` scriptConfirm
-    --  _ <- widget `on` scriptPrompt
+    -- _ <- widget `on` consoleMessage ...
+    -- _ <- widget `on` copyClipboard
+    -- _ <- widget `on` cutClipboard
+    -- _ <- widget `on` pasteClipboard
+    -- _ <- widget `on` populatePopup
+    -- _ <- widget `on` printRequested
+    -- _ <- widget `on` scriptAlert
+    -- _ <- widget `on` scriptConfirm
+    -- _ <- widget `on` scriptPrompt
     _ <- widget `on` statusBarTextChanged $ \ str -> $plog putStrLn $ "Status:" ++ str
-    --  _ <- widget `on` selectAll
-    --  _ <- widget `on` selectionChanged
-    --  _ <- widget `on` setScrollAdjustments
-    --  _ <- widget `on` databaseQuotaExceeded
-    _ <- widget `on` documentLoadFinished $ \ wf -> do 
+    -- _ <- widget `on` selectAll
+    -- _ <- widget `on` selectionChanged
+    -- _ <- widget `on` setScrollAdjustments
+    -- _ <- widget `on` databaseQuotaExceeded
+    _ <- widget `on` documentLoadFinished $ \ wf -> do
         uri <- webFrameGetUri wf
         $plog putStrLn $ "documentLoadFinished: " ++ (show uri)
-    -- _ <- widget `on` iconLoaded $ $plog putStrLn $ "Icon loaded" -- segfaults included 
+    -- _ <- widget `on` iconLoaded $ $plog putStrLn $ "Icon loaded" -- segfaults included
     -- _ <- widget `on` redo -- binding didn't match webkitgtk signal
     -- _ <- widget `on` undo -- binding didn't match webkitgtk signal
     _ <- widget `on` mimeTypePolicyDecisionRequested $ \ _wf nr mime _wp -> do
@@ -113,14 +113,14 @@ newWithPage page cb = do
                         return True
                     Nothing -> return False
             Nothing -> return False
-    --  _ <- widget `on` moveCursor
-    --  _ <- widget `on` navigationPolicyDecisionRequested
-    --  _ <- widget `on` newWindowPolicyDecisionRequested
+    -- _ <- widget `on` moveCursor
+    -- _ <- widget `on` navigationPolicyDecisionRequested
+    -- _ <- widget `on` newWindowPolicyDecisionRequested
     {- _ <- widget `on` resourceRequestStarting $ \ wf wr nrequ nresp -> do
-        requestUri <- networkRequestGetUri nrequ 
+        requestUri <- networkRequestGetUri nrequ
         putStrLn $ "ResourceRequest: " ++ (show requestUri) -} -- makeNewGObjectError / NullPointerProblem
-    --  _ <- widget `on` geolocationPolicyDecisionCancelled
-    --  _ <- widget `on` geolocationPolicyDecisionRequested
+    -- _ <- widget `on` geolocationPolicyDecisionCancelled
+    -- _ <- widget `on` geolocationPolicyDecisionRequested
 
     return ()
 {-
@@ -139,13 +139,12 @@ instance PageClass WebViewPage where
 
     destroy page = do
         webViewLoadHtmlString (getWidget page) "text/html" ""
-        
 
     load page uri =  webViewLoadUri (unWebViewPage page) uriString >> return True
         where uriString = uriToString id uri ""
 
     getCurrentURI page = do
-        muri <- webViewGetUri.unWebViewPage $ page
+        muri <- webViewGetUri . unWebViewPage $ page
         case muri of
             Just uri -> case parseURI uri of
                 Just x -> return x
@@ -153,7 +152,7 @@ instance PageClass WebViewPage where
             _ -> return nullURI
 
     getCurrentTitle page = do
-        mTitle <- webViewGetTitle.unWebViewPage $ page
+        mTitle <- webViewGetTitle . unWebViewPage $ page
         case mTitle of
             Just title -> return title
             _ -> return ""
@@ -169,4 +168,4 @@ getDownloadDestinationURI uri = do
     appDir <- getAppUserDataDirectory "lambdacat"
     let webCache =  appDir </>  "webView"
     createDirectoryIfMissing True webCache
-    return $ "file://" ++ webCache </> (makeValid.filter isUnreserved) (escapeURIString isUnreserved uri)
+    return $ "file://" ++ webCache </> (makeValid . filter isUnreserved) (escapeURIString isUnreserved uri)

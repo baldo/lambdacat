@@ -50,9 +50,10 @@ class (Eq page, Typeable page) => PageClass page where
     -- | Creates a new page.
     new :: UIClass ui => CallBack ui -> IO page
 
-    -- | Cleanup page objects
-    -- After this funtions is called no further calls
-    -- will be made against the destroyed page.
+    {- | Cleanup page objects
+         After this funtions is called no further calls
+         will be made against the destroyed page.
+    -}
     destroy :: page -> IO ()
 
     -- | Some uri functions
@@ -90,7 +91,7 @@ instance Eq Page where
 
 instance PageClass Page where
     new = return (error "Can't create existential quantificated datatype")
-    destroy (Page p) = destroy p     
+    destroy (Page p) = destroy p
 
     load (Page p) = load p
 
