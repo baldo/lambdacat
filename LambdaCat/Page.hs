@@ -148,7 +148,7 @@ canHandleMimeType :: String -> [(Page, [String])] -> Bool
 canHandleMimeType mt = not . null .  pageConstructorsFromMimeType mt
 
 pageConstructorsFromMimeType :: String -> [(Page, [String])] -> [Page]
-pageConstructorsFromMimeType mt = concatMap (\ (p, lst) -> [p | elem mt lst])
+pageConstructorsFromMimeType mt = concatMap (\ (p, lst) -> [p | mt `elem` lst])
 
 pageFromMimeType :: UIClass u => CallBack u -> String -> [(Page, [String])] -> IO (Maybe Page)
 pageFromMimeType cb mimeType mimeList = do

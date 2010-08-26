@@ -17,6 +17,7 @@ module LambdaCat.Page.Poppler.PageLayout
 
     ) where
 
+import Control.Arrow
 import Control.Monad
 import Data.Map (Map)
 import qualified Data.Map as Map
@@ -81,14 +82,14 @@ documentGetPage = Map.lookup
 
 documentGetExistencePages :: [Int] -> DocumentGeometry -> [(Int, (Double, Double))]
 documentGetExistencePages pages doc =
-    map (\ (a, b) -> (a, fromJust b)) . filter (isJust . snd)
+    map (second fromJust) . filter (isJust . snd)
     . map (\ i -> (i, documentGetPage i doc)) $ pages
 
 fitPage :: Int -> PageLayoutAlgorithm
 fitPage count current (winWidth, winHeight) doc =
     let fP = current - (current `mod` count)
         lP  = documentGetNPages doc `min` fP + count - 1
-        pageSpace = winWidth / (fromIntegral count)
+        pageSpace = winWidth / fromIntegral count
         pages     =  documentGetExistencePages [fP .. lP] doc
     in foldr (\ (nr, (pageWidth, pageHeight)) lst ->
             let leftSide  = fromIntegral (length lst )  * pageSpace
@@ -112,7 +113,7 @@ continue f current size doc =
     in foldl (\ lst (nr, (_, _h)) ->
             let crt       = length lst `mod` length normalFit
                 iteration = length lst `div` length normalFit
-                upperLine = (height + 50) * (fromIntegral iteration)
+                upperLine = (height + 50) * fromIntegral iteration
                 (_, sc, (x0, y0), s0) = normalFit !! crt
                 -- sc = height / h
             in (nr, sc, (x0, y0 + upperLine), s0) : lst

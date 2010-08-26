@@ -55,7 +55,7 @@ newWithPage page cb = do
         return True
 
     _ <- widget `on` loadCommitted   $ \ _ -> return ()
-    _ <- widget `on` progressChanged $ \ p -> $plog putStrLn $ "Progress:" ++ (show p)
+    _ <- widget `on` progressChanged $ \ p -> $plog putStrLn $ "Progress:" ++ show p
     _ <- widget `on` loadError $ \ _wf suri (GError dom code msg) -> do
                                     $plog putStrLn ("Error:  " ++ msg)
                                     $plog putStrLn ("Code:   " ++ show code)
@@ -94,7 +94,7 @@ newWithPage page cb = do
     -- _ <- widget `on` databaseQuotaExceeded
     _ <- widget `on` documentLoadFinished $ \ wf -> do
         uri <- webFrameGetUri wf
-        $plog putStrLn $ "documentLoadFinished: " ++ (show uri)
+        $plog putStrLn $ "documentLoadFinished: " ++ show uri
     -- _ <- widget `on` iconLoaded $ $plog putStrLn $ "Icon loaded" -- segfaults included
     -- _ <- widget `on` redo -- binding didn't match webkitgtk signal
     -- _ <- widget `on` undo -- binding didn't match webkitgtk signal
@@ -137,7 +137,7 @@ instance PageClass WebViewPage where
         newWithPage page cb
         return page
 
-    destroy page = do
+    destroy page =
         webViewLoadHtmlString (getWidget page) "text/html" ""
 
     load page uri =  webViewLoadUri (unWebViewPage page) uriString >> return True

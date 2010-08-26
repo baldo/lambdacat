@@ -12,6 +12,7 @@ import LambdaCat.Page.Poppler.PageLayout
 import LambdaCat.Utils
 
 import Control.Concurrent
+import Control.Monad
 import Data.Typeable
 import Graphics.UI.Gtk hiding (Point)
 import Graphics.UI.Gtk.Poppler.Document hiding (PageClass, PageLayout)
@@ -112,17 +113,14 @@ viewerDraw viewer = do
         posPages <- liftIO $ fromPageLayout posLayout doc
         liftIO $ widgetSetSizeRequest area (truncate widgetWidth) (truncate widgetHeight)
 
-        mapM_ (\ (page, scal, p@(x0, y0), s@(x1, y1)) -> liftIO $ renderWithDrawable frameWin $ do
-           if  shouldDraw (p, s) ((hCurrent, vCurrent), (fromIntegral winWidth, fromIntegral winHeight))
-              then do
+        mapM_ (\ (page, scal, p@(x0, y0), s@(x1, y1)) -> liftIO $ renderWithDrawable frameWin $
+           when (shouldDraw (p, s) ((hCurrent, vCurrent), (fromIntegral winWidth, fromIntegral winHeight))) $ do
                 setSourceRGB 1.0 1.0 1.0
                 rectangle x0 y0 x1 y1
                 fill
                 translate x0 y0
                 scale scal scal
                 pageRender page
-              else
-                return ()
             ) posPages
   liftIO $ putMVar (pageDocument viewer) mayBeDoc
 

@@ -23,7 +23,7 @@ genNewId :: IO TabId
 genNewId = modifyMVar nextTabId (\ t -> return (t + 1, t))
 
 containerTabId :: Attr Container (Maybe TabId)
-containerTabId = unsafePerformIO $ objectCreateAttribute
+containerTabId = unsafePerformIO objectCreateAttribute
 
 setContainerId
     :: ContainerClass container

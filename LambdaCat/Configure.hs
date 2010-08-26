@@ -25,4 +25,4 @@ lambdaCatConf :: LambdaCatConf
 lambdaCatConf = unsafePerformIO $ readIORef cfgIORef
 
 setLCC :: LambdaCatConf -> IO ()
-setLCC conf = writeIORef cfgIORef conf
+setLCC = writeIORef cfgIORef

@@ -87,7 +87,7 @@ removePageFromBrowser (BM bm) bid page =
   modifyMVar_ bm (return . Map.update (\ (bw, pages) -> Just (bw, Map.filter ((/= page) . thrd) pages)) bid)
 
 replacePageInBrowser :: BrowserManager -> BrowserId -> Page -> Page -> IO ()
-replacePageInBrowser (BM bm) bid oldpage newpage = do
+replacePageInBrowser (BM bm) bid oldpage newpage =
     modifyMVar_ bm (return . Map.update (\ (bw, pages) -> Just (bw, Map.map replace pages)) bid)
   where replace :: (TabLabel, Container, Page) -> (TabLabel, Container, Page)
         replace (tl, container, page) | page == oldpage = (tl, container, newpage)
@@ -136,7 +136,7 @@ getBrowserPages (BM bm) bid = do
         Nothing -> return []
 
 getBrowserByPage :: BrowserManager -> Page -> IO (Maybe (BrowserId, GladeBrowser))
-getBrowserByPage (BM bm) page = do
+getBrowserByPage (BM bm) page =
     withMVar bm (return . Map.foldWithKey findBrowser Nothing)
  where findBrowser _ _ x@(Just _) = x
        findBrowser bid (browser, pMap) Nothing =
@@ -147,14 +147,14 @@ getBrowserByPage (BM bm) page = do
 
 -- TODO unevil
 getLabelAndContainerForPage :: BrowserManager -> BrowserId -> Page -> IO (Maybe (TabLabel, Container))
-getLabelAndContainerForPage (BM bm) bid page = do
+getLabelAndContainerForPage (BM bm) bid page =
     withMVar bm $ \ bs -> do
         let mb = Map.lookup bid bs
         $plog putStrLn ("getContainerForPage: page = " ++ show page)
         $plog putStrLn ("getContainerForPage: mb   = " ++ show mb)
-        return $ selectContainer $ mb
+        return $ selectContainer mb
   where selectContainer Nothing       = Nothing
         selectContainer (Just (_, m)) = Map.foldWithKey
             (\ _k (tl, c, page') s -> case s of
                 o@(Just _) -> o
-                Nothing -> if page == page' then (Just (tl, c)) else Nothing ) Nothing m
+                Nothing -> if page == page' then Just (tl, c) else Nothing) Nothing m

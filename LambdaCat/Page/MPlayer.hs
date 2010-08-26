@@ -44,24 +44,24 @@ instance PageClass MPlayerPage where
         mHandles <- newMVar Nothing
         mURI     <- newMVar nullURI
 
-        return $ MPlayerPage { mplayerSocket = socket, mplayerHandles = mHandles, mplayerURI = mURI }
+        return MPlayerPage { mplayerSocket = socket, mplayerHandles = mHandles, mplayerURI = mURI }
 
     destroy _ = return ()
 
     load page@MPlayerPage { mplayerSocket = socket } uri = do
-        mplayerCommand page $ "quit"
+        mplayerCommand page "quit"
         handles <- spawnMPlayer socket uri
         updateHandles page $ Just handles
         return True
 
     getCurrentURI = flip withURI return
-    getCurrentTitle = flip withURI (return . (flip (uriToString id) ""))
+    getCurrentTitle = flip withURI (return . flip (uriToString id) "")
 
 withHandles :: MPlayerPage -> (Handles -> IO ()) -> IO ()
 withHandles MPlayerPage { mplayerHandles = mHandles } f = do
     mh <- takeMVar mHandles
     maybe (return ()) f mh
-    putMVar mHandles (mh)
+    putMVar mHandles mh
 
 updateHandles :: MPlayerPage -> Maybe Handles -> IO ()
 updateHandles MPlayerPage { mplayerHandles = mHandles } mh = modifyMVar_ mHandles (\ _ -> return mh)

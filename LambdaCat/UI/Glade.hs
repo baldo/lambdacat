@@ -115,7 +115,7 @@ instance UIClass GladeUI where
             tid <- notebookGetCurrentPage notebook
             mcontainer <- notebookGetNthPage notebook tid
             case mcontainer of
-                Just container -> do
+                Just container ->
                     withContainerId (castToContainer container) $ \ tabId -> do
                         mPage <- getPageFromBrowser (browsers ui) bid tabId
                         case mPage of
@@ -131,7 +131,7 @@ instance UIClass GladeUI where
                             return ()
 
         xmlGetToolButton :: GladeXML -> String -> IO ToolButton
-        xmlGetToolButton xml name = xmlGetWidget xml castToToolButton name
+        xmlGetToolButton xml = xmlGetWidget xml castToToolButton
 
     update ui bid f = do
         f ui bid

@@ -33,7 +33,7 @@ instance PageClass CatPage where
     new cb = do
         wvpage <- new cb
         uri <- newMVar nullURI
-        return $ CatPage { webViewPage = wvpage, catUri = uri }
+        return CatPage { webViewPage = wvpage, catUri = uri }
 
     destroy cb = destroy (webViewPage cb)
 
