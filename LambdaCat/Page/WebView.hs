@@ -20,7 +20,7 @@ import Graphics.UI.Gtk.WebKit.WebView
 import Graphics.UI.Gtk.WebKit.WebFrame
 import Graphics.UI.Gtk.WebKit.Download
 import Graphics.UI.Gtk.WebKit.NetworkRequest
-import Graphics.UI.Gtk
+import Graphics.UI.Gtk hiding (populatePopup)
 import Network.URI
 import System.Directory
 import System.FilePath
@@ -82,7 +82,22 @@ newWithPage page cb = do
     -- _ <- widget `on` copyClipboard
     -- _ <- widget `on` cutClipboard
     -- _ <- widget `on` pasteClipboard
-    -- _ <- widget `on` populatePopup
+    _ <- widget `on` populatePopup $ \ menu -> do
+        $plog putStrLn "populatePopup"
+        item <- menuItemNewWithLabel "Toggle source view"
+        sep  <- separatorMenuItemNew
+
+        _ <- onActivateLeaf item $ do
+            let wv = getWidget page
+            m <- webViewGetViewSourceMode wv
+            webViewSetViewSourceMode wv $ not m
+            reload page
+
+        menuAttach menu item 0 1 0 1
+        menuAttach menu sep 0 1 1 2
+
+        widgetShow item
+        widgetShow sep
     -- _ <- widget `on` printRequested
     -- _ <- widget `on` scriptAlert
     -- _ <- widget `on` scriptConfirm
