@@ -106,7 +106,7 @@ newWithPage page cb = do
     -- _ <- widget `on` scriptAlert
     -- _ <- widget `on` scriptConfirm
     -- _ <- widget `on` scriptPrompt
-    _ <- widget `on` statusBarTextChanged $ \ str -> $plog putStrLn $ "Status:" ++ str
+    _ <- widget `on` statusBarTextChanged $ \ stat -> cb (statusChanged stat)
     -- _ <- widget `on` selectAll
     -- _ <- widget `on` selectionChanged
     -- _ <- widget `on` setScrollAdjustments

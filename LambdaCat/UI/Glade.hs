@@ -36,8 +36,14 @@ instance UIClass GladeUI where
         Just xml <- xmlNew fpath
         window   <- xmlGetWidget xml castToWindow "browserWindow"
         notebook <- xmlGetWidget xml castToNotebook "pageNoteBook"
+        statbar  <- xmlGetWidget xml castToStatusbar "browserStatus"
 
-        let browser = GladeBrowser { gladeXml = xml, gladeWindow = window, pageContainer = notebook }
+        let browser = GladeBrowser
+                        { gladeXml      = xml
+                        , gladeWindow   = window
+                        , gladeStatBar  = statbar
+                        , pageContainer = notebook
+                        }
         bid <- addBrowser (browsers ui) browser
         -- General / Events ---------------------------------------------------
         _ <- onDestroy window mainQuit
@@ -161,6 +167,22 @@ instance UIClass GladeUI where
                         return ()
                 window <- xmlGetWidget xml castToWindow "browserWindow"
                 set window [ windowTitle := title ]
+
+    statusChanged status ui bid = do
+        $plog putStrLn $ "Status:" ++ status
+        mb <- getBrowser (browsers ui) bid
+        case mb of
+            Nothing ->
+                $pinfo putStrLn $ "StatusError: cannot find browser"
+            Just b -> do
+                let sb = gladeStatBar b
+                cntx <- statusbarGetContextId sb "status"
+                case status of
+                    "" ->
+                        statusbarPop sb cntx
+                    stat -> do
+                        _ <- statusbarPush sb cntx stat
+                        return ()
 
     replacePage ui bid oldpage page@(Page hasWidget) = do
         bool <- getBrowser (browsers ui) bid

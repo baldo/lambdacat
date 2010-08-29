@@ -41,6 +41,7 @@ import Graphics.UI.Gtk.Glade
 data GladeBrowser = GladeBrowser
     { gladeXml      :: GladeXML
     , gladeWindow   :: Window
+    , gladeStatBar  :: Statusbar
     , pageContainer :: Notebook
     }
 
