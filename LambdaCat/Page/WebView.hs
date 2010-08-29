@@ -93,8 +93,8 @@ newWithPage page cb = do
     -- _ <- widget `on` setScrollAdjustments
     -- _ <- widget `on` databaseQuotaExceeded
     _ <- widget `on` documentLoadFinished $ \ wf -> do
-        uri <- webFrameGetUri wf
-        $plog putStrLn $ "documentLoadFinished: " ++ show uri
+        Just uri <- webFrameGetUri wf
+        $plog putStrLn $ "documentLoadFinished: " ++ show uri ++ " => " ++ dshow (parseURIReference uri)
     -- _ <- widget `on` iconLoaded $ $plog putStrLn $ "Icon loaded" -- segfaults included
     -- _ <- widget `on` redo -- binding didn't match webkitgtk signal
     -- _ <- widget `on` undo -- binding didn't match webkitgtk signal
@@ -107,7 +107,7 @@ newWithPage page cb = do
                 maybePage <- pageFromMimeType cb mime (mimeList lambdaCatConf)
                 case maybePage of
                     Just newPage -> do
-                        $plog putStr ("Mime: uri = " ++ show uri)
+                        $plog putStr ("Mime: uri = " ++ show uri ++ " => " ++ dshow uri)
                         cb (\ ui bid -> replacePage ui bid (Page page) newPage)
                         _ <- load newPage uri
                         return True
