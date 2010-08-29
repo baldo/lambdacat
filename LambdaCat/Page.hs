@@ -39,6 +39,8 @@ class UIClass ui where
     -- | Replace current title with the one from given page
     changedTitle :: ui -> Page -> IO ()
 
+    changedProgress :: Int -> ui -> BrowserId -> IO ()
+
     statusChanged :: String -> ui -> BrowserId -> IO ()
 
     update :: ui -> BrowserId -> CallBack ui

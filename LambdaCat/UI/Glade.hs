@@ -168,6 +168,18 @@ instance UIClass GladeUI where
                 window <- xmlGetWidget xml castToWindow "browserWindow"
                 set window [ windowTitle := title ]
 
+    changedProgress progress ui bid = do
+        mb <- getBrowser (browsers ui) bid
+        case mb of
+            Nothing ->
+                $pinfo putStrLn $ "ProgressError: cannot find browser"
+            Just b -> do
+                let sb = gladeStatBar b
+                cntx <- statusbarGetContextId sb "progress"
+                statusbarPop sb cntx
+                _ <- statusbarPush sb cntx $ show progress ++ "%"
+                return ()
+ 
     statusChanged status ui bid = do
         $plog putStrLn $ "Status:" ++ status
         mb <- getBrowser (browsers ui) bid

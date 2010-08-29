@@ -59,7 +59,7 @@ newWithPage page cb = do
         return True
 
     _ <- widget `on` loadCommitted   $ \ _ -> return ()
-    _ <- widget `on` progressChanged $ \ p -> $plog putStrLn $ "Progress:" ++ show p
+    _ <- widget `on` progressChanged $ \ p -> cb (changedProgress p)
     _ <- widget `on` loadError $ \ _wf suri (GError dom code msg) -> do
                                     $plog putStrLn ("Error:  " ++ msg)
                                     $plog putStrLn ("Code:   " ++ show code)
