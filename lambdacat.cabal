@@ -19,6 +19,8 @@ Extra-Source-Files:
 Data-Files:
     lambdacat.glade
     lambdacat.gtkrc
+    styles/atom.css
+    styles/rss.css
     cats/kebab.jpg
     cats/sheela.jpg
     about/blank.html

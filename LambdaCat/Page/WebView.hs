@@ -15,8 +15,12 @@ import LambdaCat.Page
 import LambdaCat.Configure
 import LambdaCat.Utils
 
+import Paths_lambdacat
+
+import Control.Monad
 import Data.Typeable
 import Graphics.UI.Gtk.WebKit.WebView
+import Graphics.UI.Gtk.WebKit.WebSettings
 import Graphics.UI.Gtk.WebKit.WebFrame
 import Graphics.UI.Gtk.WebKit.Download
 import Graphics.UI.Gtk.WebKit.NetworkRequest
@@ -114,6 +118,13 @@ newWithPage page cb = do
     -- _ <- widget `on` redo -- binding didn't match webkitgtk signal
     -- _ <- widget `on` undo -- binding didn't match webkitgtk signal
     _ <- widget `on` mimeTypePolicyDecisionRequested $ \ _wf nr mime _wp -> do
+        when (mime == "application/rss+xml" || mime == "application/atom+xml") $ do
+            let wv = getWidget page
+            let fname = takeWhile (/= '+') $ tail $ dropWhile (/= '/') mime
+            css <- getDataFileName $ "styles/" ++ fname ++ ".css"
+            ws <- webViewGetWebSettings wv
+            set ws [ webSettingsUserStylesheetUri := Just $ "file://" ++ css ]
+            webViewSetWebSettings wv ws
         $plog putStrLn $ "Mime: " ++ mime
         msuri <- networkRequestGetUri nr
         case msuri of

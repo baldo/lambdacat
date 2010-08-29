@@ -1,0 +1,33 @@
+feed * {
+    display: none;
+}
+
+feed {
+    display: block;
+    margin: 10px;
+}
+
+feed>title {
+    display: block;
+    font-size: larger;
+    font-weight: bold;
+}
+
+feed>subtitle {
+    display: block;
+}
+
+entry {
+    display: block;
+    margin: 10px 0px 10px 0px;
+}
+
+entry>title {
+    display: block;
+    font-weight: bold;
+}
+
+entry>summary {
+    display: block;
+}
+

@@ -1,0 +1,36 @@
+rss * {
+    display: none;
+}
+
+rss {
+    display: block;
+}
+
+channel {
+    display: block;
+    margin: 10px;
+}
+
+channel>title {
+    display: block;
+    font-size: larger;
+    font-weight: bold;
+}
+
+channel>description {
+    display: block;
+}
+
+item {
+    display: block;
+    margin: 10px 0px 10px 0px;
+}
+
+item>title {
+    display: block;
+    font-weight: bold;
+}
+
+item>description {
+    display: block;
+}
