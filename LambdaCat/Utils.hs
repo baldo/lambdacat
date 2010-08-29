@@ -6,12 +6,16 @@ module LambdaCat.Utils
 
     , pinfo
     , plog
+
+    , DShow (..)
+    , dprint
     )
 where
 
 import Prelude hiding (log)
 import Control.Monad
 import Language.Haskell.TH
+import Network.URI
 import System.Console.CmdArgs.Verbosity
 
 import Flags
@@ -56,4 +60,48 @@ plog = do
     if debug
         then [| \ f -> log (\ x -> putStr pos >> f x) |]
         else [| log |]
+
+class DShow a where
+    dshow :: a -> String
+    dshow x = dshows x ""
+
+    dshows :: a -> ShowS
+    dshows x = const $ dshow x
+
+instance DShow a => DShow (Maybe a) where
+    dshows (Just x) = showString "Just " . dshows x
+    dshows Nothing  = showString "Nothing"
+
+instance DShow URI where
+    dshows URI
+        { uriScheme    = s
+        , uriAuthority = a
+        , uriPath      = p
+        , uriQuery     = q
+        , uriFragment  = f
+        } = showString "URI: scheme = "
+          . shows s
+          . showString ", auth = ("
+          . dshows a
+          . showString "), path = "
+          . shows p
+          . showString ", query = "
+          . shows q
+          . showString ", fragment = "
+          . shows f
+
+instance DShow URIAuth where
+    dshows URIAuth
+        { uriUserInfo = u
+        , uriRegName  = r
+        , uriPort     = p
+        } = showString "URIAuth: user = "
+          . shows u
+          . showString ", reg = "
+          . shows r
+          . showString ", port = "
+          . shows p
+
+dprint :: DShow a => a -> IO ()
+dprint = putStrLn . dshow
 
