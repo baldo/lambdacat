@@ -69,7 +69,7 @@ Library
         dyre >= 0.8.5 && < 0.9,
         filepath,
         directory,
-        cmdargs == 0.2.*,
+        cmdargs == 0.3.*,
         template-haskell == 2.4.*
 
     if flag(release)
