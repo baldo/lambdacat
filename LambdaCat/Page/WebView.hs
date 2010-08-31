@@ -112,8 +112,16 @@ newWithPage page cb = do
     -- _ <- widget `on` setScrollAdjustments
     -- _ <- widget `on` databaseQuotaExceeded
     _ <- widget `on` documentLoadFinished $ \ wf -> do
-        Just uri <- webFrameGetUri wf
-        $plog putStrLn $ "documentLoadFinished: " ++ show uri ++ " => " ++ dshow (parseURIReference uri)
+        muri <- webFrameGetUri wf
+        case muri of
+            Just uri ->
+                $plog putStrLn $ "documentLoadFinished: "
+                              ++ show uri
+                              ++ " => "
+                              ++ dshow (parseURIReference uri)
+            Nothing ->
+                $plog putStrLn $ "documentLoadFinished, but not successfull."
+
     -- _ <- widget `on` iconLoaded $ $plog putStrLn $ "Icon loaded" -- segfaults included
     -- _ <- widget `on` redo -- binding didn't match webkitgtk signal
     -- _ <- widget `on` undo -- binding didn't match webkitgtk signal
