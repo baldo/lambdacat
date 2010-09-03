@@ -24,12 +24,8 @@ import Graphics.UI.Gtk.WebKit.WebSettings
 import Graphics.UI.Gtk.WebKit.WebFrame
 import Graphics.UI.Gtk.WebKit.Download
 import Graphics.UI.Gtk.WebKit.NetworkRequest
-<<<<<<< HEAD
 import Graphics.UI.Gtk hiding (populatePopup)
-=======
 import Graphics.UI.Gtk.WebKit.WebResource
-import Graphics.UI.Gtk
->>>>>>> c7fedbea2e0c18f7b3d41f40e93db99515a1b16a
 import Network.URI
 import System.Directory
 import System.FilePath
