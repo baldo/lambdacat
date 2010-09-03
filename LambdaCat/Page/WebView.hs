@@ -110,7 +110,8 @@ newWithPage page cb = do
     _ <- widget `on` statusBarTextChanged $ \ stat -> cb (statusChanged stat)
     -- _ <- widget `on` selectAll
     -- _ <- widget `on` selectionChanged
-    -- _ <- widget `on` setScrollAdjustments
+    _ <- widget `on` setScrollAdjustments $ \ wv gtkAdj1 gtkAdj2 ->
+        putStrLn $ "ScrollAdjustment"
     -- _ <- widget `on` databaseQuotaExceeded
     _ <- widget `on` documentLoadFinished $ \ wf -> do
         muri <- webFrameGetUri wf
