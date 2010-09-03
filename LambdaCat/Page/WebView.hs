@@ -80,7 +80,7 @@ newWithPage page cb = do
                                                     return True
                                         _ -> return False
     _ <- widget `on` titleChanged $ \ _ newTitle -> $plog putStrLn newTitle
-    -- _ <- widget `on` hoveringOverLink $ \ a b -> $plog putStrLn $ a ++ " --> " ++ b -- segfaults included
+    _ <- widget `on` hoveringOverLink $ \ a b -> $plog putStrLn $ (show a) ++ " --> " ++ (show b) -- segfaults included
     _ <- widget `on` webViewReady $ $plog putStrLn "Yay, I am ready" >> return True
     _ <- widget `on` closeWebView $ $plog putStrLn "CloseMe" >> return True
     -- _ <- widget `on` consoleMessage ...
@@ -110,8 +110,7 @@ newWithPage page cb = do
     _ <- widget `on` statusBarTextChanged $ \ stat -> cb (statusChanged stat)
     -- _ <- widget `on` selectAll
     -- _ <- widget `on` selectionChanged
-    _ <- widget `on` setScrollAdjustments $ \ wv gtkAdj1 gtkAdj2 ->
-        putStrLn $ "ScrollAdjustment"
+    -- _ <- widget `on` setScrollAdjustments
     -- _ <- widget `on` databaseQuotaExceeded
     _ <- widget `on` documentLoadFinished $ \ wf -> do
         muri <- webFrameGetUri wf
@@ -156,7 +155,7 @@ newWithPage page cb = do
         case mnrequ of
             Just nrequ -> do
                 requestUri <- networkRequestGetUri nrequ
-                putStrLn $ "ResourceRequest: " ++ (show requestUri) 
+                $plog putStrLn $ "ResourceRequest: " ++ (show requestUri) 
             Nothing -> return ()
     -- _ <- widget `on` geolocationPolicyDecisionCancelled
     -- _ <- widget `on` geolocationPolicyDecisionRequested
