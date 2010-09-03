@@ -151,9 +151,12 @@ newWithPage page cb = do
     -- _ <- widget `on` moveCursor
     -- _ <- widget `on` navigationPolicyDecisionRequested
     -- _ <- widget `on` newWindowPolicyDecisionRequested
-    {- _ <- widget `on` resourceRequestStarting $ \ wf wr nrequ nresp -> do
-        requestUri <- networkRequestGetUri nrequ
-        putStrLn $ "ResourceRequest: " ++ (show requestUri) -} -- makeNewGObjectError / NullPointerProblem
+    _ <- widget `on` resourceRequestStarting $ \ wf wr mnrequ nresp -> do
+        case mnrequ of
+            Just nrequ -> do
+                requestUri <- networkRequestGetUri nrequ
+                putStrLn $ "ResourceRequest: " ++ (show requestUri) 
+            Nothing -> return ()
     -- _ <- widget `on` geolocationPolicyDecisionCancelled
     -- _ <- widget `on` geolocationPolicyDecisionRequested
     return ()
