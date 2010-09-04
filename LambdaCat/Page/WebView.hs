@@ -123,7 +123,7 @@ newWithPage page cb = do
             Nothing ->
                 $plog putStrLn $ "documentLoadFinished, but not successfull."
 
-    -- _ <- widget `on` iconLoaded $ $plog putStrLn $ "Icon loaded" -- segfaults included
+    _ <- widget `on` iconLoaded $ \str -> $plog putStrLn $ "Icon:" ++ (show str)
     -- _ <- widget `on` redo -- binding didn't match webkitgtk signal
     -- _ <- widget `on` undo -- binding didn't match webkitgtk signal
     _ <- widget `on` mimeTypePolicyDecisionRequested $ \ _wf nr mime _wp -> do
