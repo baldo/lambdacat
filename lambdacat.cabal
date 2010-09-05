@@ -43,7 +43,7 @@ Executable lambdacat
                 -O2 -Wall -threaded -eventlog
         else
             Ghc-Options:
-                -O2 -Wnot -threaded
+                -O2 -Wall -threaded
     else
         if flag(debug)
             Ghc-Options:
