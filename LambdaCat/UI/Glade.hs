@@ -193,6 +193,7 @@ instance UIClass GladeUI where
                     "" ->
                         statusbarPop sb cntx
                     stat -> do
+                        statusbarPop sb cntx
                         _ <- statusbarPush sb cntx stat
                         return ()
 
