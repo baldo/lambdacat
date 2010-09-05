@@ -79,7 +79,12 @@ newWithPage page cb = do
                                                     return True
                                         _ -> return False
     _ <- widget `on` titleChanged $ \ _ newTitle -> $plog putStrLn newTitle
-    _ <- widget `on` hoveringOverLink $ \ a b -> $plog putStrLn $ (show a) ++ " --> " ++ (show b) -- segfaults included
+    _ <- widget `on` hoveringOverLink $ \ mtitle muri -> do
+        $plog putStrLn $ (show mtitle) ++ " --> " ++ (show muri)
+        case muri of
+            Just uri -> cb (statusChanged uri)
+            Nothing  -> cb (statusChanged "")
+        -- segfaults included - still?
     _ <- widget `on` webViewReady $ $plog putStrLn "Yay, I am ready" >> return True
     _ <- widget `on` closeWebView $ $plog putStrLn "CloseMe" >> return True
     -- _ <- widget `on` consoleMessage ...
