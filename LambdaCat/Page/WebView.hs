@@ -21,8 +21,8 @@ import Control.Monad
 import Data.Typeable
 import Graphics.UI.Gtk.WebKit.WebView
 import Graphics.UI.Gtk.WebKit.WebSettings
-import Graphics.UI.Gtk.WebKit.WebDataSource
-import Graphics.UI.Gtk.WebKit.WebResource
+--import Graphics.UI.Gtk.WebKit.WebDataSource
+--import Graphics.UI.Gtk.WebKit.WebResource
 import Graphics.UI.Gtk.WebKit.WebFrame
 import Graphics.UI.Gtk.WebKit.Download
 import Graphics.UI.Gtk.WebKit.NetworkRequest
