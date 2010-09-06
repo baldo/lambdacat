@@ -93,6 +93,7 @@ mplayerCommand page cmd = do
     withHandles page $ \ handles -> do
         let sin = stdin handles
         hPutStrLn sin (cmd ++ "\n")
+        hFlush sin
     return ()
 
 monitor :: Handles -> (Handles -> Handle) -> IO ()
