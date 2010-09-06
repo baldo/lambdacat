@@ -61,7 +61,7 @@ Library
         gtk >= 0.11 && < 0.12,
         glade >= 0.11 && < 0.12,
         cairo == 0.11.*,
-        webkit >= 0.11 && < 0.12,
+        webkit >= 0.11.2 && < 0.12,
         poppler == 0.11.*,
         network == 2.2.*,
         containers == 0.3.*,
