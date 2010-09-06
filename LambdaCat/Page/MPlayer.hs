@@ -20,6 +20,7 @@ import System.Process
 
 data MPlayerPage = MPlayerPage
     { mplayerSocket  :: Socket
+    , mplayerWidget  :: ScrolledWindow
     , mplayerHandles :: MVar (Maybe Handles)
     , mplayerURI     :: MVar URI
     }
@@ -35,36 +36,57 @@ data Handles = Handles
     }
   deriving Eq
 
-instance HasWidget MPlayerPage Socket where
-    getWidget = mplayerSocket
+instance HasWidget MPlayerPage ScrolledWindow where
+    getWidget = mplayerWidget
 
 instance PageClass MPlayerPage where
     new _ = do
+        swrapper <- scrolledWindowNew Nothing Nothing
+
+        set swrapper [ scrolledWindowHscrollbarPolicy := PolicyNever
+                     , scrolledWindowVscrollbarPolicy := PolicyNever
+                     ]
+
         socket   <- socketNew
         mHandles <- newMVar Nothing
         mURI     <- newMVar nullURI
 
-        return MPlayerPage { mplayerSocket = socket, mplayerHandles = mHandles, mplayerURI = mURI }
+        let page = MPlayerPage
+                    { mplayerSocket  = socket
+                    , mplayerWidget  = swrapper
+                    , mplayerHandles = mHandles
+                    , mplayerURI     = mURI
+                    }
 
-    destroy _ = return ()
+        return page
 
-    load page@MPlayerPage { mplayerSocket = socket } uri = do
-        mplayerCommand page "quit"
-        handles <- spawnMPlayer socket uri
-        updateHandles page $ Just handles
+    destroy page = mplayerCommand page "quit"
+
+    load page uri = do
+        mplayerCommand page $ "loadfile " ++ show uri ++ " 0"
         return True
 
     getCurrentURI = flip withURI return
     getCurrentTitle = flip withURI (return . flip (uriToString id) "")
 
 withHandles :: MPlayerPage -> (Handles -> IO ()) -> IO ()
-withHandles MPlayerPage { mplayerHandles = mHandles } f = do
+withHandles MPlayerPage
+                { mplayerWidget  = swrapper
+                , mplayerSocket  = socket
+                , mplayerHandles = mHandles
+                }
+            f = do
     mh <- takeMVar mHandles
-    maybe (return ()) f mh
-    putMVar mHandles mh
+    h  <- maybe ( do
+                    scrolledWindowAddWithViewport swrapper socket
+                    spawnMPlayer socket
+                ) return mh
 
-updateHandles :: MPlayerPage -> Maybe Handles -> IO ()
-updateHandles MPlayerPage { mplayerHandles = mHandles } mh = modifyMVar_ mHandles (\ _ -> return mh)
+    f h
+    putMVar mHandles $ Just h
+
+--updateHandles :: MPlayerPage -> Maybe Handles -> IO ()
+--updateHandles MPlayerPage { mplayerHandles = mHandles } mh = modifyMVar_ mHandles (\ _ -> return mh)
 
 withURI :: MPlayerPage -> (URI -> IO a) -> IO a
 withURI MPlayerPage { mplayerURI = mURI } f = do
@@ -76,11 +98,11 @@ withURI MPlayerPage { mplayerURI = mURI } f = do
 toHandles :: (Handle, Handle, Handle, a) -> Handles
 toHandles (sin, sout, serr, _) = Handles { stdin = sin, stdout = sout, stderr = serr }
 
-spawnMPlayer :: Socket -> URI -> IO Handles
-spawnMPlayer socket uri = do
+spawnMPlayer :: Socket -> IO Handles
+spawnMPlayer socket = do
     widgetShowAll socket
     wid <- liftM fromNativeWindowId $ socketGetId socket
-    let commandLine = "mplayer " ++ uriToString id uri "" ++ " -gui -idle -slave -wid " ++ show (wid :: Int)
+    let commandLine = "mplayer -gui -noconsolecontrols -idle -slave -wid " ++ show (wid :: Int)
     $plog print commandLine
     tHandles <- runInteractiveCommand commandLine
     let handles = toHandles tHandles
@@ -93,6 +115,7 @@ mplayerCommand page cmd = do
     withHandles page $ \ handles -> do
         let sin = stdin handles
         hPutStrLn sin (cmd ++ "\n")
+        hFlush sin
     return ()
 
 monitor :: Handles -> (Handles -> Handle) -> IO ()

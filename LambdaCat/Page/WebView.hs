@@ -21,11 +21,12 @@ import Control.Monad
 import Data.Typeable
 import Graphics.UI.Gtk.WebKit.WebView
 import Graphics.UI.Gtk.WebKit.WebSettings
+--import Graphics.UI.Gtk.WebKit.WebDataSource
+--import Graphics.UI.Gtk.WebKit.WebResource
 import Graphics.UI.Gtk.WebKit.WebFrame
 import Graphics.UI.Gtk.WebKit.Download
 import Graphics.UI.Gtk.WebKit.NetworkRequest
 import Graphics.UI.Gtk hiding (populatePopup)
-import Graphics.UI.Gtk.WebKit.WebResource
 import Network.URI
 import System.Directory
 import System.FilePath
@@ -80,7 +81,12 @@ newWithPage page cb = do
                                                     return True
                                         _ -> return False
     _ <- widget `on` titleChanged $ \ _ newTitle -> $plog putStrLn newTitle
-    _ <- widget `on` hoveringOverLink $ \ a b -> $plog putStrLn $ (show a) ++ " --> " ++ (show b) -- segfaults included
+    _ <- widget `on` hoveringOverLink $ \ mtitle muri -> do
+        $plog putStrLn $ (show mtitle) ++ " --> " ++ (show muri)
+        case muri of
+            Just uri -> cb (statusChanged uri)
+            Nothing  -> cb (statusChanged "")
+        -- segfaults included - still?
     _ <- widget `on` webViewReady $ $plog putStrLn "Yay, I am ready" >> return True
     _ <- widget `on` closeWebView $ $plog putStrLn "CloseMe" >> return True
     -- _ <- widget `on` consoleMessage ...
@@ -123,7 +129,21 @@ newWithPage page cb = do
             Nothing ->
                 $plog putStrLn $ "documentLoadFinished, but not successfull."
 
-    _ <- widget `on` iconLoaded $ \str -> $plog putStrLn $ "Icon:" ++ (show str)
+    _ <- widget `on` iconLoaded $ \ uri -> do
+        $plog putStrLn $ "Icon:" ++ (show uri)
+{- Needs patch in webkit
+        let wv = getWidget page
+        frame <- webViewGetMainFrame wv
+        dsrc <- webFrameGetDataSource frame
+
+        rs <- webDataSourceGetSubresources dsrc
+        ricos <- filterM (fmap (== uri) . webResourceGetUri) rs
+
+        case ricos of
+            (rico : _) -> do
+                $plog putStrLn "here webResourceGetData should be used..."
+            [] -> $pinfo putStrLn "Icon: Strange, no icon resource found..."
+-}
     -- _ <- widget `on` redo -- binding didn't match webkitgtk signal
     -- _ <- widget `on` undo -- binding didn't match webkitgtk signal
     _ <- widget `on` mimeTypePolicyDecisionRequested $ \ _wf nr mime _wp -> do
@@ -199,6 +219,13 @@ instance PageClass WebViewPage where
     stop    =  webViewStopLoading . unWebViewPage
     reload  =  webViewReload . unWebViewPage
 
+    search page text = do
+        let wv = getWidget page
+        webViewUnMarkTextMatches wv
+        _ <- webViewMarkTextMatches wv text False 0
+        webViewSetHighlightTextMatches wv True
+        _ <- webViewSearchText wv text False True True
+        return ()
 
 getDownloadDestinationURI :: String -> IO String
 getDownloadDestinationURI uri = do
