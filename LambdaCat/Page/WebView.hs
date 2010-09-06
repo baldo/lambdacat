@@ -219,6 +219,13 @@ instance PageClass WebViewPage where
     stop    =  webViewStopLoading . unWebViewPage
     reload  =  webViewReload . unWebViewPage
 
+    search page text = do
+        let wv = getWidget page
+        webViewUnMarkTextMatches wv
+        _ <- webViewMarkTextMatches wv text False 0
+        webViewSetHighlightTextMatches wv True
+        _ <- webViewSearchText wv text False True True
+        return ()
 
 getDownloadDestinationURI :: String -> IO String
 getDownloadDestinationURI uri = do

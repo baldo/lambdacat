@@ -1,4 +1,4 @@
-{-# LANGUAGE DeriveDataTypeable, FunctionalDependencies, MultiParamTypeClasses, ExistentialQuantification, FlexibleInstances, RankNTypes #-}
+{-# LANGUAGE DeriveDataTypeable, FunctionalDependencies, MultiParamTypeClasses, ExistentialQuantification, FlexibleInstances, RankNTypes, TemplateHaskell #-}
 
 module LambdaCat.Page
     ( UIClass (..)
@@ -16,6 +16,7 @@ where
 
 import LambdaCat.Protocol
 import LambdaCat.Browser
+import LambdaCat.Utils
 
 import Data.Typeable
 import Network.URI
@@ -70,6 +71,9 @@ class (Eq page, Typeable page) => PageClass page where
     stop _ = return ()
     reload _ = return ()
 
+    search :: page -> String -> IO ()
+    search page _ = $plog putStrLn $ "Search: No implementation for " ++ show (typeOf page)
+
     -- | generic informations on a page
     getCurrentURI :: page -> IO URI
     getCurrentTitle :: page -> IO String
@@ -103,6 +107,8 @@ instance PageClass Page where
     forward (Page p) = forward p
     stop (Page p) = stop p
     reload (Page p) = reload p
+
+    search (Page p) = search p
 
     getCurrentURI (Page p)   = getCurrentURI p
     getCurrentTitle (Page p) = getCurrentTitle p

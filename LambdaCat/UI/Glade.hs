@@ -75,6 +75,10 @@ instance UIClass GladeUI where
             case parseURIReference text of
                 Just uri -> pageAction notebook bid $ loadAction uri bid
                 Nothing  -> return ()
+        searchText <- xmlGetWidget xml castToEntry "searchText"
+        _ <- onEditableChanged searchText $ do
+            text <- entryGetText searchText
+            pageAction notebook bid $ flip search text
         addTab <- xmlGetToolButton xml "addTab"
         _ <- onToolButtonClicked addTab $ newPage bid (parseURI "about:blank") >> return ()
         menuItemQuit <- xmlGetWidget xml castToMenuItem "menuItemQuit"
