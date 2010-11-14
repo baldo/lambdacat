@@ -15,7 +15,7 @@ import Data.Version
 import System.Console.CmdArgs hiding (cmdArgs, CmdArgs)
 import qualified System.Console.CmdArgs as CA
 
-import System
+import System.Environment
 
 data CmdArgs = CmdArgs
     { recompile :: Bool
