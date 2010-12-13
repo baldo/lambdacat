@@ -26,7 +26,7 @@ import Config.Dyre
 import Config.Dyre.Compile
 import Data.Maybe
 import Network.URI
-import System
+import System.Exit
 import System.IO
 
 defaultURIModifier :: URI -> URI
