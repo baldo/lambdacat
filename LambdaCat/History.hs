@@ -1,57 +1,74 @@
-module LambdaCat.History
-    ( History
-    , HistoryMap
+module LambdaCat.History 
+  ( History 
+ 
+  , singleton
 
-    -- history functions
-    , newHistory
-    , historyAdd
-    , historyForward
-    , historyBackward
+  , back
+  , forward
+  , insert
 
-    -- map functions
-    , newHistoryMap
-    , 
-    ) where
+  , hasBack
+  , hasForward
+  , getForwards
+  )
+ where
 
-import LambdaCat.Page
+import Data.IntMap (IntMap)
+import qualified Data.IntMap as IntMap
+import Network.URI 
+import Data.Maybe (isJust)
 
-import Control.Concurrent.MVar
-import Data.Map (Map)
-import qualified Data.Map as Map
-import Network.URI
+type History = DTree URI
 
-newtype  History = History { unHistory :: ([HistoryEntry], HistoryEntry, [HistoryEntry]) }
-    deriving Show
+-- | Weighted directed Tree
+data DTree a = DTree 
+  { dTreeWeight  :: a
+  , dTreeBack    :: Maybe (Int,DTree a)
+  , dTreeForward :: IntMap (DTree a)
+  }
+ deriving Show
 
-type HistoryEntry = URI
+singleton :: a -> DTree a
+singleton weight = DTree 
+  { dTreeWeight  = weight 
+  , dTreeBack    = Nothing
+  , dTreeForward = IntMap.empty
+  }
 
-newHistory :: HistoryEntry -> History
-newHistory uri = History ([], uri, [])
+back :: DTree a -> Maybe (DTree a)
+back dt = case dTreeBack dt of
+  Just (index,dt') -> 
+              let newDt   = dt { dTreeBack = Nothing }
+                  forwMap = dTreeForward dt'
+              in  Just $ dt' { dTreeForward = IntMap.insert index newDt forwMap }
+  Nothing  -> Nothing
 
-historyAdd :: History -> HistoryEntry -> History
-historyAdd (History (past, present, _)) uri = History (present : past, uri, [])
+hasBack :: DTree a -> Bool
+hasBack = isJust . dTreeBack 
 
-historyBackward :: History -> (HistoryEntry, History)
-historyBackward h@(History ([]  , pres, _))   = History (pres, h)
-historyBackward (History (p : ps, pres, fut)) = History (p, (ps, p, pres : fut))
+forward :: Int -> DTree a -> Maybe (DTree a)
+forward index dt = 
+  let forwMap = dTreeForward dt
+      (mdt', forwMap') = IntMap.updateLookupWithKey (\ _ -> const Nothing) index forwMap
+      newDt = dt { dTreeForward = forwMap' }
+  in  case mdt' of
+      Just dt' -> Just $ dt' { dTreeBack = Just (index,newDt) }
+      Nothing  -> Nothing
 
-historyForward :: History -> (HistoryEntry, History)
-historyForward h@(History (_, pres, []))      = History (pres, h)
-historyForward (History (past, pres, f : fs)) = History (f, (pres : past, f, fs))
+hasForward :: DTree a -> Bool
+hasForward = IntMap.null . dTreeForward 
 
--- Data structure for handling multiple Historys 
+getForwards :: DTree a -> [(Int,a)]
+getForwards = map withSnd . IntMap.toList . dTreeForward
+  where withSnd :: (Int,DTree a) -> (Int,a)
+        withSnd (key,dt) = (key,dTreeWeight dt)
 
-newtype HistoryManager key = HM { unMap :: MVar (HistoryMap key) }
+insert :: a -> DTree a -> DTree a 
+insert weight dt = 
+    let forwMap = dTreeForward dt
+        newDt   = singleton weight
+    in  dt { dTreeForward = IntMap.insert (newIndex forwMap) newDt forwMap }
 
-type HistoryMap key = Map key HistoryEntry
-
-newHistoryMap :: Ord key => IO (HistoryMap key)
-newHistoryMap = do
-    m <- newMVar Map.empty
-    return (HM m)
-
-createHistoryForKey :: Ord key => key -> HistoryEntry -> HistoryManager -> IO ()
-createHistoryForKey key entry (HM mvar) =
-   modifyMVar_ mvar (return . Map.insert key (newHistory entry))
-
-
+newIndex :: IntMap a -> Int 
+newIndex m | IntMap.null m  = 0
+           | otherwise      = 1 + (fst $ IntMap.findMax m)
