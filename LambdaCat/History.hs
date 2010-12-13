@@ -6,6 +6,7 @@ module LambdaCat.History
   , back
   , forward
   , insert
+  , current 
 
   , hasBack
   , hasForward
@@ -54,6 +55,9 @@ forward index dt =
   in  case mdt' of
       Just dt' -> Just $ dt' { dTreeBack = Just (index,newDt) }
       Nothing  -> Nothing
+
+current :: DTree a -> a 
+current = dTreeWeight 
 
 hasForward :: DTree a -> Bool
 hasForward = IntMap.null . dTreeForward 
