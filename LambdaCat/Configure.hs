@@ -12,10 +12,9 @@ import LambdaCat.Page (Page (..))
 import LambdaCat.Protocol
 
 data LambdaCatConf = LambdaCatConf
-    { uriModifier :: URI -> URI
-    , pageList    :: [(Page, [Protocol])]
-    , mimeList    :: [(Page, [String])]
-    , homeURI     :: URI
+    { supplierList :: [(Supplier, [Protocol])]
+    , viewList     :: [(View    , [Protocol], [String])]
+    , homeURI      :: URI
     }
 
 cfgIORef :: IORef LambdaCatConf

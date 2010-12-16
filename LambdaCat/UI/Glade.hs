@@ -3,12 +3,12 @@
 module LambdaCat.UI.Glade where
 
 import LambdaCat.Browser
-import LambdaCat.Page
+import LambdaCat.Class
 import LambdaCat.Configure (lambdaCatConf, LambdaCatConf (..))
 
 import LambdaCat.Utils
 import LambdaCat.UI.Glade.PersistentTabId
-import LambdaCat.UI.Glade.BrowserManager
+import LambdaCat.Session
 
 import Paths_lambdacat
 
@@ -19,74 +19,91 @@ import Network.URI
 
 
 data GladeUI = GladeUI
-   { browsers  :: BrowserManager
+   { gladeXml      :: GladeXML
+   , gladeWindow   :: Window
+   , gladeStatBar  :: Statusbar
+   , pageContainer :: Notebook
+   , gladeSession  :: Session Int TabMeta 
    }
 
+data TabMeta = TabMeta 
+  { tabView  :: View
+  , tabIdent :: Int
+  , tabLabel :: Label
+  , tabImage :: Image 
+  }
+
 instance UIClass GladeUI where
-    init = do
-     _ <- initGUI
-     bm <- newBrowserManager
-     return GladeUI { browsers = bm }
+  init = do
+      _ <- initGUI
 
-    newBrowser ui = do
-        spath    <- getDataFileName "lambdacat.gtkrc"
-        rcParse spath
+      spath    <- getDataFileName "lambdacat.gtkrc"
+      rcParse spath
 
-        fpath    <- getDataFileName "lambdacat.glade"
-        Just xml <- xmlNew fpath
-        window   <- xmlGetWidget xml castToWindow "browserWindow"
-        notebook <- xmlGetWidget xml castToNotebook "pageNoteBook"
-        statbar  <- xmlGetWidget xml castToStatusbar "browserStatus"
+      fpath    <- getDataFileName "lambdacat.glade"
+      Just xml <- xmlNew fpath
+      window   <- xmlGetWidget xml castToWindow "browserWindow"
+      notebook <- xmlGetWidget xml castToNotebook "pageNoteBook"
+      statbar  <- xmlGetWidget xml castToStatusbar "browserStatus"
+      return GladeUI { gladeSession = newSession
+                     , gladeXML     = xml
+                     , gladeWindow  = window 
+                     , gladeStatBar = statbar
+                     , pageConatiner= notebook 
+                     }
 
-        let browser = GladeBrowser
-                        { gladeXml      = xml
-                        , gladeWindow   = window
-                        , gladeStatBar  = statbar
-                        , pageContainer = notebook
-                        }
-        bid <- addBrowser (browsers ui) browser
-        -- General / Events ---------------------------------------------------
-        _ <- onDestroy window mainQuit
-        _ <- notebook `on`  switchPage $ \ newActive -> do
-            -- we assert that there is a container in a tab
-            (Just container) <- notebookGetNthPage notebook newActive
-            withContainerId (castToContainer container) $ \ tabId -> do
-                mPage <- getPageFromBrowser (browsers ui) bid tabId
-                case mPage of
-                    Nothing  -> return ()
-                    Just (_, _, p) -> do
-                        uriChanged ui p
-                        changedTitle ui p
+  mainLoop ui = do
+      let notebook = pageConatiner ui
+          statbar  = gladeStatBar ui
+          xml      = gladeXML ui
+          window   = gladeWindow ui
+          session  = gladeSession ui
+      -- General / Events ---------------------------------------------------
+      _ <- onDestroy window mainQuit
+      _ <- notebook `on`  switchPage $ \ newActive -> do
+          --  when this signal is called we assert 
+          --  that there is a tab, which contains a container.
+          (Just container) <- notebookGetNthPage notebook newActive
+          withContainerId (castToContainer container) $ \ tabId -> do
+              case getTab session tabId of
+                  Nothing  -> return ()
+                  Just tab -> do 
+                      changeURI   ui tabId (tabView tab)
+                      changeTitle ui tabId (tabView tab)
 
-        -- Toolbar / Events ---------------------------------------------------
-        pageBack <- xmlGetToolButton xml "pageBack"
-        _ <- onToolButtonClicked pageBack (pageAction notebook bid back)
-        pageForward <- xmlGetToolButton xml "pageForward"
-        _ <- onToolButtonClicked pageForward (pageAction notebook bid forward)
-        pageReload <- xmlGetToolButton xml "pageReload"
-        _ <- onToolButtonClicked pageReload (pageAction notebook bid reload)
-        pageHome <- xmlGetToolButton xml "pageHome"
-        _ <- onToolButtonClicked pageHome $
-                pageAction notebook bid $
-                    loadAction (homeURI lambdaCatConf) bid
-        pageURI <- xmlGetWidget xml castToEntry "pageURI"
-        _ <- onEntryActivate pageURI  $ do
-            text <- entryGetText pageURI
-            case parseURIReference text of
-                Just uri -> pageAction notebook bid $ loadAction uri bid
-                Nothing  -> return ()
-        searchText <- xmlGetWidget xml castToEntry "searchText"
-        _ <- onEditableChanged searchText $ do
-            text <- entryGetText searchText
-            pageAction notebook bid $ flip search text
-        addTab <- xmlGetToolButton xml "addTab"
-        _ <- onToolButtonClicked addTab $ newPage bid (parseURI "about:blank") >> return ()
-        menuItemQuit <- xmlGetWidget xml castToMenuItem "menuItemQuit"
-        _ <- onActivateLeaf menuItemQuit mainQuit
-        menuItemInfo <- xmlGetWidget xml castToMenuItem "menuItemInfo"
-        _ <- onActivateLeaf menuItemInfo $ newPage bid (parseURI "about:info") >> return ()
-        widgetShowAll window
-        return bid
+      -- Toolbar / Events ---------------------------------------------------
+      {- Review following code
+      pageBack <- xmlGetToolButton xml "pageBack"
+      _ <- onToolButtonClicked pageBack (pageAction notebook bid (\_ p -> back p))
+      pageForward <- xmlGetToolButton xml "pageForward"
+      _ <- onToolButtonClicked pageForward (pageAction notebook bid (\_ p -> forward p))
+      pageReload <- xmlGetToolButton xml "pageReload"
+      _ <- onToolButtonClicked pageReload (pageAction notebook bid (\_ p -> reload p))
+      pageHome <- xmlGetToolButton xml "pageHome"
+      _ <- onToolButtonClicked pageHome $
+              pageAction notebook bid $
+                  loadAction (homeURI lambdaCatConf) bid
+      pageURI <- xmlGetWidget xml castToEntry "pageURI"
+      _ <- onEntryActivate pageURI  $ do
+          text <- entryGetText pageURI
+          case parseURIReference text of
+              Just uri -> pageAction notebook bid $ loadAction uri bid
+              Nothing  -> return ()
+      searchText <- xmlGetWidget xml castToEntry "searchText"
+      _ <- onEditableChanged searchText $ do
+          text <- entryGetText searchText
+          pageAction notebook bid $ (\ _ p -> flip search text  p)
+      addTab <- xmlGetToolButton xml "addTab"
+      _ <- onToolButtonClicked addTab $ newPage bid (parseURI "about:blank") >> return ()
+      menuItemQuit <- xmlGetWidget xml castToMenuItem "menuItemQuit"
+      _ <- onActivateLeaf menuItemQuit mainQuit
+      menuItemInfo <- xmlGetWidget xml castToMenuItem "menuItemInfo"
+      _ <- onActivateLeaf menuItemInfo $ newPage bid (parseURI "about:info") >> return ()
+      -}
+      widgetShowAll window
+      -- start GTK mainloop
+      mainGUI
+     {-
 
      where
         newPage :: BrowserId -> Maybe URI -> IO (Maybe Page)
@@ -104,8 +121,8 @@ instance UIClass GladeUI where
                     _ <- load w uri'
                     return $ Just w
 
-        loadAction :: URI -> BrowserId -> Page -> IO ()
-        loadAction uri bid w = do
+        loadAction :: URI -> BrowserId -> TabId -> Page -> IO ()
+        loadAction uri bid tid w = do
             mw' <- pageFromProtocol (update ui bid)
                                     (uriModifier lambdaCatConf)
                                     (pageList lambdaCatConf)
@@ -115,11 +132,11 @@ instance UIClass GladeUI where
                 -- TODO call an default error page
                 Nothing -> return ()
                 Just (w', uri') -> do
-                    replacePage ui bid w w'
+                    replacePage ui bid tid w w'
                     _ <- load w' uri'
                     return ()
 
-        pageAction :: Notebook -> BrowserId -> (Page -> IO a) -> IO ()
+        pageAction :: Notebook -> BrowserId -> (TabId -> Page -> IO a) -> IO ()
         pageAction notebook bid f = do
             -- TODO select correct page
             tid <- notebookGetCurrentPage notebook
@@ -129,153 +146,131 @@ instance UIClass GladeUI where
                     withContainerId (castToContainer container) $ \ tabId -> do
                         mPage <- getPageFromBrowser (browsers ui) bid tabId
                         case mPage of
-                            Just (_, _, p) -> f p >> return ()
+                            Just (_, _, p) -> f tabId p >> return ()
                             Nothing -> return ()
                 Nothing -> do
                     mp <- newPage bid $ parseURI "about:blank"
                     case mp of
                         Just p -> do
-                            _ <- f p
+                            -- _ <- f undefined p 
                             return ()
                         Nothing ->
                             return ()
 
         xmlGetToolButton :: GladeXML -> String -> IO ToolButton
         xmlGetToolButton xml = xmlGetWidget xml castToToolButton
+    -}
 
-    update ui bid f = do
-        f ui bid
-        return ()
+  update ui tabid f = f ui tabid
 
-    uriChanged ui page = do
-        p <- getBrowserByPage (browsers ui) page
-        case p of
-          Just (_, GladeBrowser { gladeXml = xml }) -> do
-            pageURI <- xmlGetWidget xml castToEntry "pageURI"
-            uri <- getCurrentURI page
-            entrySetText pageURI (uriString uri)
-          Nothing  -> return ()
-      where uriString uri = uriToString id uri ""
+  changedURI view ui meta = do
+      let xml = gladeXML ui 
+      pageURI <- xmlGetWidget xml castToEntry "pageURI"
+      uri <- getCurrentURI view
+      entrySetText pageURI (uriString uri)
+    where uriString uri = uriToString id uri ""
 
-    changedTitle ui page = do
-        mBrowser <- getBrowserByPage (browsers ui) page
-        case mBrowser of
-            Nothing -> return ()
-            Just (bid, GladeBrowser { gladeXml = xml}) -> do
-                title <- getCurrentTitle page
-                mLabel  <- getLabelAndContainerForPage (browsers ui) bid page
-                case mLabel of
-                    Nothing  -> return ()
-                    Just ((_img, label), _) -> do
-                        set label [ labelLabel := if null title then "(Untitled)" else title ]
-                        return ()
-                window <- xmlGetWidget xml castToWindow "browserWindow"
-                set window [ windowTitle := title ]
+  changedTitle view ui meta = do
+      let xml   = gladeXML ui
+          tab   = getTab (gladeSession ui) meta -- meta :: Int ??
+          label = tabLabel tab
+      title <- getCurrentTitle view
+      case mLabel of
+        Nothing  -> return ()
+        Just ((_img, label), _) -> do
+          set label [ labelLabel := if null title then "(Untitled)" else title ]
+          return ()
+      window <- xmlGetWidget xml castToWindow "browserWindow"
+      set window [ windowTitle := title ]
 
-    changedProgress progress ui bid = do
-        mb <- getBrowser (browsers ui) bid
-        case mb of
-            Nothing ->
-                $pinfo putStrLn $ "ProgressError: cannot find browser"
-            Just b -> do
-                let sb = gladeStatBar b
-                cntx <- statusbarGetContextId sb "progress"
-                statusbarPop sb cntx
-                _ <- statusbarPush sb cntx $ show progress ++ "%"
-                return ()
- 
-    statusChanged status ui bid = do
-        $plog putStrLn $ "Status:" ++ status
-        mb <- getBrowser (browsers ui) bid
-        case mb of
-            Nothing ->
-                $pinfo putStrLn $ "StatusError: cannot find browser"
-            Just b -> do
-                let sb = gladeStatBar b
-                cntx <- statusbarGetContextId sb "status"
-                case status of
-                    "" ->
-                        statusbarPop sb cntx
-                    stat -> do
-                        statusbarPop sb cntx
-                        _ <- statusbarPush sb cntx stat
-                        return ()
+  changedProgress progress ui meta = do 
+      let sb = gladeStatBar ui
+      -- TODO check if current tab is equal to the tab which hosts the calling
+      -- view 
+      cntx <- statusbarGetContextId sb "progress"
+      statusbarPop sb cntx
+      _ <- statusbarPush sb cntx $ show progress ++ "%"
+      return ()
 
-    replacePage ui bid oldpage page@(Page hasWidget) = do
-        bool <- getBrowser (browsers ui) bid
-        $plog putStrLn ("replacePage: " ++ show bool)
-        case bool of
-          Just (GladeBrowser { gladeXml = xml }) -> do
-            let widget = getWidget hasWidget
-            _noteBook <- xmlGetWidget xml castToNotebook "pageNoteBook"
-            -- Replace page in container
-            $plog putStrLn ("replacePage bid: " ++ show bid)
-            maybeContainer <- getLabelAndContainerForPage (browsers ui) bid oldpage
-            $plog putStrLn ("replacePage container: " ++ show (isJust maybeContainer))
-            case maybeContainer of
-              Just (_, container) -> do
-                mapM_ (containerRemove container) =<< containerGetChildren container
-                containerAdd container widget
-                widgetShowAll widget
-                -- Replace page in state/model
-                replacePageInBrowser (browsers ui) bid oldpage page
-                destroy oldpage
-                return ()
-              Nothing -> return ()
-          Nothing -> return ()
+  changedStatus status ui meta = do
+      let sb = gladeStatBar b
+      -- TODO check if current tab is equal to the tab which hosts the 
+      -- calling view
+      cntx <- statusbarGetContextId sb "status"
+      case status of
+        ""   -> statusbarPop sb cntx
+        stat -> do
+          statusbarPop sb cntx
+          _ <- statusbarPush sb cntx stat
+          return ()
 
-    embedPage ui bid page@(Page hasWidget) = do
-        bool <- getBrowser (browsers ui) bid
-        $plog putStrLn ("embedPage: " ++ show bool)
-        case bool of
-          Just (GladeBrowser { gladeXml = xml }) -> do
-            let widget = getWidget hasWidget
-            noteBook  <- xmlGetWidget xml castToNotebook "pageNoteBook"
-            scrolledWindow <- scrolledWindowNew Nothing Nothing
-            containerAdd scrolledWindow widget
+  replaceView view ui meta = do
+      -- should we destory old page ?
+      let session = updateTab (gladeSession ui) meta $ \ tab ->
+                      tab { tabView = view } 
+      _noteBook <- xmlGetWidget xml castToNotebook "pageNoteBook"
+      -- Replace page in container
+      --    maybeContainer <- getLabelAndContainerForPage (browsers ui) bid oldpage
+      case maybeContainer of
+        Just (_, container) -> do
+          mapM_ (containerRemove container) =<< containerGetChildren container
+          embed view (\w -> containerAdd container w >> widgetShowAll w) 
+          return ()
+        Nothing -> return ()
 
-            tabId <- genNewId
-            setContainerId scrolledWindow tabId
+  {-
 
-            _tabId <- notebookAppendPage noteBook scrolledWindow "(No Title)"
-            (labelWidget, img, label) <- tabWidget (do
-                removeTId <- get noteBook (notebookChildPosition scrolledWindow)
-                notebookRemovePage noteBook removeTId
-                withContainerId scrolledWindow $ \ removeTabId -> do
-                    -- we assume that any existing tab should have a page in it.
-                    Just (_, _, removePage) <- getPageFromBrowser (browsers ui) bid removeTabId
-                    removePageFromBrowser (browsers ui) bid removePage
-                    destroy removePage
-                )
-            notebookSetTabLabel noteBook scrolledWindow labelWidget
-            widgetShowAll noteBook
-            addPageToBrowser (browsers ui) bid tabId img label (castToContainer scrolledWindow) page
-            return ()
-          Nothing -> return ()
+  embedPage ui bid page@(Page hasWidget) = do
+      bool <- getBrowser (browsers ui) bid
+      $plog putStrLn ("embedPage: " ++ show bool)
+      case bool of
+        Just (GladeBrowser { gladeXml = xml }) -> do
+          let widget = getWidget hasWidget
+          noteBook  <- xmlGetWidget xml castToNotebook "pageNoteBook"
+          scrolledWindow <- scrolledWindowNew Nothing Nothing
+          containerAdd scrolledWindow widget
 
-      where tabWidget closeCallback = do
-                hbox  <- hBoxNew False 3
-                label <- labelNew (Just "(Untitled)")
+          tabId <- genNewId
+          setContainerId scrolledWindow tabId
 
-                button <- buttonNew
-                widgetSetName button "tab-close-button"
+          _tabId <- notebookAppendPage noteBook scrolledWindow "(No Title)"
+          (labelWidget, img, label) <- tabWidget (do
+              removeTId <- get noteBook (notebookChildPosition scrolledWindow)
+              notebookRemovePage noteBook removeTId
+              withContainerId scrolledWindow $ \ removeTabId -> do
+                  -- we assume that any existing tab should have a page in it.
+                  Just (_, _, removePage) <- getPageFromBrowser (browsers ui) bid removeTabId
+                  removePageFromBrowser (browsers ui) bid removePage
+                  destroy removePage
+              )
+          notebookSetTabLabel noteBook scrolledWindow labelWidget
+          widgetShowAll noteBook
+          addPageToBrowser (browsers ui) bid tabId img label (castToContainer scrolledWindow) page
+          return ()
+        Nothing -> return ()
 
-                fav <- imageNewFromStock stockJustifyCenter IconSizeMenu
+    where tabWidget closeCallback = do
+              hbox  <- hBoxNew False 3
+              label <- labelNew (Just "(Untitled)")
 
-                img <- imageNewFromStock stockClose IconSizeMenu
+              button <- buttonNew
+              widgetSetName button "tab-close-button"
 
-                set button
-                    [ buttonRelief := ReliefNone
-                    , buttonImage  := img
-                    ]
+              fav <- imageNewFromStock stockJustifyCenter IconSizeMenu
 
-                _ <- button `onClicked` closeCallback
+              img <- imageNewFromStock stockClose IconSizeMenu
 
-                boxPackStart hbox fav PackGrow 0
-                boxPackStart hbox label PackGrow 0
-                boxPackStart hbox button PackNatural 0
+              set button
+                  [ buttonRelief := ReliefNone
+                  , buttonImage  := img
+                  ]
 
-                widgetShowAll hbox
-                return (hbox, img, label)
+              _ <- button `onClicked` closeCallback
 
-    mainLoop _ = mainGUI
+              boxPackStart hbox fav PackGrow 0
+              boxPackStart hbox label PackGrow 0
+              boxPackStart hbox button PackNatural 0
+
+              widgetShowAll hbox
+              return (hbox, img, label)
+  -}

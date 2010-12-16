@@ -68,7 +68,7 @@ Library
         dyre >= 0.8.5 && < 0.9,
         filepath,
         directory,
-        cmdargs == 0.5.*,
+        cmdargs == 0.6.*,
         template-haskell == 2.4.*
 
     if flag(release)
@@ -96,7 +96,7 @@ Library
         LambdaCat.Configure
         LambdaCat.CmdArgs
         LambdaCat.Loadable
-        LambdaCat.Page
+        LambdaCat.Class
         LambdaCat.Page.About
         LambdaCat.Page.Cat
         LambdaCat.Page.WebView

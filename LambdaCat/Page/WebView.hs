@@ -21,8 +21,6 @@ import Control.Monad
 import Data.Typeable
 import Graphics.UI.Gtk.WebKit.WebView
 import Graphics.UI.Gtk.WebKit.WebSettings
---import Graphics.UI.Gtk.WebKit.WebDataSource
---import Graphics.UI.Gtk.WebKit.WebResource
 import Graphics.UI.Gtk.WebKit.WebFrame
 import Graphics.UI.Gtk.WebKit.Download
 import Graphics.UI.Gtk.WebKit.NetworkRequest
@@ -45,12 +43,12 @@ webViewPage = Page (undefined :: WebViewPage)
 newWrappablePage :: IO WebViewPage
 newWrappablePage = webViewNew >>= return . WebViewPage
 
-newWithPage :: (UIClass ui, PageClass p, HasWidget p WebView) => p -> CallBack ui -> IO ()
+newWithPage :: (UIClass ui, PageClass p, HasWidget p WebView) => p -> CallBack ui tabid -> IO ()
 newWithPage page cb = do
-    cb (\ ui _ -> uriChanged ui (Page page))
+    cb (\ ui tabid _ -> uriChanged ui tabid (Page page))
     let widget = getWidget page
-    _ <- widget `on` loadFinished  $ (\ _ -> cb (\ ui _ -> uriChanged ui (Page page)))
-    _ <- widget `on` loadFinished  $ (\ _ -> cb (\ ui _ -> changedTitle ui (Page page)))
+    _ <- widget `on` loadFinished  $ (\ _ -> cb (\ ui tabid _ -> uriChanged ui tabid (Page page)))
+    _ <- widget `on` loadFinished  $ (\ _ -> cb (\ ui tabid _ -> changedTitle ui tabid (Page page)))
     -- _ <- widget `on` createWebView $ (\ _ -> createNew >>= return . unWebViewPage)
 
     _ <- widget `on` downloadRequested $ \ download -> do
@@ -76,7 +74,7 @@ newWithPage page cb = do
                                             case mw of
                                                 Nothing -> return False
                                                 Just (w, uri') -> do
-                                                    cb (\ ui bid -> replacePage ui bid (Page page) w)
+                                                    cb (\ ui tabid bid -> replacePage ui bid tabid (Page page) w)
                                                     _ <- load w uri'
                                                     return True
                                         _ -> return False
@@ -163,7 +161,7 @@ newWithPage page cb = do
                 case maybePage of
                     Just newPage -> do
                         $plog putStr ("Mime: uri = " ++ show uri ++ " => " ++ dshow uri)
-                        cb (\ ui bid -> replacePage ui bid (Page page) newPage)
+                        cb (\ ui tid bid -> replacePage ui bid tid (Page page) newPage)
                         _ <- load newPage uri
                         return True
                     Nothing -> return False
