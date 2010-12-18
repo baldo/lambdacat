@@ -28,7 +28,10 @@ class UIClass ui where
     update          :: ui -> meta -> Callback ui meta -> IO ()
 
     -- | Embed the view into the given browser.
-    embedView       :: View -> ui -> IO ()
+    --   For this function the meta data COULD be undefined
+    --   and is here to have a unique function interface
+    --   for the supplier 
+    embedView       :: View -> Callback ui meta 
 
     -- | Replace view with new view. The 'View' that
     -- should be replaced SHOULD be determind by @meta@.
@@ -47,10 +50,11 @@ class UIClass ui where
 -- | Class of viewers, which can render and handle content behind a 'URI'.
 class Typeable view => ViewClass view where
     -- | Creates a new view.
-    new :: UIClass ui => (Callback ui meta -> IO ()) -> IO view
+    new :: IO view
 
     -- | Ask the view to embed its widget by calling the given function. 
-    embed :: WidgetClass widget => view -> (widget -> IO ()) -> IO ()
+    --   And give the callback function to the widget 
+    embed :: (UIClass ui, WidgetClass widget) => view -> (widget -> IO ()) -> (Callback ui meta -> IO ()) -> IO ()
 
     -- | Destructor, allow cleaning up when view is discarded. 
     destroy :: view -> IO ()
@@ -65,6 +69,9 @@ class Typeable view => ViewClass view where
 
 -- | Class of suppliers, which retrieve content and select appropiate viewers.
 class Supplier supplier where
+  -- | Use of parameters
+  --   view <- new 
+  --   callbackfkt (actionfkt view)
   supplyView :: supplier -> (Callback ui meta -> IO ()) -> (View -> Callback ui meta) -> URI -> IO ()
 --  supplyContent :: TODO 
 
@@ -79,7 +86,7 @@ instance Show View where
 
 instance ViewClass View where
     new                 = return (error "Can't create existential quantificated datatype")
-    embed (View view)   = embed view 
+    embed (View view) callback  = embed view callback
     destroy (View view) = destroy view
 
     load (View view) = load view
@@ -90,8 +97,7 @@ instance ViewClass View where
 eqType :: (Typeable a, Typeable b) => a -> b -> Bool
 eqType a b = typeOf a == typeOf b
 
-createView :: (ViewClass view, UIClass ui) 
+createView :: (ViewClass view) 
            => view
-           -> (Callback ui meta -> IO ())
            -> IO view
 createView _ = new
