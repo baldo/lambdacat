@@ -3,8 +3,11 @@
 module LambdaCat.Class 
     ( UIClass (..)
     , ViewClass (..)
-    , View (..)
+    , SupplierClass (..)
     , Callback
+
+    , View (..) 
+    , Supplier (..)
 
     )
 where
@@ -68,7 +71,7 @@ class Typeable view => ViewClass view where
 
 
 -- | Class of suppliers, which retrieve content and select appropiate viewers.
-class Supplier supplier where
+class SupplierClass supplier where
   -- | Use of parameters
   --   view <- new 
   --   callbackfkt (actionfkt view)
@@ -93,6 +96,11 @@ instance ViewClass View where
 
     getCurrentURI (View view)   = getCurrentURI view
     getCurrentTitle (View view) = getCurrentTitle view
+
+data Supplier = forall supplier . (SupplierClass supplier) => Supplier supplier 
+
+instance SupplierClass Supplier where
+  supplyView (Supplier supplier) = supplyView supplier
 
 eqType :: (Typeable a, Typeable b) => a -> b -> Bool
 eqType a b = typeOf a == typeOf b
