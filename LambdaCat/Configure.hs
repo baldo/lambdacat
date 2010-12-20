@@ -8,8 +8,7 @@ import Data.IORef
 import Foreign
 import Network.URI
 
-import LambdaCat.Page (Page (..))
-import LambdaCat.Protocol
+import LambdaCat.Class (View (..),Supplier(..))
 
 data LambdaCatConf = LambdaCatConf
     { supplierList :: [(Supplier, [Protocol])]
@@ -17,11 +16,14 @@ data LambdaCatConf = LambdaCatConf
     , homeURI      :: URI
     }
 
+type Protocol = String
+
 cfgIORef :: IORef LambdaCatConf
 cfgIORef = unsafePerformIO $ newIORef (undefined :: LambdaCatConf)
 
 lambdaCatConf :: LambdaCatConf
 lambdaCatConf = unsafePerformIO $ readIORef cfgIORef
+
 
 setLCC :: LambdaCatConf -> IO ()
 setLCC = writeIORef cfgIORef
