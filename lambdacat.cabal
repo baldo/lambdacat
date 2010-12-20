@@ -97,7 +97,7 @@ Library
         LambdaCat.Loadable
         LambdaCat.Class
         LambdaCat.Supply 
-        LambdaCat.View.WebView
+        LambdaCat.View.Web
         LambdaCat.UI.Glade
         LambdaCat.UI.Glade.PersistentTabId
 

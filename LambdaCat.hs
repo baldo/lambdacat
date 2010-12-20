@@ -11,7 +11,7 @@ import Flags
 import LambdaCat.Configure
 import LambdaCat.Supply
 import LambdaCat.CmdArgs
-import LambdaCat.View.WebView
+import LambdaCat.View.Web
 import LambdaCat.UI.Glade
 import LambdaCat.Class 
 

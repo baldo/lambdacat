@@ -1,6 +1,6 @@
 {-# LANGUAGE DeriveDataTypeable, FlexibleContexts, FlexibleInstances, MultiParamTypeClasses, TemplateHaskell #-}
 
-module LambdaCat.View.WebView
+module LambdaCat.View.Web
     ( WebViewPage
 
     , webViewPage
