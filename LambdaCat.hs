@@ -7,7 +7,6 @@ module LambdaCat
     )
 where
 
-import Flags
 import LambdaCat.Configure
 import LambdaCat.Supply
 import LambdaCat.CmdArgs
