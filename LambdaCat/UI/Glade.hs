@@ -2,13 +2,13 @@
 
 module LambdaCat.UI.Glade where
 
-import LambdaCat.Browser
 import LambdaCat.Class
 import LambdaCat.Configure (lambdaCatConf, LambdaCatConf (..))
 
 import LambdaCat.Utils
 import LambdaCat.UI.Glade.PersistentTabId
 import LambdaCat.Session
+import LambdaCat.Supply 
 
 import Paths_lambdacat
 
@@ -22,7 +22,7 @@ data GladeUI = GladeUI
    { gladeXml      :: GladeXML
    , gladeWindow   :: Window
    , gladeStatBar  :: Statusbar
-   , pageContainer :: Notebook
+   , viewContainer :: Notebook
    , gladeSession  :: Session Int TabMeta 
    }
 
@@ -218,6 +218,41 @@ instance UIClass GladeUI where
           return ()
         Nothing -> return ()
 
+  embedView view ui _ = do
+    let noteBook = viewContainer ui
+    scrolledWindow <- scrolledWindowNew Nothing Nothing  
+    tabId          <- getNewId
+    embed view (embedHandle scrolledWindow) (update ui tabId) 
+    (labelWidget, img, label) <- tabWidget (do
+              removeTId <- get noteBook (notebookChildPosition scrolledWindow)
+              notebookRemovePage noteBook removeTId
+              withContainerId scrolledWindow $ \ removeTabId -> do
+                -- TODO
+							)
+
+    notbookAppendPage noteBook scrolledWindow labelWidget  
+   where embedHandle scrolledWindow widget = do
+          containerAdd scrolledWindow widget
+          setContainerId scrolledWindow widget
+          return () 
+         tabWidget closeCallback = do
+          hbox  <- hBoxNew False 3
+          label <- labelNew (Just "(Untitled)")
+          button <- buttonNew
+          widgetSetName button "tab-close-button"
+          fav <- imageNewFromStock stockJustifyCenter IconSizeMenu
+          img <- imageNewFromStock stockClose IconSizeMenu
+          set button
+            [ buttonRelief := ReliefNone
+            , buttonImage  := img
+            ]
+          _ <- button `onClicked` closeCallback
+          boxPackStart hbox fav PackGrow 0
+          boxPackStart hbox label PackGrow 0
+          boxPackStart hbox button PackNatural 0
+          widgetShowAll hbox
+          return (hbox, img, label)
+        
   {-
 
   embedPage ui bid page@(Page hasWidget) = do
