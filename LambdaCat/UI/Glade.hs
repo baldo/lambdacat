@@ -9,7 +9,7 @@ import LambdaCat.UI.Glade.PersistentTabId
 import LambdaCat.Session
 import LambdaCat.Supply 
 
-import Paths_lambdacat
+-- import Paths_lambdacat
 
 import Data.Maybe
 import Graphics.UI.Gtk
@@ -18,7 +18,7 @@ import Network.URI
 
 
 data GladeUI = GladeUI
-   { gladeXml      :: GladeXML
+   { gladeXML      :: GladeXML
    , gladeWindow   :: Window
    , gladeStatBar  :: Statusbar
    , viewContainer :: Notebook
@@ -26,20 +26,19 @@ data GladeUI = GladeUI
    }
 
 data TabMeta = TabMeta 
-  { tabView  :: View
-  , tabIdent :: Int
-  , tabLabel :: Label
-  , tabImage :: Image 
+  { tabMetaIdent :: Int
+  , tabMetaLabel :: Label
+  , tabMetaImage :: Image 
   }
 
 instance UIClass GladeUI where
   init = do
       _ <- initGUI
 
-      spath    <- getDataFileName "lambdacat.gtkrc"
+      spath    <-  return undefined -- getDataFileName "lambdacat.gtkrc"
       rcParse spath
 
-      fpath    <- getDataFileName "lambdacat.glade"
+      fpath    <- return undefined -- getDataFileName "lambdacat.glade"
       Just xml <- xmlNew fpath
       window   <- xmlGetWidget xml castToWindow "browserWindow"
       notebook <- xmlGetWidget xml castToNotebook "pageNoteBook"
@@ -48,11 +47,11 @@ instance UIClass GladeUI where
                      , gladeXML     = xml
                      , gladeWindow  = window 
                      , gladeStatBar = statbar
-                     , pageConatiner= notebook 
+                     , viewContainer= notebook 
                      }
 
   mainLoop ui = do
-      let notebook = pageConatiner ui
+      let notebook = viewContainer ui
           statbar  = gladeStatBar ui
           xml      = gladeXML ui
           window   = gladeWindow ui
@@ -171,14 +170,11 @@ instance UIClass GladeUI where
 
   changedTitle view ui meta = do
       let xml   = gladeXML ui
-          tab   = getTab (gladeSession ui) meta -- meta :: Int ??
-          label = tabLabel tab
+          tab   = getTab (gladeSession ui) (tabMetaIdent meta)
+          label = tabMetaLabel tab
       title <- getCurrentTitle view
-      case mLabel of
-        Nothing  -> return ()
-        Just ((_img, label), _) -> do
-          set label [ labelLabel := if null title then "(Untitled)" else title ]
-          return ()
+      set label [ labelLabel := if null title then "(Untitled)" else title ]
+      return ()
       window <- xmlGetWidget xml castToWindow "browserWindow"
       set window [ windowTitle := title ]
 
@@ -192,7 +188,7 @@ instance UIClass GladeUI where
       return ()
 
   changedStatus status ui meta = do
-      let sb = gladeStatBar b
+      let sb = gladeStatBar ui 
       -- TODO check if current tab is equal to the tab which hosts the 
       -- calling view
       cntx <- statusbarGetContextId sb "status"
@@ -205,31 +201,33 @@ instance UIClass GladeUI where
 
   replaceView view ui meta = do
       -- should we destory old page ?
-      let session = updateTab (gladeSession ui) meta $ \ tab ->
-                      tab { tabView = view } 
-      _noteBook <- xmlGetWidget xml castToNotebook "pageNoteBook"
-      -- Replace page in container
-      --    maybeContainer <- getLabelAndContainerForPage (browsers ui) bid oldpage
-      case maybeContainer of
-        Just (_, container) -> do
-          mapM_ (containerRemove container) =<< containerGetChildren container
-          embed view (\w -> containerAdd container w >> widgetShowAll w) 
-          return ()
-        Nothing -> return ()
+      let oldView    = tabView $ getTab (gladeSession ui) (tabMetaIdent meta) 
+          newSession = updateTab (gladeSession ui) meta $ \ tab -> tab { tabView = view } 
+          container  = viewContainer ui 
+      destroy oldView
+      mapM_ (containerRemove container) =<< containerGetChildren container
+      embed view (\w -> containerAdd container w >> widgetShowAll w) 
+      return ()
 
   embedView view ui _ = do
     let noteBook = viewContainer ui
+        session  = gladeSession ui 
     scrolledWindow <- scrolledWindowNew Nothing Nothing  
-    tabId          <- getNewId
-    embed view (embedHandle scrolledWindow) (update ui tabId) 
+    tabId          <- genNewId
     (labelWidget, img, label) <- tabWidget (do
               removeTId <- get noteBook (notebookChildPosition scrolledWindow)
               notebookRemovePage noteBook removeTId
-              withContainerId scrolledWindow $ \ removeTabId -> do
-                -- TODO
-							)
-
-    notbookAppendPage noteBook scrolledWindow labelWidget  
+              withContainerId scrolledWindow $ \ removeTabId ->
+                    let tab = getTab session removeTabId
+                    in  destroy (tabView tab)
+              )
+    let tabMeta = TabMeta 
+          { tabMetaIdent = tabId 
+          , tabMetaLabel = label
+          , tabMetaImage = img 
+          }
+    embed view (embedHandle scrolledWindow) (update ui tabMeta) 
+    notebookAppendPage noteBook scrolledWindow labelWidget  
    where embedHandle scrolledWindow widget = do
           containerAdd scrolledWindow widget
           setContainerId scrolledWindow widget
@@ -252,7 +250,7 @@ instance UIClass GladeUI where
           widgetShowAll hbox
           return (hbox, img, label)
         
-  {-
+  {- Can we remove following code now? 
 
   embedPage ui bid page@(View hasWidget) = do
       bool <- getBrowser (browsers ui) bid
@@ -277,7 +275,7 @@ instance UIClass GladeUI where
                   removePageFromBrowser (browsers ui) bid removePage
                   destroy removePage
               )
-          notebookSetTabLabel noteBook scrolledWindow labelWidget
+          notebookSetTabLabel noteBook scrolledWindow labelWidge
           widgetShowAll noteBook
           addPageToBrowser (browsers ui) bid tabId img label (castToContainer scrolledWindow) page
           return ()
