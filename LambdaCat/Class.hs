@@ -58,7 +58,8 @@ class Typeable view => ViewClass view where
 
     -- | Ask the view to embed its widget by calling the given function. 
     --   And give the callback function to the widget 
-    embed :: (UIClass ui meta) => view -> (Widget -> IO ()) -> (Callback ui meta -> IO ()) -> IO ()
+    embed :: UIClass ui meta
+          => view -> (Widget -> IO ()) -> (Callback ui meta -> IO ()) -> IO ()
 
     -- | Destructor, allow cleaning up when view is discarded. 
     destroy :: view -> IO ()

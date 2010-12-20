@@ -19,38 +19,12 @@ Extra-Source-Files:
 Data-Files:
     lambdacat.glade
     lambdacat.gtkrc
-    styles/atom.css
-    styles/rss.css
-    cats/kebab.jpg
-    cats/sheela.jpg
-    about/blank.html
-    about/info.html
-
-Flag Debug
-    Description: Enable some debugging and profiling stuff.
-    Default:     False
-
-Flag Release
-    Description: Reduce build messages and build even if warnings arise.
-    Default:     True
 
 Executable lambdacat
     Main-is: Main.hs
 
-    if flag(release)
-        if flag(debug)
-            Ghc-Options:
-                -O2 -Wall -threaded -eventlog
-        else
-            Ghc-Options:
-                -O2 -Wall -threaded
-    else
-        if flag(debug)
-            Ghc-Options:
-                -O2 -Wall -Werror -threaded -eventlog
-        else
-            Ghc-Options:
-                -O2 -Wall -Werror -threaded
+    Ghc-Options:
+        -O2 -Wall -threaded
 
 Library
     Build-Depends:
@@ -71,24 +45,8 @@ Library
         cmdargs == 0.6.*,
         template-haskell == 2.4.*
 
-    if flag(release)
-        if flag(debug)
-            Ghc-Options:
-                -O2 -Wall -eventlog
-            Cpp-Options:
-                -DDEBUG
-        else
-            Ghc-Options:
-                -O2 -Wnot -eventlog
-    else
-        if flag(debug)
-            Ghc-Options:
-                -O2 -Wall -Werror -eventlog
-            Cpp-Options:
-                -DDEBUG
-        else
-            Ghc-Options:
-                -O2 -Wall -Werror
+    Ghc-Options:
+        -O2 -Wall
 
     Exposed-Modules:
         LambdaCat
@@ -97,16 +55,14 @@ Library
         LambdaCat.Loadable
         LambdaCat.Class
         LambdaCat.Supply 
-        LambdaCat.View.WebView
+        LambdaCat.View.Web
         LambdaCat.UI.Glade
         LambdaCat.UI.Glade.PersistentTabId
 
     Other-Modules:
-        Flags
         Paths_lambdacat
 
     Extensions:
-        CPP,
         DeriveDataTypeable,
         ExistentialQuantification,
         FlexibleInstances,
@@ -115,7 +71,4 @@ Library
         MultiParamTypeClasses,
         RankNTypes,
         TypeSynonymInstances
-
-    Build-Tools:
-        cpphs
 

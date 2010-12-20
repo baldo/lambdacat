@@ -1,47 +1,30 @@
 {-# LANGUAGE DeriveDataTypeable, FlexibleContexts, FlexibleInstances, MultiParamTypeClasses, TemplateHaskell #-}
 
-module LambdaCat.View.WebView
-    ( WebViewPage
-
-    , webViewPage
-
-    , newWrappablePage
-    , newWithPage
+module LambdaCat.View.Web
+    ( WebView
     ) where
 
-import Prelude hiding (log)
-
 import LambdaCat.Class
-import LambdaCat.Configure
 
-import Paths_lambdacat
-
-import Control.Monad
+import Data.Maybe
 import Data.Typeable
-import Graphics.UI.Gtk.WebKit.WebView
-import Graphics.UI.Gtk.WebKit.WebSettings
-import Graphics.UI.Gtk.WebKit.WebFrame
-import Graphics.UI.Gtk.WebKit.Download
-import Graphics.UI.Gtk.WebKit.NetworkRequest
-import Graphics.UI.Gtk hiding (populatePopup)
+import qualified Graphics.UI.Gtk.WebKit.WebView as WV
+import Graphics.UI.Gtk.Abstract.Widget
+-- import Graphics.UI.Gtk.WebKit.WebSettings
+-- import Graphics.UI.Gtk.WebKit.WebFrame
+-- import Graphics.UI.Gtk.WebKit.Download
+-- import Graphics.UI.Gtk.WebKit.NetworkRequest
+-- import Graphics.UI.Gtk hiding (populatePopup)
 import Network.URI
-import System.Directory
-import System.FilePath
-import System.Glib.GError
+-- import System.Directory
+-- import System.FilePath
+-- import System.Glib.GError
 
-newtype WebViewPage = WebViewPage { unWebViewPage :: WebView }
+-- | Data type representing the view. Do not confuse this with WebKit's WebView.
+newtype WebView = WebView { webViewWidget :: WV.WebView }
   deriving (Eq, Typeable)
 
-instance HasWidget WebViewPage WebView where
-    getWidget = unWebViewPage
-
--- TODO: nicer API please!
-webViewPage :: View
-webViewPage = View (undefined :: WebViewPage)
-
-newWrappablePage :: IO WebViewPage
-newWrappablePage = webViewNew >>= return . WebViewPage
-
+{-
 newWithPage :: (UIClass ui, PageClass p, HasWidget p WebView) => p -> CallBack ui tabid -> IO ()
 newWithPage page cb = do
     cb (\ ui tabid _ -> uriChanged ui tabid (View page))
@@ -126,21 +109,6 @@ newWithPage page cb = do
             Nothing ->
                 $plog putStrLn $ "documentLoadFinished, but not successfull."
 
-    _ <- widget `on` iconLoaded $ \ uri -> do
-        $plog putStrLn $ "Icon:" ++ (show uri)
-{- Needs patch in webkit
-        let wv = getWidget page
-        frame <- webViewGetMainFrame wv
-        dsrc <- webFrameGetDataSource frame
-
-        rs <- webDataSourceGetSubresources dsrc
-        ricos <- filterM (fmap (== uri) . webResourceGetUri) rs
-
-        case ricos of
-            (rico : _) -> do
-                $plog putStrLn "here webResourceGetData should be used..."
-            [] -> $pinfo putStrLn "Icon: Strange, no icon resource found..."
--}
     -- _ <- widget `on` redo -- binding didn't match webkitgtk signal
     -- _ <- widget `on` undo -- binding didn't match webkitgtk signal
     _ <- widget `on` mimeTypePolicyDecisionRequested $ \ _wf nr mime _wp -> do
@@ -177,56 +145,32 @@ newWithPage page cb = do
     -- _ <- widget `on` geolocationPolicyDecisionCancelled
     -- _ <- widget `on` geolocationPolicyDecisionRequested
     return ()
-{-
-  where createNew :: IO WebViewPage
-        createNew = do
-            page <- new cb
-            cb (\ ui bid -> embedPage ui bid (View page))
-            return page
 -}
 
-instance PageClass WebViewPage where
-    new cb = do
-        page <- newWrappablePage
-        newWithPage page cb
-        return page
+instance ViewClass WebView where
+    new = do
+        widget <- WV.webViewNew
+        return $ WebView { webViewWidget = widget }
 
-    destroy page =
-        webViewLoadHtmlString (getWidget page) "text/html" ""
+    embed WebView { webViewWidget = widget } embedder _update = do
+        embedder $ castToWidget widget
 
-    load page uri =  webViewLoadUri (unWebViewPage page) uriString >> return True
-        where uriString = uriToString id uri ""
+    destroy WebView { webViewWidget = widget } =
+        -- TODO: Unref WebKit's WebView.
+        WV.webViewLoadHtmlString widget "text/html" ""
 
-    getCurrentURI page = do
-        muri <- webViewGetUri . unWebViewPage $ page
-        case muri of
-            Just uri -> case parseURI uri of
-                Just x -> return x
-                _ -> return nullURI
-            _ -> return nullURI
+    load WebView { webViewWidget = widget } uri = do
+        -- TODO: Write module for URI conversion
+        WV.webViewLoadUri widget (uriToString id uri "")
+        return True
 
-    getCurrentTitle page = do
-        mTitle <- webViewGetTitle . unWebViewPage $ page
-        case mTitle of
-            Just title -> return title
-            _ -> return ""
+    getCurrentURI WebView { webViewWidget = widget } = do
+        mUriStr <- WV.webViewGetUri widget
+        return $ fromMaybe nullURI $ do
+            uriStr <- mUriStr
+            parseURI uriStr
 
-    back    =  webViewGoBack . unWebViewPage
-    forward =  webViewGoForward . unWebViewPage
-    stop    =  webViewStopLoading . unWebViewPage
-    reload  =  webViewReload . unWebViewPage
+    getCurrentTitle WebView { webViewWidget = widget } = do
+        mTitle <- WV.webViewGetTitle widget
+        return $ fromMaybe "" mTitle
 
-    search page text = do
-        let wv = getWidget page
-        webViewUnMarkTextMatches wv
-        _ <- webViewMarkTextMatches wv text False 0
-        webViewSetHighlightTextMatches wv True
-        _ <- webViewSearchText wv text False True True
-        return ()
-
-getDownloadDestinationURI :: String -> IO String
-getDownloadDestinationURI uri = do
-    appDir <- getAppUserDataDirectory "lambdacat"
-    let webCache =  appDir </>  "webView"
-    createDirectoryIfMissing True webCache
-    return $ "file://" ++ webCache </> (makeValid . filter isUnreserved) (escapeURIString isUnreserved uri)
