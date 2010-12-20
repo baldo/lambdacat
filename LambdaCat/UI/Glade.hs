@@ -200,7 +200,6 @@ instance UIClass GladeUI where
           return ()
 
   replaceView view ui meta = do
-      -- should we destory old page ?
       let oldView    = tabView $ getTab (gladeSession ui) (tabMetaIdent meta) 
           newSession = updateTab (gladeSession ui) meta $ \ tab -> tab { tabView = view } 
           container  = viewContainer ui 
@@ -214,12 +213,12 @@ instance UIClass GladeUI where
         session  = gladeSession ui 
     scrolledWindow <- scrolledWindowNew Nothing Nothing  
     tabId          <- genNewId
+    setContainerId scrolledWindow tabId 
     (labelWidget, img, label) <- tabWidget (do
               removeTId <- get noteBook (notebookChildPosition scrolledWindow)
               notebookRemovePage noteBook removeTId
               withContainerId scrolledWindow $ \ removeTabId ->
-                    let tab = getTab session removeTabId
-                    in  destroy (tabView tab)
+                    destroy $ tabView $ getTab session removeTabId
               )
     let tabMeta = TabMeta 
           { tabMetaIdent = tabId 
