@@ -22,16 +22,16 @@ data GladeUI = GladeUI
    , gladeWindow   :: Window
    , gladeStatBar  :: Statusbar
    , viewContainer :: Notebook
-   , gladeSession  :: Session Int TabMeta 
+   , gladeSession  :: Session TabId TabMeta 
    }
 
 data TabMeta = TabMeta 
-  { tabMetaIdent :: Int
+  { tabMetaIdent :: TabId
   , tabMetaLabel :: Label
   , tabMetaImage :: Image 
   }
 
-instance UIClass GladeUI where
+instance UIClass GladeUI TabMeta where
   init = do
       _ <- initGUI
 
@@ -59,17 +59,20 @@ instance UIClass GladeUI where
       -- General / Events ---------------------------------------------------
       _ <- onDestroy window mainQuit
       _ <- notebook `on`  switchPage $ \ newActive -> do
-          --  when this signal is called we assert 
-          --  that there is a tab, which contains a container.
-          (Just container) <- notebookGetNthPage notebook newActive
-          withContainerId (castToContainer container) $ \ tabId -> do
-              case getTab session tabId of
-                  Nothing  -> return ()
-                  Just tab -> do 
-                      changeURI   ui tabId (tabView tab)
-                      changeTitle ui tabId (tabView tab)
-
+        mContainer <- notebookGetNthPage notebook newActive
+        case mContainer of
+          Just container -> withContainerId (castToContainer container) $ \ tabId -> do
+            case getTab session tabId of
+              Just tab -> do 
+                changedURI   (tabView tab) ui (tabMeta tab)
+                changedTitle (tabView tab) ui (tabMeta tab)
+              Nothing  -> return ()
+          Nothing  -> return ()
       -- Toolbar / Events ---------------------------------------------------
+      addTab <- xmlGetToolButton xml "addTab"
+      let Just defaultURI = parseURI "about:blank"
+      _ <- onToolButtonClicked addTab $ supplyForView (update ui (undefined :: TabMeta)) embedView defaultURI
+
       {- Review following code
       pageBack <- xmlGetToolButton xml "pageBack"
       _ <- onToolButtonClicked pageBack (pageAction notebook bid (\_ p -> back p))
@@ -87,12 +90,6 @@ instance UIClass GladeUI where
           case parseURIReference text of
               Just uri -> pageAction notebook bid $ loadAction uri bid
               Nothing  -> return ()
-      searchText <- xmlGetWidget xml castToEntry "searchText"
-      _ <- onEditableChanged searchText $ do
-          text <- entryGetText searchText
-          pageAction notebook bid $ (\ _ p -> flip search text  p)
-      addTab <- xmlGetToolButton xml "addTab"
-      _ <- onToolButtonClicked addTab $ newPage bid (parseURI "about:blank") >> return ()
       menuItemQuit <- xmlGetWidget xml castToMenuItem "menuItemQuit"
       _ <- onActivateLeaf menuItemQuit mainQuit
       menuItemInfo <- xmlGetWidget xml castToMenuItem "menuItemInfo"
@@ -104,20 +101,6 @@ instance UIClass GladeUI where
      {-
 
      where
-        newPage :: BrowserId -> Maybe URI -> IO (Maybe View)
-        newPage bid uri = do
-            mw <- pageFromProtocol (update ui bid)
-                                   (uriModifier lambdaCatConf)
-                                   (pageList lambdaCatConf)
-                                   Nothing
-                                   uri
-            case mw of
-                -- TODO call an default error page
-                Nothing -> return Nothing
-                Just (w, uri') -> do
-                    embedPage ui bid w
-                    _ <- load w uri'
-                    return $ Just w
 
         loadAction :: URI -> BrowserId -> TabId -> View -> IO ()
         loadAction uri bid tid w = do
@@ -155,8 +138,6 @@ instance UIClass GladeUI where
                         Nothing ->
                             return ()
 
-        xmlGetToolButton :: GladeXML -> String -> IO ToolButton
-        xmlGetToolButton xml = xmlGetWidget xml castToToolButton
     -}
 
   update ui meta f = f ui meta
@@ -170,8 +151,8 @@ instance UIClass GladeUI where
 
   changedTitle view ui meta = do
       let xml   = gladeXML ui
-          tab   = getTab (gladeSession ui) (tabMetaIdent meta)
-          label = tabMetaLabel tab
+          tab = getTab (gladeSession ui) (tabMetaIdent meta)
+          label = tabMetaLabel meta
       title <- getCurrentTitle view
       set label [ labelLabel := if null title then "(Untitled)" else title ]
       return ()
@@ -200,12 +181,13 @@ instance UIClass GladeUI where
           return ()
 
   replaceView view ui meta = do
-      let oldView    = tabView $ getTab (gladeSession ui) (tabMetaIdent meta) 
-          newSession = updateTab (gladeSession ui) meta $ \ tab -> tab { tabView = view } 
+      let Just tab   = getTab (gladeSession ui) (tabMetaIdent meta) 
+          oldView    = tabView tab
+          newSession = updateTab (gladeSession ui) (tabMetaIdent meta) $ \ t -> Just $ t { tabView = view } 
           container  = viewContainer ui 
       destroy oldView
       mapM_ (containerRemove container) =<< containerGetChildren container
-      embed view (\w -> containerAdd container w >> widgetShowAll w) 
+      embed view (\w -> containerAdd container w >> widgetShowAll w) (update ui meta)
       return ()
 
   embedView view ui _ = do
@@ -218,18 +200,18 @@ instance UIClass GladeUI where
               removeTId <- get noteBook (notebookChildPosition scrolledWindow)
               notebookRemovePage noteBook removeTId
               withContainerId scrolledWindow $ \ removeTabId ->
-                    destroy $ tabView $ getTab session removeTabId
+                    destroy $ tabView . fromJust $ getTab session removeTabId
               )
     let tabMeta = TabMeta 
           { tabMetaIdent = tabId 
           , tabMetaLabel = label
           , tabMetaImage = img 
           }
-    embed view (embedHandle scrolledWindow) (update ui tabMeta) 
-    notebookAppendPage noteBook scrolledWindow labelWidget  
+    embed view (embedHandle scrolledWindow) (update ui (undefined :: TabMeta))
+    notebookAppendPageMenu noteBook scrolledWindow labelWidget labelWidget
+    return ()
    where embedHandle scrolledWindow widget = do
           containerAdd scrolledWindow widget
-          setContainerId scrolledWindow widget
           return () 
          tabWidget closeCallback = do
           hbox  <- hBoxNew False 3
@@ -248,60 +230,9 @@ instance UIClass GladeUI where
           boxPackStart hbox button PackNatural 0
           widgetShowAll hbox
           return (hbox, img, label)
-        
-  {- Can we remove following code now? 
 
-  embedPage ui bid page@(View hasWidget) = do
-      bool <- getBrowser (browsers ui) bid
-      $plog putStrLn ("embedPage: " ++ show bool)
-      case bool of
-        Just (GladeBrowser { gladeXml = xml }) -> do
-          let widget = getWidget hasWidget
-          noteBook  <- xmlGetWidget xml castToNotebook "pageNoteBook"
-          scrolledWindow <- scrolledWindowNew Nothing Nothing
-          containerAdd scrolledWindow widget
 
-          tabId <- genNewId
-          setContainerId scrolledWindow tabId
 
-          _tabId <- notebookAppendPage noteBook scrolledWindow "(No Title)"
-          (labelWidget, img, label) <- tabWidget (do
-              removeTId <- get noteBook (notebookChildPosition scrolledWindow)
-              notebookRemovePage noteBook removeTId
-              withContainerId scrolledWindow $ \ removeTabId -> do
-                  -- we assume that any existing tab should have a page in it.
-                  Just (_, _, removePage) <- getPageFromBrowser (browsers ui) bid removeTabId
-                  removePageFromBrowser (browsers ui) bid removePage
-                  destroy removePage
-              )
-          notebookSetTabLabel noteBook scrolledWindow labelWidge
-          widgetShowAll noteBook
-          addPageToBrowser (browsers ui) bid tabId img label (castToContainer scrolledWindow) page
-          return ()
-        Nothing -> return ()
+xmlGetToolButton :: GladeXML -> String -> IO ToolButton
+xmlGetToolButton xml = xmlGetWidget xml castToToolButton
 
-    where tabWidget closeCallback = do
-              hbox  <- hBoxNew False 3
-              label <- labelNew (Just "(Untitled)")
-
-              button <- buttonNew
-              widgetSetName button "tab-close-button"
-
-              fav <- imageNewFromStock stockJustifyCenter IconSizeMenu
-
-              img <- imageNewFromStock stockClose IconSizeMenu
-
-              set button
-                  [ buttonRelief := ReliefNone
-                  , buttonImage  := img
-                  ]
-
-              _ <- button `onClicked` closeCallback
-
-              boxPackStart hbox fav PackGrow 0
-              boxPackStart hbox label PackGrow 0
-              boxPackStart hbox button PackNatural 0
-
-              widgetShowAll hbox
-              return (hbox, img, label)
-  -}
