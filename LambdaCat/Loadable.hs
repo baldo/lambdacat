@@ -5,8 +5,8 @@ module LambdaCat.Loadable
     )
 where
 
-import LambdaCat.Page
+import LambdaCat.Class
 
 class Loadable l where
-    load :: PageClass page => page -> l -> IO ()
+    load :: ViewClass view => view -> l -> IO ()
 

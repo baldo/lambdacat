@@ -5,7 +5,6 @@ module LambdaCat.UI.Glade where
 import LambdaCat.Class
 import LambdaCat.Configure (lambdaCatConf, LambdaCatConf (..))
 
-import LambdaCat.Utils
 import LambdaCat.UI.Glade.PersistentTabId
 import LambdaCat.Session
 import LambdaCat.Supply 
@@ -106,7 +105,7 @@ instance UIClass GladeUI where
      {-
 
      where
-        newPage :: BrowserId -> Maybe URI -> IO (Maybe Page)
+        newPage :: BrowserId -> Maybe URI -> IO (Maybe View)
         newPage bid uri = do
             mw <- pageFromProtocol (update ui bid)
                                    (uriModifier lambdaCatConf)
@@ -121,7 +120,7 @@ instance UIClass GladeUI where
                     _ <- load w uri'
                     return $ Just w
 
-        loadAction :: URI -> BrowserId -> TabId -> Page -> IO ()
+        loadAction :: URI -> BrowserId -> TabId -> View -> IO ()
         loadAction uri bid tid w = do
             mw' <- pageFromProtocol (update ui bid)
                                     (uriModifier lambdaCatConf)
@@ -136,7 +135,7 @@ instance UIClass GladeUI where
                     _ <- load w' uri'
                     return ()
 
-        pageAction :: Notebook -> BrowserId -> (TabId -> Page -> IO a) -> IO ()
+        pageAction :: Notebook -> BrowserId -> (TabId -> View -> IO a) -> IO ()
         pageAction notebook bid f = do
             -- TODO select correct page
             tid <- notebookGetCurrentPage notebook
@@ -255,7 +254,7 @@ instance UIClass GladeUI where
         
   {-
 
-  embedPage ui bid page@(Page hasWidget) = do
+  embedPage ui bid page@(View hasWidget) = do
       bool <- getBrowser (browsers ui) bid
       $plog putStrLn ("embedPage: " ++ show bool)
       case bool of

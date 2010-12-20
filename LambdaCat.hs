@@ -8,18 +8,12 @@ module LambdaCat
 where
 
 import Flags
-import LambdaCat.Browser
 import LambdaCat.Configure
+import LambdaCat.Supply
 import LambdaCat.CmdArgs
-import LambdaCat.Page.Cat
-import LambdaCat.Page.About
-import LambdaCat.Page.MPlayer
-import LambdaCat.Page.Poppler
-import LambdaCat.Page.WebView
-import LambdaCat.Utils
+import LambdaCat.View.WebView
 import LambdaCat.UI.Glade
-import qualified LambdaCat.Page as Page
-import qualified LambdaCat.Page as UI
+import LambdaCat.Class 
 
 import Prelude hiding (log)
 import Config.Dyre
@@ -52,11 +46,11 @@ mainCat (e, cfg) = do
     ui <- UI.init :: IO GladeUI
     browser <- UI.newBrowser ui :: IO BrowserId
     mapM_ (\ uri -> do
-        mpage <- Page.pageFromProtocol (UI.update ui browser) (uriModifier lambdaCatConf) (pageList lambdaCatConf) Nothing (parseURIReference uri)
+        mpage <- View.pageFromProtocol (UI.update ui browser) (uriModifier lambdaCatConf) (pageList lambdaCatConf) Nothing (parseURIReference uri)
         case mpage of
             (Just (page, uri')) -> do
                 UI.embedPage ui browser page
-                _ <- Page.load page uri'
+                _ <- View.load page uri'
                 return ()
             Nothing     -> return ()
         ) us

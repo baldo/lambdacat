@@ -92,22 +92,14 @@ Library
 
     Exposed-Modules:
         LambdaCat
-        LambdaCat.Browser
         LambdaCat.Configure
         LambdaCat.CmdArgs
         LambdaCat.Loadable
         LambdaCat.Class
-        LambdaCat.Page.About
-        LambdaCat.Page.Cat
-        LambdaCat.Page.WebView
-        LambdaCat.Page.MPlayer
-        LambdaCat.Page.Poppler
-        LambdaCat.Page.Poppler.PageLayout
+        LambdaCat.Supply 
+        LambdaCat.View.WebView
         LambdaCat.UI.Glade
         LambdaCat.UI.Glade.PersistentTabId
-        LambdaCat.UI.Glade.BrowserManager
-        LambdaCat.Utils
-        LambdaCat.Protocol
 
     Other-Modules:
         Flags
