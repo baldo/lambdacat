@@ -9,6 +9,7 @@ module LambdaCat.Class
     , View (..) 
     , Supplier (..)
 
+    , createView
     )
 where
 
