@@ -159,7 +159,7 @@ instance UIClass GladeUI where
         xmlGetToolButton xml = xmlGetWidget xml castToToolButton
     -}
 
-  update ui tabid f = f ui tabid
+  update ui meta f = f ui meta
 
   changedURI view ui meta = do
       let xml = gladeXML ui 
