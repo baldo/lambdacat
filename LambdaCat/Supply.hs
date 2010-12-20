@@ -13,11 +13,11 @@ import LambdaCat.Configure
 
 -- | Selects a proper supplier for the 'URI'
 supplyForView :: (Callback ui meta -> IO ()) -> (View -> Callback ui meta) -> URI -> IO () 
-supplyForView callbackHdl embedHdl uri = do
+supplyForView callbackHdl embedHdl uri = 
   let suppliers = supplierList lambdaCatConf
       protocol = uriScheme uri 
       mSupply   = find (\ (s,ps) -> isJust $ find (==protocol) ps) suppliers
-  case mSupply of
+  in  case mSupply of
     Just (supply,_) -> supplyView supply callbackHdl embedHdl uri
     Nothing         -> return () -- maybe an error or something
 
