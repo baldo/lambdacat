@@ -4,15 +4,18 @@ import LambdaCat.History (History)
 import qualified LambdaCat.History as History 
 import Data.Map (Map)
 import qualified Data.Map as Map
-import Network.URI (URI) 
+import Network.URI (URI)
+import LambdaCat.Class 
 
 data Session tabIdent tabmeta = Session 
-  { sessionTabs      :: Map tabIdent (Tab tabIdent tabmeta) 
+  { sessionTabs      :: Map tabIdent (Tab tabmeta) 
   , sessionTabActive :: Maybe tabIdent 
   }
 
-data Tab tabIdent tabmeta  = Tab 
-  { tabIdent   :: tabIdent 
+-- Do we really need the tabmeta in here
+-- it should be passed throught the ui and callback Hdl on the View side 
+data Tab tabmeta  = Tab 
+  { tabView    :: View
   , tabMeta    :: tabmeta 
   , tabHistory :: History
   }
@@ -26,13 +29,14 @@ newSession = Session
 
 -- | create a new tab and add uri to its initial history 
 newTab :: Ord tabIdent 
-       => tabIdent 
+       => tabIdent
+       -> View 
        -> tabMeta 
        -> URI 
        -> Session tabIdent tabMeta 
        -> Session tabIdent tabMeta
-newTab ti tm uri session = 
-  let tab   = Tab { tabIdent = ti , tabHistory = History.singleton uri , tabMeta = tm  }
+newTab ti view tm uri session = 
+  let tab   = Tab { tabView = view  , tabHistory = History.singleton uri , tabMeta = tm  }
       sessTabs = sessionTabs session
   in  session { sessionTabs = Map.insert ti tab sessTabs }
 
@@ -50,7 +54,7 @@ updateTab session tabId f =
                               return $ tab { tabMeta = meta }
   in  session { sessionTabs = newTabs } 
 
-getTab :: Ord tabIdent => Session tabIdent tabMeta -> tabIdent -> Maybe (Tab tabIdent tabMeta)
+getTab :: Ord tabIdent => Session tabIdent tabMeta -> tabIdent -> Maybe (Tab tabMeta)
 getTab session ti = 
   let sessTabs = sessionTabs session
   in  Map.lookup ti sessTabs 
