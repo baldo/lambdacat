@@ -8,8 +8,6 @@ module LambdaCat.Class
 
     , View (..) 
     , Supplier (..)
-
-    , createView
     )
 where
 
@@ -107,10 +105,3 @@ instance SupplierClass Supplier where
 eqType :: (Typeable a, Typeable b) => a -> b -> Bool
 eqType a b = typeOf a == typeOf b
 
-createView :: View -> IO View
-createView (View v) = return . View =<< createView_ v
-
-createView_ :: (ViewClass view) 
-           => view
-           -> IO view
-createView_ _ = new

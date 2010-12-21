@@ -8,6 +8,7 @@ import Network.URI
 
 import LambdaCat.Class
 import LambdaCat.Configure
+import LambdaCat.View
 
 data WebSupplier = WebSupplier
 
