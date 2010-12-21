@@ -5,12 +5,15 @@ import qualified LambdaCat.History as History
 import Data.Map (Map)
 import qualified Data.Map as Map
 import Network.URI (URI)
-import LambdaCat.Class 
+import LambdaCat.Class
+import Control.Concurrent.MVar
 
 data Session tabIdent tabmeta = Session 
   { sessionTabs      :: Map tabIdent (Tab tabmeta) 
   , sessionTabActive :: Maybe tabIdent 
   }
+
+newtype MSession tabIdent tabMeta = MSession { unMSession :: MVar (Session tabIdent tabMeta )} 
 
 -- Do we really need the tabmeta in here
 -- it should be passed throught the ui and callback Hdl on the View side 
@@ -19,6 +22,9 @@ data Tab tabmeta  = Tab
   , tabMeta    :: tabmeta 
   , tabHistory :: History
   }
+
+newMSession :: IO (MSession tabIdent tabMeta)
+newMSession = return . MSession =<< newMVar newSession
 
 -- | create a new session with given session meta data.
 newSession :: Session tabIdent tabMeta 
@@ -58,3 +64,9 @@ getTab :: Ord tabIdent => Session tabIdent tabMeta -> tabIdent -> Maybe (Tab tab
 getTab session ti = 
   let sessTabs = sessionTabs session
   in  Map.lookup ti sessTabs 
+
+getSession :: MSession tabIdent tabMeta -> IO (Session tabIdent tabMeta)
+getSession = readMVar . unMSession
+
+withMSession :: (Session tabIdent tabMeta -> Session tabIdent tabMeta) -> MSession tabIdent tabMeta -> IO () 
+withMSession f (MSession mvar) = withMVar mvar (return . f) >> return ()
