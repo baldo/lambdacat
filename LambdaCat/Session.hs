@@ -89,8 +89,8 @@ deleteTab ident session =
 getSession :: MSession tabIdent tabMeta -> IO (Session tabIdent tabMeta)
 getSession = readMVar . unMSession
 
-updateMSession :: (Session tabIdent tabMeta -> Session tabIdent tabMeta) -> MSession tabIdent tabMeta -> IO () 
-updateMSession f (MSession mvar) = withMVar mvar (return . f) >> return ()
+updateMSession :: (Session tabIdent tabMeta -> IO (Session tabIdent tabMeta,a) ) -> MSession tabIdent tabMeta -> IO a
+updateMSession f msession = modifyMVar (unMSession msession) f
 
-withMSession :: MSession tabIdent tabMeta -> (Session tabIdent tabMeta -> a) -> IO a 
-withMSession msession f = getSession msession >>= return . f
+withMSession :: MSession tabIdent tabMeta -> (Session tabIdent tabMeta -> IO a) -> IO a 
+withMSession msession = withMVar (unMSession msession)

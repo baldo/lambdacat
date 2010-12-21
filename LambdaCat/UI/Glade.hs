@@ -22,7 +22,7 @@ data GladeUI = GladeUI
    , gladeWindow   :: Window
    , gladeStatBar  :: Statusbar
    , viewContainer :: Notebook
-   , gladeSession  :: Session TabId TabMeta 
+   , gladeSession  :: MSession TabId TabMeta 
    }
 
 data TabMeta = TabMeta 
@@ -43,7 +43,8 @@ instance UIClass GladeUI TabMeta where
       window   <- xmlGetWidget xml castToWindow "mainWindow"
       notebook <- xmlGetWidget xml castToNotebook "viewNotebook"
       statbar  <- xmlGetWidget xml castToStatusbar "statusbar"
-      return GladeUI { gladeSession = newSession
+      session <- newMSession
+      return GladeUI { gladeSession = session
                      , gladeXML     = xml
                      , gladeWindow  = window 
                      , gladeStatBar = statbar
@@ -237,7 +238,7 @@ instance UIClass GladeUI TabMeta where
 xmlGetToolButton :: GladeXML -> String -> IO ToolButton
 xmlGetToolButton xml = xmlGetWidget xml castToToolButton
 
-withNthNotebookTab :: Notebook -> Session TabId TabMeta -> Int
+withNthNotebookTab :: Notebook -> MSession TabId TabMeta -> Int
                    -> (Tab TabMeta -> IO ()) -> IO ()
 withNthNotebookTab notebook session page f = do
     mContainer <- notebookGetNthPage notebook page
@@ -245,7 +246,8 @@ withNthNotebookTab notebook session page f = do
     case mContainer of
         Just container ->
             withContainerId (castToContainer container) $ \ tabId -> do
-                case getTab session tabId of
+                mTab <- withMSession session $ getTab tabId 
+                case mTab of
                     Just tab ->
                         f tab
 
