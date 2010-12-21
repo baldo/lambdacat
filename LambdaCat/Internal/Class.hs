@@ -102,6 +102,6 @@ data Supplier = forall supplier . (SupplierClass supplier) => Supplier supplier
 instance SupplierClass Supplier where
   supplyView (Supplier supplier) = supplyView supplier
 
-eqType :: (Typeable a, Typeable b) => a -> b -> Bool
-eqType a b = typeOf a == typeOf b
+-- eqType :: (Typeable a, Typeable b) => a -> b -> Bool
+-- eqType a b = typeOf a == typeOf b
 
