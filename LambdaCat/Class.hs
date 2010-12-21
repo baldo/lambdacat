@@ -1,4 +1,4 @@
-{-# LANGUAGE DeriveDataTypeable, ExistentialQuantification#-}
+{-# LANGUAGE DeriveDataTypeable, ExistentialQuantification, MultiParamTypeClasses#-}
 
 module LambdaCat.Class 
     ( UIClass (..)
@@ -21,7 +21,7 @@ type Callback ui meta = ui -> meta -> IO ()
 
 
 -- | Class of user interfaces for lambdacat 
-class UIClass ui where
+class UIClass ui meta where
     -- | Initializes the UI and returns an UI handle.
     init :: IO ui
 
@@ -58,7 +58,7 @@ class Typeable view => ViewClass view where
 
     -- | Ask the view to embed its widget by calling the given function. 
     --   And give the callback function to the widget 
-    embed :: UIClass ui
+    embed :: UIClass ui meta
           => view -> (Widget -> IO ()) -> (Callback ui meta -> IO ()) -> IO ()
 
     -- | Destructor, allow cleaning up when view is discarded. 

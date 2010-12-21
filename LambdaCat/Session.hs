@@ -45,13 +45,13 @@ newTab ti view tm uri session =
 updateTab :: (Eq tabIdent,Ord tabIdent)
           => Session tabIdent tabMeta 
           -> tabIdent                   -- ^ ident of tab to be modified
-          -> (tabMeta -> Maybe tabMeta) -- ^ if nothing is returned the tab gets deleted
+          -> (Tab tabMeta -> Maybe (Tab tabMeta)) -- ^ if nothing is returned the tab gets deleted
           -> Session tabIdent tabMeta
 updateTab session tabId f =
   let tabs    = sessionTabs session
       newTabs = Map.updateWithKey search tabId tabs -- TODO fix 
-      search  = \ _ tab -> do meta <- f (tabMeta tab)
-                              return $ tab { tabMeta = meta }
+      search  = \ _ tab -> do newtab <- f tab
+                              return $ newtab
   in  session { sessionTabs = newTabs } 
 
 getTab :: Ord tabIdent => Session tabIdent tabMeta -> tabIdent -> Maybe (Tab tabMeta)
