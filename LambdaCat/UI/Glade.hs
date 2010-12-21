@@ -9,7 +9,7 @@ import LambdaCat.UI.Glade.PersistentTabId
 import LambdaCat.Session
 import LambdaCat.Supply 
 
--- import Paths_lambdacat
+import Paths_lambdacat
 
 import Data.Maybe
 import Graphics.UI.Gtk
@@ -35,10 +35,10 @@ instance UIClass GladeUI TabMeta where
   init = do
       _ <- initGUI
 
-      spath    <-  return undefined -- getDataFileName "lambdacat.gtkrc"
+      spath    <- getDataFileName "lambdacat.gtkrc"
       rcParse spath
 
-      fpath    <- return undefined -- getDataFileName "lambdacat.glade"
+      fpath    <- getDataFileName "lambdacat.glade"
       Just xml <- xmlNew fpath
       window   <- xmlGetWidget xml castToWindow "browserWindow"
       notebook <- xmlGetWidget xml castToNotebook "pageNoteBook"
