@@ -152,13 +152,13 @@ instance UIClass GladeUI TabMeta where
 
   changedTitle view ui meta = do
       let xml   = gladeXML ui
-          tab = getTab (gladeSession ui) (tabMetaIdent meta)
           label = tabMetaLabel meta
       title <- getCurrentTitle view
       set label [ labelLabel := if null title then "(Untitled)" else title ]
-      return ()
       window <- xmlGetWidget xml castToWindow "browserWindow"
       set window [ windowTitle := title ]
+      return ()
+
 
   changedProgress progress ui meta = do 
       let sb = gladeStatBar ui
@@ -181,27 +181,26 @@ instance UIClass GladeUI TabMeta where
           _ <- statusbarPush sb cntx stat
           return ()
 
-  replaceView view ui meta = do
-      let Just tab   = getTab (gladeSession ui) (tabMetaIdent meta) 
+  replaceView view ui meta = updateMSession (gladeSession ui) $ \ session -> do
+      let Just tab   = getTab (tabMetaIdent meta) session
           oldView    = tabView tab
-          newSession = updateTab (gladeSession ui) (tabMetaIdent meta) $ \ t -> Just $ t { tabView = view } 
+          newSession = updateTab session (tabMetaIdent meta) $ \ t -> Just $ t { tabView = view } 
           container  = viewContainer ui 
       destroy oldView
       mapM_ (containerRemove container) =<< containerGetChildren container
       embed view (\w -> containerAdd container w >> widgetShowAll w) (update ui meta)
-      return ()
+      return (newSession,())
 
   embedView view ui _ = do
     let noteBook = viewContainer ui
-        session  = gladeSession ui 
     scrolledWindow <- scrolledWindowNew Nothing Nothing  
     tabId          <- genNewId
     setContainerId scrolledWindow tabId 
-    (labelWidget, img, label) <- tabWidget (do
+    (labelWidget, img, label) <- tabWidget (withMSession (gladeSession ui) $ \ session -> do
               removeTId <- get noteBook (notebookChildPosition scrolledWindow)
               notebookRemovePage noteBook removeTId
               withContainerId scrolledWindow $ \ removeTabId ->
-                    destroy $ tabView . fromJust $ getTab session removeTabId
+                    destroy $ tabView . fromJust $ getTab removeTabId session
               )
     let tabMeta = TabMeta 
           { tabMetaIdent = tabId 
@@ -240,19 +239,17 @@ xmlGetToolButton xml = xmlGetWidget xml castToToolButton
 
 withNthNotebookTab :: Notebook -> MSession TabId TabMeta -> Int
                    -> (Tab TabMeta -> IO ()) -> IO ()
-withNthNotebookTab notebook session page f = do
+withNthNotebookTab notebook msession page f = do
     mContainer <- notebookGetNthPage notebook page
 
     case mContainer of
         Just container ->
-            withContainerId (castToContainer container) $ \ tabId -> do
-                mTab <- withMSession session $ getTab tabId 
-                case mTab of
+            withContainerId (castToContainer container) $ \ tabId -> 
+              withMSession msession $ \ session  ->
+                case getTab tabId session of
                     Just tab ->
                         f tab
-
                     Nothing ->
                         return ()
-
         Nothing ->
             return ()
