@@ -17,6 +17,7 @@ module LambdaCat.Session
   where
 
 import LambdaCat.History (History)
+import LambdaCat.View
 import qualified LambdaCat.History as History 
 import Data.Map (Map)
 import qualified Data.Map as Map
