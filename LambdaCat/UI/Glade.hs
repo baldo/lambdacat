@@ -1,6 +1,10 @@
 {-# LANGUAGE MultiParamTypeClasses, FlexibleInstances, TypeSynonymInstances, RankNTypes, TemplateHaskell #-}
 
-module LambdaCat.UI.Glade where
+module LambdaCat.UI.Glade
+    ( GladeUI
+    , module LambdaCat.UI
+    )
+where
 
 import LambdaCat.Configure (lambdaCatConf, LambdaCatConf (..))
 
