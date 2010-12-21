@@ -39,9 +39,7 @@ mainCat (e, cfg) = do
              then [show $ homeURI cfg]
              else uris args
     ui <- Class.init :: IO GladeUI
-    mapM_ (\ uri -> do
-        supplyForView (Class.update ui undefined) embedView (fromJust $ parseURIReference uri)
-        ) us
+    mapM_ (supplyForView (Class.update ui undefined) embedView . fromJust . parseURIReference) us
     mainLoop ui
 
 lambdacat :: LambdaCatConf -> IO ()
