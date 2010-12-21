@@ -19,6 +19,7 @@ import Data.Maybe
 import Graphics.UI.Gtk
 import Graphics.UI.Gtk.Glade
 import Network.URI
+import Control.Concurrent
 
 
 data GladeUI = GladeUI
@@ -63,7 +64,7 @@ instance UIClass GladeUI TabMeta where
           session  = gladeSession ui
       -- General / Events ---------------------------------------------------
       _ <- onDestroy window mainQuit
-      _ <- notebook `on`  switchPage $ \ newActive -> do
+      _ <- notebook `on`  switchPage $ \ newActive -> 
         withNthNotebookTab notebook session newActive $ \ tab -> do
             changedURI   (tabView tab) ui (tabMeta tab)
             changedTitle (tabView tab) ui (tabMeta tab)
@@ -149,7 +150,7 @@ instance UIClass GladeUI TabMeta where
 
   changedURI view ui _meta = do
       let xml = gladeXML ui 
-      pageURI <- xmlGetWidget xml castToEntry "pageURI"
+      pageURI <- xmlGetWidget xml castToEntry "addressEntry"
       uri <- getCurrentURI view
       entrySetText pageURI (uriString uri)
     where uriString uri = uriToString id uri ""
@@ -159,7 +160,7 @@ instance UIClass GladeUI TabMeta where
           label = tabMetaLabel meta
       title <- getCurrentTitle view
       set label [ labelLabel := if null title then "(Untitled)" else title ]
-      window <- xmlGetWidget xml castToWindow "browserWindow"
+      window <- xmlGetWidget xml castToWindow "mainWindow"
       set window [ windowTitle := title ]
       return ()
 
@@ -200,10 +201,11 @@ instance UIClass GladeUI TabMeta where
     scrolledWindow <- scrolledWindowNew Nothing Nothing  
     tabId          <- genNewId
     setContainerId scrolledWindow tabId 
-    (labelWidget, img, label) <- tabWidget (withMSession (gladeSession ui) $ \ session -> do
+    (labelWidget, img, label) <- tabWidget (do 
               removeTId <- get noteBook (notebookChildPosition scrolledWindow)
               notebookRemovePage noteBook removeTId
-              withContainerId scrolledWindow $ \ removeTabId ->
+              withMSession (gladeSession ui) $ \ session -> 
+                withContainerId scrolledWindow $ \ removeTabId ->
                     destroy $ tabView . fromJust $ getTab removeTabId session
               )
     let tabMeta = TabMeta 
@@ -211,7 +213,9 @@ instance UIClass GladeUI TabMeta where
           , tabMetaLabel = label
           , tabMetaImage = img 
           }
-    embed view (embedHandle scrolledWindow) (update ui (undefined :: TabMeta))
+    embed view (embedHandle scrolledWindow) (update ui tabMeta)
+    updateMSession (gladeSession ui) $ \ session ->
+        return (newTab tabId view tabMeta nullURI session,())
     notebookAppendPageMenu noteBook scrolledWindow labelWidget labelWidget
     widgetShowAll noteBook
     return ()
@@ -245,15 +249,14 @@ withNthNotebookTab :: Notebook -> MSession TabId TabMeta -> Int
                    -> (Tab TabMeta -> IO ()) -> IO ()
 withNthNotebookTab notebook msession page f = do
     mContainer <- notebookGetNthPage notebook page
-
     case mContainer of
-        Just container ->
+        Just container -> do
             withContainerId (castToContainer container) $ \ tabId -> 
-              withMSession msession $ \ session  ->
+              withMSession msession $ \ session  -> 
                 case getTab tabId session of
-                    Just tab ->
+                    Just tab -> 
                         f tab
-                    Nothing ->
+                    Nothing -> 
                         return ()
         Nothing ->
             return ()
