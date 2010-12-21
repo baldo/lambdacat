@@ -21,9 +21,9 @@ import System.IO
 
 defaultConfig :: LambdaCatConf
 defaultConfig = LambdaCatConf
-    { supplierList = [ (webSupplier   , ["http:","https:"])
+    { supplierList = [ (webSupplier   , ["http:","https:","about:"])
                      ]
-    , viewList     = [ (View (undefined :: WebView) , ["http:", "https:", "file:"], [])
+    , viewList     = [ (View (undefined :: WebView) , ["about:","http:", "https:", "file:"], [])
                      ]
     , homeURI      = fromJust $ parseURI "http://www.haskell.org"
     }
