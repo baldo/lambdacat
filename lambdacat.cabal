@@ -52,7 +52,6 @@ Library
         LambdaCat
         LambdaCat.Configure
         LambdaCat.CmdArgs
-        LambdaCat.Loadable
         LambdaCat.Supplier
         LambdaCat.Supplier.Web
         LambdaCat.View
