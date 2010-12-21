@@ -16,7 +16,7 @@ supplyForView :: (Callback ui meta -> IO ()) -> (View -> Callback ui meta) -> UR
 supplyForView callbackHdl embedHdl uri = 
   let suppliers = supplierList lambdaCatConf
       protocol = uriScheme uri 
-      mSupply   = find (\ (s,ps) -> isJust $ find (==protocol) ps) suppliers
+      mSupply   = find (\ (_s, ps) -> isJust $ find (== protocol) ps) suppliers
   in  case mSupply of
     Just (supply,_) -> supplyView supply callbackHdl embedHdl uri
     Nothing         -> putStrLn $ "Can't find a supplier for protocol:" ++ protocol
@@ -31,7 +31,7 @@ instance SupplierClass WebSupplier where
   supplyView _ callbackHdl embedHdl uri =
     let viewers    = viewList lambdaCatConf 
         protocol   = uriScheme uri 
-        mViewConst = find (\ (vc,ps,_) -> isJust $ find (== protocol) ps) viewers
+        mViewConst = find (\ (_vc, ps, _) -> isJust $ find (== protocol) ps) viewers
     in  case mViewConst of
       Just (vc,_,_) -> do 
         view <- createView vc
