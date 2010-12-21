@@ -73,6 +73,13 @@ instance UIClass GladeUI TabMeta where
       let Just defaultURI = parseURI "about:blank"
       _ <- onToolButtonClicked addTab $ supplyForView (update ui (undefined :: TabMeta)) embedView defaultURI
 
+      quitItem <- xmlGetWidget xml castToMenuItem "quitItem"
+      _ <- onActivateLeaf quitItem mainQuit
+
+      let Just infoURI = parseURI "about:info"
+      infoItem <- xmlGetWidget xml castToMenuItem "infoItem"
+      _ <- onActivateLeaf infoItem $ supplyForView (update ui (undefined :: TabMeta)) embedView infoURI
+
       {- Review following code
       pageBack <- xmlGetToolButton xml "pageBack"
       _ <- onToolButtonClicked pageBack (pageAction notebook bid (\_ p -> back p))
@@ -90,10 +97,6 @@ instance UIClass GladeUI TabMeta where
           case parseURIReference text of
               Just uri -> pageAction notebook bid $ loadAction uri bid
               Nothing  -> return ()
-      menuItemQuit <- xmlGetWidget xml castToMenuItem "menuItemQuit"
-      _ <- onActivateLeaf menuItemQuit mainQuit
-      menuItemInfo <- xmlGetWidget xml castToMenuItem "menuItemInfo"
-      _ <- onActivateLeaf menuItemInfo $ newPage bid (parseURI "about:info") >> return ()
       -}
       widgetShowAll window
       -- start GTK mainloop
