@@ -59,16 +59,10 @@ instance UIClass GladeUI TabMeta where
       -- General / Events ---------------------------------------------------
       _ <- onDestroy window mainQuit
       _ <- notebook `on`  switchPage $ \ newActive -> do
-        mContainer <- notebookGetNthPage notebook newActive
-        case mContainer of
-          Just container -> withContainerId (castToContainer container) $ \ tabId -> do
-            case getTab session tabId of
-              Just tab -> do 
-                changedURI   (tabView tab) ui (tabMeta tab)
-                changedTitle (tabView tab) ui (tabMeta tab)
-              Nothing  -> return ()
-          Nothing  -> return ()
-      -- Toolbar / Events ---------------------------------------------------
+        withNthNotebookTab notebook session newActive $ \ tab -> do
+            changedURI   (tabView tab) ui (tabMeta tab)
+            changedTitle (tabView tab) ui (tabMeta tab)
+     -- Toolbar / Events ---------------------------------------------------
       addTab <- xmlGetToolButton xml "addTabButton"
       let Just defaultURI = parseURI "about:blank"
       _ <- onToolButtonClicked addTab $ supplyForView (update ui (undefined :: TabMeta)) embedView defaultURI
@@ -243,6 +237,24 @@ instance UIClass GladeUI TabMeta where
 xmlGetToolButton :: GladeXML -> String -> IO ToolButton
 xmlGetToolButton xml = xmlGetWidget xml castToToolButton
 
+withNthNotebookTab :: Notebook -> Session TabId TabMeta -> Int
+                   -> (Tab TabMeta -> IO ()) -> IO ()
+withNthNotebookTab notebook session page f = do
+    mContainer <- notebookGetNthPage notebook page
+
+    case mContainer of
+        Just container ->
+            withContainerId (castToContainer container) $ \ tabId -> do
+                case getTab session tabId of
+                    Just tab ->
+                        f tab
+
+                    Nothing ->
+                        return ()
+
+        Nothing ->
+            return ()
+ 
 loadUriInCurrentTab :: UIClass ui meta
                     => Notebook -> Session TabId TabMeta
                     -> (Callback ui meta -> IO ()) -> URI -> IO ()
