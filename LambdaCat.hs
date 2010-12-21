@@ -35,11 +35,12 @@ mainCat (e, cfg) = do
     setLCC cfg
     args <- getCmdArgs
 
-    let us = if null $ uris args
-             then [show $ homeURI cfg]
-             else uris args
+    let  uria = map parseURIReference $ uris args
+         us   = if null uria
+                then [Just $ homeURI cfg]
+                else uria
     ui <- Class.init :: IO GladeUI
-    mapM_ (supplyForView (Class.update ui undefined) embedView . fromJust . parseURIReference) us
+    mapM_ (supplyForView (Class.update ui undefined) embedView . fromJust) us
     mainLoop ui
 
 lambdacat :: LambdaCatConf -> IO ()
