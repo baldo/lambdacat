@@ -208,14 +208,14 @@ instance UIClass GladeUI TabMeta where
                 withContainerId scrolledWindow $ \ removeTabId ->
                     destroy $ tabView . fromJust $ getTab removeTabId session
               )
-    let tabMeta = TabMeta 
+    let newMeta = TabMeta 
           { tabMetaIdent = tabId 
           , tabMetaLabel = label
           , tabMetaImage = img 
           }
-    embed view (embedHandle scrolledWindow) (update ui tabMeta)
+    embed view (embedHandle scrolledWindow) (update ui newMeta)
     updateMSession (gladeSession ui) $ \ session ->
-        return (newTab tabId view tabMeta nullURI session,())
+        return (newTab tabId view newMeta nullURI session,())
     notebookAppendPageMenu noteBook scrolledWindow labelWidget labelWidget
     widgetShowAll noteBook
     return ()
