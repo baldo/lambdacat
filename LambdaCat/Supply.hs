@@ -36,6 +36,7 @@ instance SupplierClass WebSupplier where
       Just (vc,_,_) -> do 
         view <- createView vc
         callbackHdl (embedHdl view)
+        _status <- load view uri
         return ()
       Nothing -> return ()
         
