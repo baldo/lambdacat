@@ -19,7 +19,7 @@ supplyForView callbackHdl embedHdl uri =
       mSupply   = find (\ (s,ps) -> isJust $ find (==protocol) ps) suppliers
   in  case mSupply of
     Just (supply,_) -> supplyView supply callbackHdl embedHdl uri
-    Nothing         -> return () -- maybe an error or something
+    Nothing         -> putStrLn $ "Can't find a supplier for protocol:" ++ protocol
 
 
 data WebSupplier = WebSupplier
@@ -38,6 +38,4 @@ instance SupplierClass WebSupplier where
         callbackHdl (embedHdl view)
         _status <- load view uri
         return ()
-      Nothing -> return ()
-        
-    
+      Nothing -> putStrLn $ "Can't find a view for protocol:" ++ protocol 
