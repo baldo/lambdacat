@@ -40,9 +40,9 @@ instance UIClass GladeUI TabMeta where
 
       fpath    <- getDataFileName "lambdacat.glade"
       Just xml <- xmlNew fpath
-      window   <- xmlGetWidget xml castToWindow "browserWindow"
-      notebook <- xmlGetWidget xml castToNotebook "pageNoteBook"
-      statbar  <- xmlGetWidget xml castToStatusbar "browserStatus"
+      window   <- xmlGetWidget xml castToWindow "mainWindow"
+      notebook <- xmlGetWidget xml castToNotebook "viewNotebook"
+      statbar  <- xmlGetWidget xml castToStatusbar "statusbar"
       return GladeUI { gladeSession = newSession
                      , gladeXML     = xml
                      , gladeWindow  = window 
@@ -69,7 +69,7 @@ instance UIClass GladeUI TabMeta where
               Nothing  -> return ()
           Nothing  -> return ()
       -- Toolbar / Events ---------------------------------------------------
-      addTab <- xmlGetToolButton xml "addTab"
+      addTab <- xmlGetToolButton xml "addTabButton"
       let Just defaultURI = parseURI "about:blank"
       _ <- onToolButtonClicked addTab $ supplyForView (update ui (undefined :: TabMeta)) embedView defaultURI
 
