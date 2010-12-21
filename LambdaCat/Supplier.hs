@@ -1,5 +1,10 @@
 module LambdaCat.Supplier
-  ( supplyForView
+  ( SupplierClass (..)
+  , Supplier (..)
+
+  , Callback
+
+  , supplyForView
   ) where
 
 import Data.List  (find)
