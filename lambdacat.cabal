@@ -58,6 +58,7 @@ Library
         LambdaCat.Supplier.Web
         LambdaCat.View
         LambdaCat.View.Web
+        LambdaCat.UI
         LambdaCat.UI.Glade
         LambdaCat.UI.Glade.PersistentTabId
 
