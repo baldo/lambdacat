@@ -9,7 +9,7 @@ import LambdaCat.Configure
 import LambdaCat.Supplier
 import LambdaCat.Supplier.Web
 import LambdaCat.CmdArgs
-import LambdaCat.View.Web (WebView)
+import LambdaCat.View.Web (webView)
 import LambdaCat.UI.Glade as UI
 
 import Config.Dyre
@@ -23,7 +23,7 @@ defaultConfig :: LambdaCatConf
 defaultConfig = LambdaCatConf
     { supplierList = [ (webSupplier   , ["http:","https:","about:"])
                      ]
-    , viewList     = [ (View (undefined :: WebView) , ["about:","http:", "https:", "file:"], [])
+    , viewList     = [ (webView, ["about:","http:", "https:", "file:"], [])
                      ]
     , homeURI      = fromJust $ parseURI "http://www.haskell.org"
     }

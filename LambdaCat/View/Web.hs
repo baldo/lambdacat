@@ -2,6 +2,7 @@
 
 module LambdaCat.View.Web
     ( WebView
+    , webView
 
     , module LambdaCat.View
     ) where
@@ -25,6 +26,9 @@ import Network.URI
 -- | Data type representing the view. Do not confuse this with WebKit's WebView.
 newtype WebView = WebView { webViewWidget :: WV.WebView }
   deriving (Eq, Typeable)
+
+webView :: View
+webView = View (WebView undefined)
 
 {-
 newWithPage :: (UIClass ui, PageClass p, HasWidget p WebView) => p -> CallBack ui tabid -> IO ()
