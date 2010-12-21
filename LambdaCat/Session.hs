@@ -1,4 +1,18 @@
-module LambdaCat.Session where
+module LambdaCat.Session 
+  ( MSession
+  , Session (..)
+  , Tab (..)
+  
+  , newMSession
+  , updateMSession
+
+  , newSession
+  , getSession
+  , newTab
+  , updateTab
+  , getTab 
+  )
+  where
 
 import LambdaCat.History (History)
 import qualified LambdaCat.History as History 
@@ -68,5 +82,5 @@ getTab session ti =
 getSession :: MSession tabIdent tabMeta -> IO (Session tabIdent tabMeta)
 getSession = readMVar . unMSession
 
-withMSession :: (Session tabIdent tabMeta -> Session tabIdent tabMeta) -> MSession tabIdent tabMeta -> IO () 
-withMSession f (MSession mvar) = withMVar mvar (return . f) >> return ()
+updateMSession :: (Session tabIdent tabMeta -> Session tabIdent tabMeta) -> MSession tabIdent tabMeta -> IO () 
+updateMSession f (MSession mvar) = withMVar mvar (return . f) >> return ()
