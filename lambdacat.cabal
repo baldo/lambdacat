@@ -54,7 +54,8 @@ Library
         LambdaCat.CmdArgs
         LambdaCat.Loadable
         LambdaCat.Class
-        LambdaCat.Supply 
+        LambdaCat.Supplier
+        LambdaCat.Supplier.Web
         LambdaCat.View.Web
         LambdaCat.UI.Glade
         LambdaCat.UI.Glade.PersistentTabId

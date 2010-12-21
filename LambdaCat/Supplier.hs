@@ -1,7 +1,5 @@
-module LambdaCat.Supply 
+module LambdaCat.Supplier
   ( supplyForView
-  
-  , webSupplier
   ) where
 
 import Data.List  (find)
@@ -20,22 +18,3 @@ supplyForView callbackHdl embedHdl uri =
   in  case mSupply of
     Just (supply,_) -> supplyView supply callbackHdl embedHdl uri
     Nothing         -> putStrLn $ "Can't find a supplier for protocol:" ++ protocol
-
-
-data WebSupplier = WebSupplier
-
-webSupplier :: Supplier
-webSupplier = Supplier WebSupplier
-
-instance SupplierClass WebSupplier where
-  supplyView _ callbackHdl embedHdl uri =
-    let viewers    = viewList lambdaCatConf 
-        protocol   = uriScheme uri 
-        mViewConst = find (\ (_vc, ps, _) -> isJust $ find (== protocol) ps) viewers
-    in  case mViewConst of
-      Just (vc,_,_) -> do 
-        view <- createView vc
-        callbackHdl (embedHdl view)
-        _status <- load view uri
-        return ()
-      Nothing -> putStrLn $ "Can't find a view for protocol:" ++ protocol 

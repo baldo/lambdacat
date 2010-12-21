@@ -7,7 +7,7 @@ import LambdaCat.Configure (lambdaCatConf, LambdaCatConf (..))
 
 import LambdaCat.UI.Glade.PersistentTabId
 import LambdaCat.Session
-import LambdaCat.Supply 
+import LambdaCat.Supplier
 
 import Paths_lambdacat
 

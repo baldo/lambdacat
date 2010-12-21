@@ -6,7 +6,8 @@ module LambdaCat
 where
 
 import LambdaCat.Configure
-import LambdaCat.Supply
+import LambdaCat.Supplier
+import LambdaCat.Supplier.Web
 import LambdaCat.CmdArgs
 import LambdaCat.View.Web (WebView)
 import LambdaCat.UI.Glade 
