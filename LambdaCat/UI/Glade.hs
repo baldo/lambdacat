@@ -68,7 +68,7 @@ instance UIClass GladeUI TabMeta where
       _ <- onToolButtonClicked addTab $ supplyForView (update ui (undefined :: TabMeta)) embedView defaultURI
 
       homeButton <- xmlGetToolButton xml "homeButton"
-      _ <- onToolButtonClicked homeButton $ loadUriInCurrentTab notebook session (update ui (undefined :: TabMeta)) $ homeURI lambdaCatConf
+      _ <- onToolButtonClicked homeButton $ supplyForView (update ui (undefined :: TabMeta)) replaceView $ homeURI lambdaCatConf
 
       quitItem <- xmlGetWidget xml castToMenuItem "quitItem"
       _ <- onActivateLeaf quitItem mainQuit
@@ -254,24 +254,3 @@ withNthNotebookTab notebook session page f = do
 
         Nothing ->
             return ()
- 
-loadUriInCurrentTab :: UIClass ui meta
-                    => Notebook -> Session TabId TabMeta
-                    -> (Callback ui meta -> IO ()) -> URI -> IO ()
-loadUriInCurrentTab notebook session update uri = do
-    tab <- notebookGetCurrentPage notebook
-    mContainer <- notebookGetNthPage notebook tab
-
-    case mContainer of
-        Just container ->
-            withContainerId (castToContainer container) $ \ tabId -> do
-                case getTab session tabId of
-                    Just tab ->
-                        supplyForView update replaceView uri
-
-                    Nothing ->
-                        error "Tab is unknown."
- 
-        Nothing ->
-            error "This should not happen! The current tab is out of bounds."
-
