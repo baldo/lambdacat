@@ -5,13 +5,14 @@ module LambdaCat.Session
   
   , newMSession
   , updateMSession
+  , withMSession
 
-  , deleteTab
-  , getSession
-  , getTab 
   , newSession
+  , getSession
   , newTab
+  , getTab 
   , updateTab
+  , deleteTab
     )
   where
 
@@ -75,8 +76,8 @@ updateTab session tabId f =
                               return $ newtab
   in  session { sessionTabs = newTabs } 
 
-getTab :: Ord tabIdent => Session tabIdent tabMeta -> tabIdent -> Maybe (Tab tabMeta)
-getTab session ti = 
+getTab :: Ord tabIdent => tabIdent -> Session tabIdent tabMeta -> Maybe (Tab tabMeta)
+getTab ti session = 
   let sessTabs = sessionTabs session
   in  Map.lookup ti sessTabs 
 
@@ -90,3 +91,6 @@ getSession = readMVar . unMSession
 
 updateMSession :: (Session tabIdent tabMeta -> Session tabIdent tabMeta) -> MSession tabIdent tabMeta -> IO () 
 updateMSession f (MSession mvar) = withMVar mvar (return . f) >> return ()
+
+withMSession :: MSession tabIdent tabMeta -> (Session tabIdent tabMeta -> a) -> IO a 
+withMSession msession f = getSession msession >>= return . f
