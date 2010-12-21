@@ -1,4 +1,4 @@
-{-# LANGUAGE DeriveDataTypeable, ExistentialQuantification, MultiParamTypeClasses#-}
+{-# LANGUAGE DeriveDataTypeable, ExistentialQuantification, MultiParamTypeClasses, FunctionalDependencies#-}
 
 module LambdaCat.Class 
     ( UIClass (..)
@@ -21,7 +21,7 @@ type Callback ui meta = ui -> meta -> IO ()
 
 
 -- | Class of user interfaces for lambdacat 
-class UIClass ui meta where
+class UIClass ui meta | ui -> meta where
     -- | Initializes the UI and returns an UI handle.
     init :: IO ui
 
@@ -107,7 +107,10 @@ instance SupplierClass Supplier where
 eqType :: (Typeable a, Typeable b) => a -> b -> Bool
 eqType a b = typeOf a == typeOf b
 
-createView :: (ViewClass view) 
+createView :: View -> IO View
+createView (View v) = return . View =<< createView_ v
+
+createView_ :: (ViewClass view) 
            => view
            -> IO view
-createView _ = new
+createView_ _ = new
