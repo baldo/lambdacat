@@ -19,8 +19,6 @@ import Data.Maybe
 import Graphics.UI.Gtk
 import Graphics.UI.Gtk.Glade
 import Network.URI
-import Control.Concurrent
-
 
 data GladeUI = GladeUI
    { gladeXML      :: GladeXML
@@ -216,7 +214,7 @@ instance UIClass GladeUI TabMeta where
     embed view (embedHandle scrolledWindow) (update ui newMeta)
     updateMSession (gladeSession ui) $ \ session ->
         return (newTab tabId view newMeta nullURI session,())
-    notebookAppendPageMenu noteBook scrolledWindow labelWidget labelWidget
+    _ <- notebookAppendPageMenu noteBook scrolledWindow labelWidget labelWidget
     widgetShowAll noteBook
     return ()
    where embedHandle scrolledWindow widget = do
