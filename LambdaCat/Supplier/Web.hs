@@ -6,8 +6,8 @@ import Data.List  (find)
 import Data.Maybe (isJust)
 import Network.URI 
 
-import LambdaCat.Class
 import LambdaCat.Configure
+import LambdaCat.Supplier
 import LambdaCat.View
 
 data WebSupplier = WebSupplier

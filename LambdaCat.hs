@@ -10,8 +10,7 @@ import LambdaCat.Supplier
 import LambdaCat.Supplier.Web
 import LambdaCat.CmdArgs
 import LambdaCat.View.Web (WebView)
-import LambdaCat.UI.Glade 
-import LambdaCat.Class as Class
+import LambdaCat.UI.Glade as UI
 
 import Config.Dyre
 import Config.Dyre.Compile
@@ -40,7 +39,7 @@ mainCat (e, cfg) = do
          us   = if null uria
                 then [Just $ homeURI cfg]
                 else uria
-    ui <- Class.init :: IO GladeUI
+    ui <- UI.init :: IO GladeUI
     mapM_ (supplyForView (Class.update ui undefined) embedView . fromJust) us
     mainLoop ui
 

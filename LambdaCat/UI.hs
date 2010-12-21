@@ -1,10 +1,10 @@
 module LambdaCat.UI
-    ( module LambdaCat.Class
+    ( module LambdaCat.Internal.Class
     , module LambdaCat.View
     )
 where
 
-import LambdaCat.Class
+import LambdaCat.Internal.Class
     ( UIClass (..)
     , Callback
     )

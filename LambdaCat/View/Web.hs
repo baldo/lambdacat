@@ -4,7 +4,7 @@ module LambdaCat.View.Web
     ( WebView
     ) where
 
-import LambdaCat.Class
+import LambdaCat.View
 
 import Data.Maybe
 import Data.Typeable

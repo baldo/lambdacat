@@ -8,7 +8,7 @@ module LambdaCat.View
     )
 where
 
-import LambdaCat.Class
+import LambdaCat.Internal.Class
 
 createView :: View -> IO View
 createView (View v) = return . View =<< createView_ v

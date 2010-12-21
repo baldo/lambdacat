@@ -11,8 +11,8 @@ import Data.List  (find)
 import Data.Maybe (isJust)
 import Network.URI 
 
-import LambdaCat.Class
 import LambdaCat.Configure
+import LambdaCat.Internal.Class
 
 -- | Selects a proper supplier for the 'URI'
 supplyForView :: (Callback ui meta -> IO ()) -> (View -> Callback ui meta) -> URI -> IO () 

@@ -8,7 +8,10 @@ import Data.IORef
 import Foreign
 import Network.URI
 
-import LambdaCat.Class (View (..),Supplier(..))
+import LambdaCat.Internal.Class
+    ( View (..)
+    , Supplier (..)
+    )
 
 data LambdaCatConf = LambdaCatConf
     { supplierList :: [(Supplier, [Protocol])]

@@ -21,7 +21,6 @@ import qualified LambdaCat.History as History
 import Data.Map (Map)
 import qualified Data.Map as Map
 import Network.URI (URI)
-import LambdaCat.Class
 import Control.Concurrent.MVar
 
 data Session tabIdent tabmeta = Session 

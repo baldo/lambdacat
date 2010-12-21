@@ -2,9 +2,9 @@
 
 module LambdaCat.UI.Glade where
 
-import LambdaCat.Class
 import LambdaCat.Configure (lambdaCatConf, LambdaCatConf (..))
 
+import LambdaCat.UI
 import LambdaCat.UI.Glade.PersistentTabId
 import LambdaCat.Session
 import LambdaCat.Supplier
