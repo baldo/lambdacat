@@ -209,6 +209,7 @@ instance UIClass GladeUI TabMeta where
           }
     embed view (embedHandle scrolledWindow) (update ui (undefined :: TabMeta))
     notebookAppendPageMenu noteBook scrolledWindow labelWidget labelWidget
+    widgetShowAll noteBook
     return ()
    where embedHandle scrolledWindow widget = do
           containerAdd scrolledWindow widget
