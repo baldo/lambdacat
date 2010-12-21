@@ -53,7 +53,6 @@ Library
         LambdaCat.Configure
         LambdaCat.CmdArgs
         LambdaCat.Loadable
-        LambdaCat.Class
         LambdaCat.Supplier
         LambdaCat.Supplier.Web
         LambdaCat.View
@@ -64,6 +63,7 @@ Library
 
     Other-Modules:
         Paths_lambdacat
+        LambdaCat.Internal.Class
 
     Extensions:
         DeriveDataTypeable,

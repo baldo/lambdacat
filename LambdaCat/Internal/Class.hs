@@ -1,6 +1,6 @@
 {-# LANGUAGE DeriveDataTypeable, ExistentialQuantification, MultiParamTypeClasses, FunctionalDependencies#-}
 
-module LambdaCat.Class 
+module LambdaCat.Internal.Class 
     ( UIClass (..)
     , ViewClass (..)
     , SupplierClass (..)
