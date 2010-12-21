@@ -6,12 +6,13 @@ module LambdaCat.Session
   , newMSession
   , updateMSession
 
-  , newSession
+  , deleteTab
   , getSession
+  , getTab 
+  , newSession
   , newTab
   , updateTab
-  , getTab 
-  )
+    )
   where
 
 import LambdaCat.History (History)
@@ -78,6 +79,11 @@ getTab :: Ord tabIdent => Session tabIdent tabMeta -> tabIdent -> Maybe (Tab tab
 getTab session ti = 
   let sessTabs = sessionTabs session
   in  Map.lookup ti sessTabs 
+
+deleteTab :: Ord tabIdent => tabIdent -> Session tabIdent tabMeta -> Session tabIdent tabMeta
+deleteTab ident session = 
+  let tabs = sessionTabs session
+  in session { sessionTabs = Map.delete ident tabs } 
 
 getSession :: MSession tabIdent tabMeta -> IO (Session tabIdent tabMeta)
 getSession = readMVar . unMSession
