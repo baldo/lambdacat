@@ -2,6 +2,8 @@
 
 module LambdaCat.View.Web
     ( WebView
+
+    , module LambdaCat.View
     ) where
 
 import LambdaCat.View

@@ -1,5 +1,7 @@
 module LambdaCat.Supplier.Web
     ( webSupplier
+
+    , module LambdaCat.Supplier
     ) where
 
 import Data.List  (find)
