@@ -57,7 +57,7 @@ instance UIClass GladeUI TabMeta where
 
   mainLoop ui = do
       let notebook = viewContainer ui
-          statbar  = gladeStatBar ui
+          -- statbar  = gladeStatBar ui
           xml      = gladeXML ui
           window   = gladeWindow ui
           session  = gladeSession ui
@@ -147,7 +147,7 @@ instance UIClass GladeUI TabMeta where
 
   update ui meta f = f ui meta
 
-  changedURI view ui meta = do
+  changedURI view ui _meta = do
       let xml = gladeXML ui 
       pageURI <- xmlGetWidget xml castToEntry "pageURI"
       uri <- getCurrentURI view
@@ -164,7 +164,7 @@ instance UIClass GladeUI TabMeta where
       return ()
 
 
-  changedProgress progress ui meta = do 
+  changedProgress progress ui _meta = do 
       let sb = gladeStatBar ui
       -- TODO check if current tab is equal to the tab which hosts the calling
       -- view 
@@ -173,7 +173,7 @@ instance UIClass GladeUI TabMeta where
       _ <- statusbarPush sb cntx $ show progress ++ "%"
       return ()
 
-  changedStatus status ui meta = do
+  changedStatus status ui _meta = do
       let sb = gladeStatBar ui 
       -- TODO check if current tab is equal to the tab which hosts the 
       -- calling view
@@ -188,12 +188,12 @@ instance UIClass GladeUI TabMeta where
   replaceView view ui meta = updateMSession (gladeSession ui) $ \ session -> do
       let Just tab   = getTab (tabMetaIdent meta) session
           oldView    = tabView tab
-          newSession = updateTab session (tabMetaIdent meta) $ \ t -> Just $ t { tabView = view } 
+          session'   = updateTab session (tabMetaIdent meta) $ \ t -> Just $ t { tabView = view } 
           container  = viewContainer ui 
       destroy oldView
       mapM_ (containerRemove container) =<< containerGetChildren container
       embed view (\w -> containerAdd container w >> widgetShowAll w) (update ui meta)
-      return (newSession,())
+      return (session', ())
 
   embedView view ui _ = do
     let noteBook = viewContainer ui
