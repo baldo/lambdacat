@@ -1,5 +1,3 @@
-{-# LANGUAGE TemplateHaskell #-}
-
 module LambdaCat
     ( lambdacat
     , defaultConfig
@@ -10,11 +8,10 @@ where
 import LambdaCat.Configure
 import LambdaCat.Supply
 import LambdaCat.CmdArgs
-import LambdaCat.View.Web
-import LambdaCat.UI.Glade
-import LambdaCat.Class 
+import LambdaCat.View.Web (WebView)
+import LambdaCat.UI.Glade 
+import LambdaCat.Class as Class
 
-import Prelude hiding (log)
 import Config.Dyre
 import Config.Dyre.Compile
 import Data.Maybe
@@ -25,9 +22,8 @@ import System.IO
 defaultConfig :: LambdaCatConf
 defaultConfig = LambdaCatConf
     { supplierList = [ (webSupplier   , ["http:","https:"])
-                     , (aboutSupplier , ["about:"])
                      ]
-    , pageList     = [ (webViewPage, ["http:", "https:", "file:"], [])
+    , viewList     = [ (View (undefined :: WebView) , ["http:", "https:", "file:"], [])
                      ]
     , homeURI      = fromJust $ parseURI "http://www.haskell.org"
     }
@@ -42,18 +38,11 @@ mainCat (e, cfg) = do
     let us = if null $ uris args
              then [show $ homeURI cfg]
              else uris args
-    ui <- UI.init :: IO GladeUI
-    browser <- UI.newBrowser ui :: IO BrowserId
+    ui <- Class.init :: IO GladeUI
     mapM_ (\ uri -> do
-        mpage <- View.pageFromProtocol (UI.update ui browser) (uriModifier lambdaCatConf) (pageList lambdaCatConf) Nothing (parseURIReference uri)
-        case mpage of
-            (Just (page, uri')) -> do
-                UI.embedPage ui browser page
-                _ <- View.load page uri'
-                return ()
-            Nothing     -> return ()
+        supplyForView (Class.update ui undefined) embedView (fromJust $ parseURIReference uri)
         ) us
-    UI.mainLoop ui
+    mainLoop ui
 
 lambdacat :: LambdaCatConf -> IO ()
 lambdacat cfg = do
@@ -76,8 +65,6 @@ dparams =
             { projectName = "lambdacat"
             , realMain    = mainCat
             , showError   = \ (_, c) s -> (Just s, c)
-            , statusOut   = $plog putStrLn
+            , statusOut   = putStrLn
             }
-    in  if debug
-            then dps { ghcOpts = ["-eventlog", "-threaded"] }
-            else dps
+    in  dps { ghcOpts = ["-eventlog", "-threaded"] }
