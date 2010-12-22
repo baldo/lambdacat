@@ -74,6 +74,16 @@ instance UIClass GladeUI TabMeta where
       homeButton <- xmlGetToolButton xml "homeButton"
       _ <- onToolButtonClicked homeButton $ supplyForView (update ui (undefined :: TabMeta)) replaceView $ homeURI lambdaCatConf
 
+      addressEntry <- xmlGetWidget xml castToEntry "addressEntry"
+      _ <- onEntryActivate addressEntry $ do
+          text <- entryGetText addressEntry
+          case parseURIReference text of
+              Just uri ->
+                  supplyForView (update ui (undefined :: TabMeta)) replaceView uri
+
+              Nothing ->
+                  return ()
+
       quitItem <- xmlGetWidget xml castToMenuItem "quitItem"
       _ <- onActivateLeaf quitItem mainQuit
 
@@ -92,12 +102,6 @@ instance UIClass GladeUI TabMeta where
       _ <- onToolButtonClicked pageHome $
               pageAction notebook bid $
                   loadAction (homeURI lambdaCatConf) bid
-      pageURI <- xmlGetWidget xml castToEntry "pageURI"
-      _ <- onEntryActivate pageURI  $ do
-          text <- entryGetText pageURI
-          case parseURIReference text of
-              Just uri -> pageAction notebook bid $ loadAction uri bid
-              Nothing  -> return ()
       -}
       widgetShowAll window
       -- start GTK mainloop
