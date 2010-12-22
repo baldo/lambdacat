@@ -19,8 +19,6 @@ import Data.Maybe
 import Graphics.UI.Gtk
 import Graphics.UI.Gtk.Glade
 import Network.URI
-import Control.Concurrent
-
 
 data GladeUI = GladeUI
    { gladeXML      :: GladeXML
@@ -58,7 +56,7 @@ instance UIClass GladeUI TabMeta where
 
   mainLoop ui = do
       let notebook = viewContainer ui
-          statbar  = gladeStatBar ui
+          -- statbar  = gladeStatBar ui
           xml      = gladeXML ui
           window   = gladeWindow ui
           session  = gladeSession ui
@@ -148,7 +146,7 @@ instance UIClass GladeUI TabMeta where
 
   update ui meta f = f ui meta
 
-  changedURI view ui meta = do
+  changedURI view ui _meta = do
       let xml = gladeXML ui 
       pageURI <- xmlGetWidget xml castToEntry "addressEntry"
       uri <- getCurrentURI view
@@ -165,7 +163,7 @@ instance UIClass GladeUI TabMeta where
       return ()
 
 
-  changedProgress progress ui meta = do 
+  changedProgress progress ui _meta = do 
       let sb = gladeStatBar ui
       -- TODO check if current tab is equal to the tab which hosts the calling
       -- view 
@@ -174,7 +172,7 @@ instance UIClass GladeUI TabMeta where
       _ <- statusbarPush sb cntx $ show progress ++ "%"
       return ()
 
-  changedStatus status ui meta = do
+  changedStatus status ui _meta = do
       let sb = gladeStatBar ui 
       -- TODO check if current tab is equal to the tab which hosts the 
       -- calling view
@@ -189,12 +187,12 @@ instance UIClass GladeUI TabMeta where
   replaceView view ui meta = updateMSession (gladeSession ui) $ \ session -> do
       let Just tab   = getTab (tabMetaIdent meta) session
           oldView    = tabView tab
-          newSession = updateTab session (tabMetaIdent meta) $ \ t -> Just $ t { tabView = view } 
+          session'   = updateTab session (tabMetaIdent meta) $ \ t -> Just $ t { tabView = view } 
           container  = viewContainer ui 
       destroy oldView
       mapM_ (containerRemove container) =<< containerGetChildren container
       embed view (\w -> containerAdd container w >> widgetShowAll w) (update ui meta)
-      return (newSession,())
+      return (session', ())
 
   embedView view ui _ = do
     let noteBook = viewContainer ui
@@ -208,15 +206,15 @@ instance UIClass GladeUI TabMeta where
                 withContainerId scrolledWindow $ \ removeTabId ->
                     destroy $ tabView . fromJust $ getTab removeTabId session
               )
-    let tabMeta = TabMeta 
+    let newMeta = TabMeta 
           { tabMetaIdent = tabId 
           , tabMetaLabel = label
           , tabMetaImage = img 
           }
-    embed view (embedHandle scrolledWindow) (update ui tabMeta)
+    embed view (embedHandle scrolledWindow) (update ui newMeta)
     updateMSession (gladeSession ui) $ \ session ->
-        return (newTab tabId view tabMeta nullURI session,())
-    notebookAppendPageMenu noteBook scrolledWindow labelWidget labelWidget
+        return (newTab tabId view newMeta nullURI session,())
+    _ <- notebookAppendPageMenu noteBook scrolledWindow labelWidget labelWidget
     widgetShowAll noteBook
     return ()
    where embedHandle scrolledWindow widget = do
