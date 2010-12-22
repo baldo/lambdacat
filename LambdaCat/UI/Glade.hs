@@ -84,6 +84,9 @@ instance UIClass GladeUI TabMeta where
               Nothing ->
                   return ()
 
+      addressItem <- xmlGetWidget xml castToToolItem "addressItem"
+      addressItem `set` [ toolItemExpand := True ]
+
       quitItem <- xmlGetWidget xml castToMenuItem "quitItem"
       _ <- onActivateLeaf quitItem mainQuit
 

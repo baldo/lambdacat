@@ -141,8 +141,7 @@
                 </child>
               </widget>
               <packing>
-                <property name="expand">True</property>
-                <property name="homogeneous">True</property>
+                <property name="expand">False</property>
               </packing>
             </child>
           </widget>
