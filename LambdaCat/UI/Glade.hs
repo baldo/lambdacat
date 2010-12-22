@@ -60,6 +60,9 @@ instance UIClass GladeUI TabMeta where
           xml      = gladeXML ui
           window   = gladeWindow ui
           session  = gladeSession ui
+
+      tabVisibility notebook
+
       -- General / Events ---------------------------------------------------
       _ <- onDestroy window mainQuit
       _ <- notebook `on`  switchPage $ \ newActive -> 
@@ -69,7 +72,9 @@ instance UIClass GladeUI TabMeta where
      -- Toolbar / Events ---------------------------------------------------
       addTab <- xmlGetToolButton xml "addTabButton"
       let Just defaultURI = parseURI "about:blank"
-      _ <- onToolButtonClicked addTab $ supplyForView (update ui (undefined :: TabMeta)) embedView defaultURI
+      _ <- onToolButtonClicked addTab $ do
+          supplyForView (update ui (undefined :: TabMeta)) embedView defaultURI
+          tabVisibility notebook
 
       homeButton <- xmlGetToolButton xml "homeButton"
       _ <- onToolButtonClicked homeButton $ supplyForView (update ui (undefined :: TabMeta)) replaceView $ homeURI lambdaCatConf
@@ -212,6 +217,7 @@ instance UIClass GladeUI TabMeta where
               withMSession (gladeSession ui) $ \ session -> 
                 withContainerId scrolledWindow $ \ removeTabId ->
                     destroy $ tabView . fromJust $ getTab removeTabId session
+              tabVisibility noteBook
               )
     let newMeta = TabMeta 
           { tabMetaIdent = tabId 
@@ -245,7 +251,10 @@ instance UIClass GladeUI TabMeta where
           widgetShowAll hbox
           return (hbox, img, label)
 
-
+tabVisibility :: Notebook -> IO ()
+tabVisibility notebook = do
+    pages <- notebookGetNPages notebook
+    set notebook [ notebookShowTabs := pages > 1 ]
 
 xmlGetToolButton :: GladeXML -> String -> IO ToolButton
 xmlGetToolButton xml = xmlGetWidget xml castToToolButton
