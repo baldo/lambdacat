@@ -72,10 +72,7 @@ class Typeable view => ViewClass view where
 
 -- | Class of suppliers, which retrieve content and select appropiate viewers.
 class SupplierClass supplier where
-  -- | Use of parameters
-  --   view <- new 
-  --   callbackfkt (actionfkt view)
-  supplyView :: supplier -> (Callback ui meta -> IO ()) -> (View -> Callback ui meta) -> URI -> IO ()
+  supplyView :: supplier -> URI -> IO (Maybe View) 
 --  supplyContent :: TODO 
 
 -- | Encapsulates any instance of 'ViewClass'

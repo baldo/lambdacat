@@ -8,6 +8,8 @@ module LambdaCat.View.Web
     ) where
 
 import LambdaCat.View
+import LambdaCat.UI 
+import LambdaCat.Supplier
 
 import Data.Maybe
 import Data.Typeable
@@ -16,8 +18,8 @@ import Graphics.UI.Gtk.Abstract.Widget
 -- import Graphics.UI.Gtk.WebKit.WebSettings
 -- import Graphics.UI.Gtk.WebKit.WebFrame
 -- import Graphics.UI.Gtk.WebKit.Download
--- import Graphics.UI.Gtk.WebKit.NetworkRequest
--- import Graphics.UI.Gtk hiding (populatePopup)
+import qualified Graphics.UI.Gtk.WebKit.NetworkRequest as NR
+import Graphics.UI.Gtk hiding (populatePopup)
 import Network.URI
 -- import System.Directory
 -- import System.FilePath
@@ -95,7 +97,7 @@ newWithPage page cb = do
 
         widgetShow item
         widgetShow sep
-    -- _ <- widget `on` printRequested
+    -- _ <- widget `on` pvigationPolicyDecisionRequestedrintRequested
     -- _ <- widget `on` scriptAlert
     -- _ <- widget `on` scriptConfirm
     -- _ <- widget `on` scriptPrompt
@@ -158,8 +160,18 @@ instance ViewClass WebView where
         widget <- WV.webViewNew
         return $ WebView { webViewWidget = widget }
 
-    embed WebView { webViewWidget = widget } embedder _update = do
+    embed WebView { webViewWidget = widget } embedder update = do
+        -- Setup signal handling
+        _ <- widget `on` WV.navigationPolicyDecisionRequested $ \ _ _ _ _ -> do
+          _ <- widget `on` WV.navigationPolicyDecisionRequested $ \ wf nr na wpd -> do            
+             muri <- NR.networkRequestGetUri nr
+             case muri of 
+                Just uri -> supplyForView update replaceView (fromJust $ parseURI uri)
+             return True
+          return False
+        -- Embed widget 
         embedder $ castToWidget widget
+        
 
     destroy WebView { webViewWidget = widget } =
         -- TODO: Unref WebKit's WebView.

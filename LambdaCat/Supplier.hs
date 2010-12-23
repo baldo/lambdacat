@@ -21,5 +21,9 @@ supplyForView callbackHdl embedHdl uri =
       protocol = uriScheme uri 
       mSupply   = find (\ (_s, ps) -> isJust $ find (== protocol) ps) suppliers
   in  case mSupply of
-    Just (supply,_) -> supplyView supply callbackHdl embedHdl uri
+    Just (supply,_) -> do 
+      mView <- supplyView supply uri
+      case mView of
+        Just view -> callbackHdl (embedHdl view)
+        Nothing   -> putStrLn $ "Load view for unhandled uri" ++ show uri
     Nothing         -> putStrLn $ "Can't find a supplier for protocol:" ++ protocol
