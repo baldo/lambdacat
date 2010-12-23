@@ -73,19 +73,18 @@ instance UIClass GladeUI TabMeta where
       addTab <- xmlGetToolButton xml "addTabButton"
       let Just defaultURI = parseURI "about:blank"
       _ <- onToolButtonClicked addTab $ do
-          supplyForView (update ui (undefined :: TabMeta)) embedView defaultURI
+          supplyForView (update ui undefined) embedView defaultURI
           tabVisibility notebook
 
       homeButton <- xmlGetToolButton xml "homeButton"
-      _ <- onToolButtonClicked homeButton $ supplyForView (update ui (undefined :: TabMeta)) replaceView $ homeURI lambdaCatConf
+      _ <- onToolButtonClicked homeButton $ supplyForView (update ui undefined) replaceView $ homeURI lambdaCatConf
 
       addressEntry <- xmlGetWidget xml castToEntry "addressEntry"
       _ <- onEntryActivate addressEntry $ do
           text <- entryGetText addressEntry
           case parseURIReference text of
-              Just uri ->
-                  supplyForView (update ui (undefined :: TabMeta)) replaceView uri
-
+              Just uri -> 
+                  supplyForView (update ui $ error "addressEntry") embedView uri
               Nothing ->
                   return ()
 
@@ -97,7 +96,7 @@ instance UIClass GladeUI TabMeta where
 
       let Just infoURI = parseURI "about:info"
       infoItem <- xmlGetWidget xml castToMenuItem "infoItem"
-      _ <- onActivateLeaf infoItem $ supplyForView (update ui (undefined :: TabMeta)) embedView infoURI
+      _ <- onActivateLeaf infoItem $ supplyForView (update ui undefined) embedView infoURI
 
       {- Review following code
       pageBack <- xmlGetToolButton xml "pageBack"
@@ -173,7 +172,6 @@ instance UIClass GladeUI TabMeta where
       window <- xmlGetWidget xml castToWindow "mainWindow"
       set window [ windowTitle := title ]
       return ()
-
 
   changedProgress progress ui _meta = do 
       let sb = gladeStatBar ui
