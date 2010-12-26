@@ -194,15 +194,16 @@ instance UIClass GladeUI TabMeta where
           _ <- statusbarPush sb cntx stat
           return ()
 
-  replaceView view ui meta = updateMSession (gladeSession ui) $ \ session -> do
+  replaceView view ui meta = do 
+    replaceViewLocal view (viewContainer ui) ui meta 
+    putStrLn "replaceView"
+    updateMSession (gladeSession ui) $ \ session ->
       let Just tab   = getTab (tabMetaIdent meta) session
           oldView    = tabView tab
           session'   = updateTab session (tabMetaIdent meta) $ \ t -> Just $ t { tabView = view } 
-          container  = viewContainer ui 
-      destroy oldView
-      mapM_ (containerRemove container) =<< containerGetChildren container
-      embed view (\w -> containerAdd container w >> widgetShowAll w) (update ui meta)
-      return (session', ())
+      in  do 
+          destroy oldView
+          return (session', ())
 
   embedView view ui _ = do
     let noteBook = viewContainer ui
@@ -212,6 +213,7 @@ instance UIClass GladeUI TabMeta where
     (labelWidget, img, label) <- tabWidget (do 
               removeTId <- get noteBook (notebookChildPosition scrolledWindow)
               notebookRemovePage noteBook removeTId
+              putStrLn "removeHdl"
               withMSession (gladeSession ui) $ \ session -> 
                 withContainerId scrolledWindow $ \ removeTabId ->
                     destroy $ tabView . fromJust $ getTab removeTabId session
@@ -223,6 +225,7 @@ instance UIClass GladeUI TabMeta where
           , tabMetaImage = img 
           }
     embed view (embedHandle scrolledWindow) (update ui newMeta)
+    putStrLn "embedView"
     updateMSession (gladeSession ui) $ \ session ->
         return (newTab tabId view newMeta nullURI session,())
     _ <- notebookAppendPageMenu noteBook scrolledWindow labelWidget labelWidget
@@ -263,7 +266,8 @@ withNthNotebookTab notebook msession page f = do
     mContainer <- notebookGetNthPage notebook page
     case mContainer of
         Just container -> do
-            withContainerId (castToContainer container) $ \ tabId -> 
+            withContainerId (castToContainer container) $ \ tabId -> do
+              putStrLn "withNthNotebookTab"
               withMSession msession $ \ session  -> 
                 case getTab tabId session of
                     Just tab -> 
@@ -272,3 +276,11 @@ withNthNotebookTab notebook msession page f = do
                         return ()
         Nothing ->
             return ()
+
+replaceViewLocal :: View -> Notebook -> GladeUI -> TabMeta -> IO ()
+replaceViewLocal view container ui meta = do
+  mapM_ (containerRemove container) =<< containerGetChildren container
+  embed view (\w -> containerAdd container w >> widgetShowAll w) (update ui meta)
+    
+
+ 
