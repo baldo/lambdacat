@@ -29,9 +29,10 @@ data GladeUI = GladeUI
    }
 
 data TabMeta = TabMeta 
-  { tabMetaIdent :: TabId
-  , tabMetaLabel :: Label
-  , tabMetaImage :: Image 
+  { tabMetaIdent     :: TabId
+  , tabMetaLabel     :: Label
+  , tabMetaImage     :: Image 
+  , tabMetaContainer :: Container
   }
 
 instance UIClass GladeUI TabMeta where
@@ -84,7 +85,7 @@ instance UIClass GladeUI TabMeta where
           text <- entryGetText addressEntry
           case parseURIReference text of
               Just uri -> 
-                  supplyForView (update ui $ error "addressEntry") embedView uri
+                  supplyForView (update ui $ error "addressEntry") replaceViewCurrent uri
               Nothing ->
                   return ()
 
@@ -195,7 +196,7 @@ instance UIClass GladeUI TabMeta where
           return ()
 
   replaceView view ui meta = do 
-    replaceViewLocal view (viewContainer ui) ui meta 
+    replaceViewLocal view (tabMetaContainer meta) ui meta 
     putStrLn "replaceView"
     updateMSession (gladeSession ui) $ \ session ->
       let Just tab   = getTab (tabMetaIdent meta) session
@@ -223,6 +224,7 @@ instance UIClass GladeUI TabMeta where
           { tabMetaIdent = tabId 
           , tabMetaLabel = label
           , tabMetaImage = img 
+          , tabMetaContainer = castToContainer scrolledWindow
           }
     embed view (embedHandle scrolledWindow) (update ui newMeta)
     putStrLn "embedView"
@@ -277,10 +279,30 @@ withNthNotebookTab notebook msession page f = do
         Nothing ->
             return ()
 
-replaceViewLocal :: View -> Notebook -> GladeUI -> TabMeta -> IO ()
+replaceViewLocal :: View -> Container -> GladeUI -> TabMeta -> IO ()
 replaceViewLocal view container ui meta = do
   mapM_ (containerRemove container) =<< containerGetChildren container
   embed view (\w -> containerAdd container w >> widgetShowAll w) (update ui meta)
+  title <- getCurrentTitle view
+  set (tabMetaLabel meta) [ labelLabel := if null title then "(Untitled)" else title ]
     
-
- 
+replaceViewCurrent :: View -> GladeUI -> a -> IO ()
+replaceViewCurrent view ui _ = do
+  let notebook = viewContainer ui
+  pageId <- notebookGetCurrentPage notebook
+  mContainer <- notebookGetNthPage notebook pageId
+  case mContainer of
+    Just container -> do
+      withContainerId (castToContainer container) $ \ tabId -> do
+      putStrLn "replaceViewCurrent"
+      meta <- updateMSession (gladeSession ui) $ \ session  -> 
+         case getTab tabId session of
+          Just tab -> do
+            let oldView    = tabView tab
+                session'   = updateTab session (tabMetaIdent$ tabMeta tab) $ \ t -> Just $ t { tabView = view } 
+            destroy oldView
+            return (session', tabMeta tab)
+          Nothing ->
+            return (session,error "there is no current tab")
+      replaceViewLocal view (castToContainer container) ui meta
+    Nothing -> return ()
