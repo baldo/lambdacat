@@ -19,6 +19,7 @@ import Graphics.UI.Gtk.Abstract.Widget
 -- import Graphics.UI.Gtk.WebKit.WebFrame
 -- import Graphics.UI.Gtk.WebKit.Download
 import qualified Graphics.UI.Gtk.WebKit.NetworkRequest as NR
+import qualified Graphics.UI.Gtk.WebKit.WebNavigationAction as NA
 import Graphics.UI.Gtk hiding (populatePopup)
 import Network.URI
 -- import System.Directory
@@ -160,15 +161,29 @@ instance ViewClass WebView where
         widget <- WV.webViewNew
         return $ WebView { webViewWidget = widget }
 
-    embed WebView { webViewWidget = widget } embedder update = do
+    embed webView@(WebView { webViewWidget = widget }) embedder update = do
         -- Setup signal handling
-        _ <- widget `on` WV.navigationPolicyDecisionRequested $ \ _ _ _ _ -> do
-          _ <- widget `on` WV.navigationPolicyDecisionRequested $ \ wf nr na wpd -> do            
-             muri <- NR.networkRequestGetUri nr
-             case muri of 
-                Just uri -> supplyForView update replaceView (fromJust $ parseURI uri)
-             return True
-          return False
+        _ <- widget `on` WV.navigationPolicyDecisionRequested $ \ _wf nr na _wpd -> do            
+          muri <- NR.networkRequestGetUri nr
+          reason <- NA.webNavigationActionGetReason na
+          case muri of 
+            Just uri -> do 
+              case reason of 
+                NA.WebNavigationReasonFormResubmitted -> return False -- this is not handled because of the form data
+                NA.WebNavigationReasonLinkClicked -> do 
+                  supplyForView update replaceView (fromJust $ parseURI uri)
+                  return True
+                _ -> return False
+            Nothing  -> return False
+
+        _ <- widget `on` WV.newWindowPolicyDecisionRequested $ \ _wf nr _na _wpd -> do
+          muri <- NR.networkRequestGetUri nr
+          case muri of 
+            Just uri -> supplyForView update replaceView (fromJust $ parseURI uri)
+            Nothing  -> return ()  
+          return True
+
+        _ <- widget `on` WV.titleChanged $ \ _wf title -> update (changedTitle $ View webView)
         -- Embed widget 
         embedder $ castToWidget widget
         
