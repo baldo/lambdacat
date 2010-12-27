@@ -72,8 +72,7 @@ updateTab :: (Eq tabIdent,Ord tabIdent)
 updateTab session tabId f =
   let tabs    = sessionTabs session
       newTabs = Map.updateWithKey search tabId tabs -- TODO fix 
-      search  = \ _ tab -> do newtab <- f tab
-                              return $ newtab
+      search _ = f
   in  session { sessionTabs = newTabs } 
 
 getTab :: Ord tabIdent => tabIdent -> Session tabIdent tabMeta -> Maybe (Tab tabMeta)

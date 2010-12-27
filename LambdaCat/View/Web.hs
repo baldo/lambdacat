@@ -183,7 +183,7 @@ instance ViewClass WebView where
             Nothing  -> return ()  
           return True
 
-        _ <- widget `on` WV.titleChanged $ \ _wf title -> update (changedTitle $ View webView)
+        _ <- widget `on` WV.titleChanged $ \ _wf _title -> update (changedTitle $ View webView)
         -- Embed widget 
         embedder $ castToWidget widget
         

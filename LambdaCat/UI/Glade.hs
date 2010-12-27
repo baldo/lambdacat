@@ -1,4 +1,4 @@
-{-# LANGUAGE MultiParamTypeClasses, FlexibleInstances, TypeSynonymInstances, RankNTypes, TemplateHaskell #-}
+{-# LANGUAGE MultiParamTypeClasses, FlexibleInstances, TypeSynonymInstances, RankNTypes #-}
 
 module LambdaCat.UI.Glade
     ( GladeUI
@@ -217,7 +217,7 @@ instance UIClass GladeUI TabMeta where
               putStrLn "removeHdl"
               withMSession (gladeSession ui) $ \ session -> 
                 withContainerId scrolledWindow $ \ removeTabId ->
-                    destroy $ tabView . fromJust $ getTab removeTabId session
+                    destroy . tabView . fromJust $ getTab removeTabId session
               tabVisibility noteBook
               )
     let newMeta = TabMeta 
@@ -267,7 +267,7 @@ withNthNotebookTab :: Notebook -> MSession TabId TabMeta -> Int
 withNthNotebookTab notebook msession page f = do
     mContainer <- notebookGetNthPage notebook page
     case mContainer of
-        Just container -> do
+        Just container -> 
             withContainerId (castToContainer container) $ \ tabId -> do
               putStrLn "withNthNotebookTab"
               withMSession msession $ \ session  -> 
@@ -292,7 +292,7 @@ replaceViewCurrent view ui _ = do
   pageId <- notebookGetCurrentPage notebook
   mContainer <- notebookGetNthPage notebook pageId
   case mContainer of
-    Just container -> do
+    Just container -> 
       withContainerId (castToContainer container) $ \ tabId -> do
       putStrLn "replaceViewCurrent"
       meta <- updateMSession (gladeSession ui) $ \ session  -> 

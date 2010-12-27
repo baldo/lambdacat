@@ -75,4 +75,4 @@ insert weight dt =
 
 newIndex :: IntMap a -> Int 
 newIndex m | IntMap.null m  = 0
-           | otherwise      = 1 + (fst $ IntMap.findMax m)
+           | otherwise      = 1 + fst (IntMap.findMax m)

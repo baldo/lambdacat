@@ -86,7 +86,7 @@ instance Show View where
 
 instance ViewClass View where
     new                 = return (error "Can't create existential quantificated datatype")
-    embed (View view) callback  = embed view callback
+    embed (View view) = embed view
     destroy (View view) = destroy view
 
     load (View view) = load view
