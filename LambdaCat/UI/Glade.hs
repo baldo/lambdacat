@@ -78,7 +78,7 @@ instance UIClass GladeUI TabMeta where
           tabVisibility notebook
 
       homeButton <- xmlGetToolButton xml "homeButton"
-      _ <- onToolButtonClicked homeButton $ supplyForView (update ui undefined) replaceView $ homeURI lambdaCatConf
+      _ <- onToolButtonClicked homeButton $ supplyForView (update ui undefined) replaceViewCurrent $ homeURI lambdaCatConf
 
       addressEntry <- xmlGetWidget xml castToEntry "addressEntry"
       _ <- onEntryActivate addressEntry $ do
