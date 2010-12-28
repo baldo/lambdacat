@@ -1,5 +1,5 @@
 module LambdaCat.History 
-  ( History (..)
+  ( History
  
   , singleton
 
