@@ -104,8 +104,14 @@ instance UIClass GladeUI TabMeta where
       _ <- onToolButtonClicked pageBack (pageAction notebook bid (\_ p -> back p))
       pageForward <- xmlGetToolButton xml "pageForward"
       _ <- onToolButtonClicked pageForward (pageAction notebook bid (\_ p -> forward p))
-      pageReload <- xmlGetToolButton xml "pageReload"
-      _ <- onToolButtonClicked pageReload (pageAction notebook bid (\_ p -> reload p))
+      -}
+      pageReload <- xmlGetToolButton xml "reloadButton"
+      _ <- onToolButtonClicked pageReload $ do
+        pageId <- notebookGetCurrentPage notebook
+        withNthNotebookTab notebook session pageId $ \ tab ->
+          let view = tabView tab
+          in  getCurrentURI view >>= load view >> return ()
+      {-
       pageHome <- xmlGetToolButton xml "pageHome"
       _ <- onToolButtonClicked pageHome $
               pageAction notebook bid $
