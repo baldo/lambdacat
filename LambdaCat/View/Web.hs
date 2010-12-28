@@ -161,7 +161,7 @@ instance ViewClass WebView where
         widget <- WV.webViewNew
         return $ WebView { webViewWidget = widget }
 
-    embed wV@(WebView { webViewWidget = widget }) embedder update = do
+    embed wV@(WebView { webViewWidget = widget }) embedder callback = do
         -- Setup signal handling
         _ <- widget `on` WV.navigationPolicyDecisionRequested $ \ _wf nr na _wpd -> do            
           muri <- NR.networkRequestGetUri nr
@@ -171,7 +171,7 @@ instance ViewClass WebView where
               case reason of 
                 NA.WebNavigationReasonFormResubmitted -> return False -- this is not handled because of the form data
                 NA.WebNavigationReasonLinkClicked -> do 
-                  supplyForView update replaceView (fromJust $ parseURI uri)
+                  supplyForView callback replaceView (fromJust $ parseURI uri)
                   return True
                 _ -> return False
             Nothing  -> return False
@@ -179,12 +179,12 @@ instance ViewClass WebView where
         _ <- widget `on` WV.newWindowPolicyDecisionRequested $ \ _wf nr _na _wpd -> do
           muri <- NR.networkRequestGetUri nr
           case muri of 
-            Just uri -> supplyForView update replaceView (fromJust $ parseURI uri)
+            Just uri -> supplyForView callback replaceView (fromJust $ parseURI uri)
             Nothing  -> return ()  
           return True
 
-        _ <- widget `on` WV.titleChanged $ \ _wf _title -> update (changedTitle $ View wV)
-        _ <- widget `on` WV.loadFinished $ \ _wf -> update (changedURI $ View wV) 
+        _ <- widget `on` WV.titleChanged $ \ _wf _title -> callback (changedTitle $ View wV)
+        _ <- widget `on` WV.loadFinished $ \ _wf -> callback (changedURI $ View wV) 
         -- Embed widget 
         embedder $ castToWidget widget
 
