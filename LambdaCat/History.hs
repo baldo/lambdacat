@@ -1,11 +1,13 @@
 module LambdaCat.History 
-  ( History 
+  ( History (..)
  
   , singleton
 
   , back
   , forward
   , insert
+  , insertAndForward
+  , updateCurrent
   , current 
 
   , hasBack
@@ -17,7 +19,7 @@ module LambdaCat.History
 import Data.IntMap (IntMap)
 import qualified Data.IntMap as IntMap
 import Network.URI 
-import Data.Maybe (isJust)
+import Data.Maybe (isJust, fromJust)
 
 type History = DTree URI
 
@@ -59,8 +61,11 @@ forward index dt =
 current :: DTree a -> a 
 current = dTreeWeight 
 
+updateCurrent :: a -> DTree a -> DTree a
+updateCurrent a tree = tree { dTreeWeight = a }
+
 hasForward :: DTree a -> Bool
-hasForward = IntMap.null . dTreeForward 
+hasForward = not . IntMap.null . dTreeForward 
 
 getForwards :: DTree a -> [(Int,a)]
 getForwards = map withSnd . IntMap.toList . dTreeForward
@@ -72,6 +77,13 @@ insert weight dt =
     let forwMap = dTreeForward dt
         newDt   = singleton weight
     in  dt { dTreeForward = IntMap.insert (newIndex forwMap) newDt forwMap }
+
+insertAndForward :: a -> DTree a -> DTree a
+insertAndForward weight dt = 
+    let forwMap = dTreeForward dt
+        newDt   = singleton weight
+        index   = newIndex forwMap
+    in fromJust . forward index $ dt { dTreeForward = IntMap.insert index  newDt forwMap }
 
 newIndex :: IntMap a -> Int 
 newIndex m | IntMap.null m  = 0
