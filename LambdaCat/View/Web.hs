@@ -161,7 +161,7 @@ instance ViewClass WebView where
         widget <- WV.webViewNew
         return $ WebView { webViewWidget = widget }
 
-    embed webView@(WebView { webViewWidget = widget }) embedder update = do
+    embed wV@(WebView { webViewWidget = widget }) embedder update = do
         -- Setup signal handling
         _ <- widget `on` WV.navigationPolicyDecisionRequested $ \ _wf nr na _wpd -> do            
           muri <- NR.networkRequestGetUri nr
@@ -183,10 +183,10 @@ instance ViewClass WebView where
             Nothing  -> return ()  
           return True
 
-        _ <- widget `on` WV.titleChanged $ \ _wf _title -> update (changedTitle $ View webView)
+        _ <- widget `on` WV.titleChanged $ \ _wf _title -> update (changedTitle $ View wV)
+        _ <- widget `on` WV.loadFinished $ \ _wf -> update (changedURI $ View wV) 
         -- Embed widget 
         embedder $ castToWidget widget
-        
 
     destroy WebView { webViewWidget = widget } =
         -- TODO: Unref WebKit's WebView.
@@ -205,5 +205,4 @@ instance ViewClass WebView where
 
     getCurrentTitle WebView { webViewWidget = widget } = do
         mTitle <- WV.webViewGetTitle widget
-        return $ fromMaybe "" mTitle
-
+        return $ fromMaybe "http://www.ccc.de" mTitle
