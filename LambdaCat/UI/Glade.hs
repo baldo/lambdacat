@@ -20,7 +20,7 @@ import Data.Maybe
 import Graphics.UI.Gtk
 import Graphics.UI.Gtk.Glade
 import Network.URI
-import Control.Concurrent (forkIO)
+import Control.Monad (when)
 
 data GladeUI = GladeUI
    { gladeXML      :: GladeXML
@@ -57,13 +57,13 @@ instance UIClass GladeUI TabMeta where
                      , viewContainer= notebook 
                      }
 
-  mainLoop ui = do
+  mainLoop ui =
       let notebook = viewContainer ui
           -- statbar  = gladeStatBar ui
           xml      = gladeXML ui
           window   = gladeWindow ui
           session  = gladeSession ui
-
+      in  do 
       tabVisibility notebook
 
       -- General / Events ---------------------------------------------------
@@ -105,37 +105,33 @@ instance UIClass GladeUI TabMeta where
 
       pageBack <- xmlGetToolButton xml "backButton"
       _ <- onToolButtonClicked pageBack $ 
-        withCurrentTab ui $ \ tab tabId session -> 
+        withCurrentTab ui $ \ tab tabId sess -> 
          let history  = tabHistory tab
              history' = if hasBack history
                         then fromJust $ back history
                         else history
              newuri   = current history'
              view     = tabView tab
-         in  do if hasBack history 
-                   then load view newuri
-                   else return False
-                return (updateTab session tabId $ const .  Just $ tab { tabHistory = history' }) 
+         in  do when (hasBack history) $ load view newuri >> return ()
+                return (updateTab sess tabId $ const .  Just $ tab { tabHistory = history' }) 
 
       forwardButton <- xmlGetToolButton xml "forwardButton"
       _ <- onToolButtonClicked forwardButton $ 
-        withCurrentTab ui $ \ tab tabId session -> 
+        withCurrentTab ui $ \ tab tabId sess -> 
          let history  = tabHistory tab
              history' = if hasForward history
                         then fromJust $ forward (fst . last . getForwards $ history ) history 
                         else history
              newuri   = current history'
              view     = tabView tab
-         in  do if hasForward history 
-                  then load view newuri
-                  else return False
-                return (updateTab session tabId $ const .  Just $ tab { tabHistory = history' })
+         in  do when (hasForward history) $ load view newuri >> return ()
+                return (updateTab sess tabId $ const .  Just $ tab { tabHistory = history' })
 
       pageReload <- xmlGetToolButton xml "reloadButton"
       _ <- onToolButtonClicked pageReload $ do
-        withCurrentTab ui $ \ tab _ session -> 
+        withCurrentTab ui $ \ tab _ sess -> 
           let view = tabView tab
-          in  getCurrentURI view >>= load view >> return session
+          in  getCurrentURI view >>= load view >> return sess
 
       widgetShowAll window
       -- start GTK mainloop
@@ -327,6 +323,5 @@ updateAddressBar :: GladeUI -> URI -> IO ()
 updateAddressBar ui uri = 
   let xml = gladeXML ui 
   in  do pageURI <- xmlGetWidget xml castToEntry "addressEntry"
-         entrySetText pageURI (uriString uri)
- where uriString uri = uriToString id uri ""
+         entrySetText pageURI (uriToString id uri "")
  
