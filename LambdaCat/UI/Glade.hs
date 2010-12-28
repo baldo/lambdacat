@@ -12,6 +12,7 @@ import LambdaCat.UI
 import LambdaCat.UI.Glade.PersistentTabId
 import LambdaCat.Session
 import LambdaCat.Supplier
+import LambdaCat.History 
 
 import Paths_lambdacat
 
@@ -19,6 +20,7 @@ import Data.Maybe
 import Graphics.UI.Gtk
 import Graphics.UI.Gtk.Glade
 import Network.URI
+import Control.Concurrent (forkIO)
 
 data GladeUI = GladeUI
    { gladeXML      :: GladeXML
@@ -68,7 +70,9 @@ instance UIClass GladeUI TabMeta where
       _ <- onDestroy window mainQuit
       _ <- notebook `on`  switchPage $ \ newActive -> 
         withNthNotebookTab notebook session newActive $ \ tab -> do
-            changedURI   (tabView tab) ui (tabMeta tab)
+            let view = tabView tab
+            uri <- getCurrentURI view
+            updateAddressBar ui uri
             changedTitle (tabView tab) ui (tabMeta tab)
      -- Toolbar / Events ---------------------------------------------------
       addTab <- xmlGetToolButton xml "addTabButton"
@@ -99,17 +103,39 @@ instance UIClass GladeUI TabMeta where
       infoItem <- xmlGetWidget xml castToMenuItem "infoItem"
       _ <- onActivateLeaf infoItem $ supplyForView (update ui undefined) embedView infoURI
 
-      {- Review following code
-      pageBack <- xmlGetToolButton xml "pageBack"
-      _ <- onToolButtonClicked pageBack (pageAction notebook bid (\_ p -> back p))
-      pageForward <- xmlGetToolButton xml "pageForward"
-      _ <- onToolButtonClicked pageForward (pageAction notebook bid (\_ p -> forward p))
-      -}
+      pageBack <- xmlGetToolButton xml "backButton"
+      _ <- onToolButtonClicked pageBack $ 
+        withCurrentTab ui $ \ tab tabId session -> 
+         let history  = tabHistory tab
+             history' = if hasBack history
+                        then fromJust $ back history
+                        else history
+             newuri   = current history'
+             view     = tabView tab
+         in  do if hasBack history 
+                   then load view newuri
+                   else return False
+                return (updateTab session tabId $ const .  Just $ tab { tabHistory = history' }) 
+
+      forwardButton <- xmlGetToolButton xml "forwardButton"
+      _ <- onToolButtonClicked forwardButton $ 
+        withCurrentTab ui $ \ tab tabId session -> 
+         let history  = tabHistory tab
+             history' = if hasForward history
+                        then fromJust $ forward (fst . last . getForwards $ history ) history 
+                        else history
+             newuri   = current history'
+             view     = tabView tab
+         in  do if hasForward history 
+                  then load view newuri
+                  else return False
+                return (updateTab session tabId $ const .  Just $ tab { tabHistory = history' })
+
       pageReload <- xmlGetToolButton xml "reloadButton"
       _ <- onToolButtonClicked pageReload $ do
-        withCurrentTab ui $ \ tab session -> 
+        withCurrentTab ui $ \ tab _ session -> 
           let view = tabView tab
-          in  getCurrentURI view >>= load view >> return (session,())
+          in  getCurrentURI view >>= load view >> return session
 
       widgetShowAll window
       -- start GTK mainloop
@@ -117,12 +143,16 @@ instance UIClass GladeUI TabMeta where
 
   update ui meta f = f ui meta
 
-  changedURI view ui _meta = do
-      let xml = gladeXML ui 
-      pageURI <- xmlGetWidget xml castToEntry "addressEntry"
-      uri <- getCurrentURI view
-      entrySetText pageURI (uriString uri)
-    where uriString uri = uriToString id uri ""
+  changedURI view ui meta =
+     let ident = tabMetaIdent meta 
+     in  do uri <- getCurrentURI view
+            updateAddressBar ui uri 
+            updateMSession (gladeSession ui) $ \ session -> return
+              (updateTab session ident $ \tab -> 
+                let history = tabHistory tab 
+                in Just $ tab { tabHistory = updateCurrent uri history }
+              ,())
+            return ()
 
   changedTitle view ui meta = do
       let xml   = gladeXML ui
@@ -156,14 +186,16 @@ instance UIClass GladeUI TabMeta where
 
   replaceView view ui meta = do 
     replaceViewLocal view (tabMetaContainer meta) ui meta 
-    putStrLn "replaceView"
-    updateMSession (gladeSession ui) $ \ session ->
+    updateMSession (gladeSession ui) $ \ session -> do 
+      newURI <- getCurrentURI view 
       let Just tab   = getTab (tabMetaIdent meta) session
           oldView    = tabView tab
-          session'   = updateTab session (tabMetaIdent meta) $ \ t -> Just $ t { tabView = view } 
-      in  do 
-          destroy oldView
-          return (session', ())
+          history    = tabHistory tab
+          history'   = insertAndForward newURI history 
+          session'   = updateTab session (tabMetaIdent meta) $ \ t -> Just $ t { tabView = view, tabHistory = history' } 
+      destroy oldView
+      
+      return (session', ())
 
   embedView view ui _ = do
     let noteBook = viewContainer ui
@@ -186,9 +218,11 @@ instance UIClass GladeUI TabMeta where
           , tabMetaContainer = castToContainer scrolledWindow
           }
     embed view (embedHandle scrolledWindow) (update ui newMeta)
+    startURI <- getCurrentURI view 
+    print startURI
     putStrLn "embedView"
     updateMSession (gladeSession ui) $ \ session ->
-        return (newTab tabId view newMeta nullURI session,())
+        return (newTab tabId view newMeta startURI session,())
     _ <- notebookAppendPageMenu noteBook scrolledWindow labelWidget labelWidget
     widgetShowAll noteBook
     return ()
@@ -239,7 +273,7 @@ withNthNotebookTab notebook msession page f = do
             return ()
 
 withCurrentTab :: GladeUI
-               -> (Tab TabMeta -> Session TabId TabMeta -> IO (Session TabId TabMeta,()))
+               -> (Tab TabMeta -> TabId -> Session TabId TabMeta -> IO (Session TabId TabMeta))
                -> IO () 
 withCurrentTab ui f =
   let notebook = viewContainer ui
@@ -249,12 +283,13 @@ withCurrentTab ui f =
     mContainer <- notebookGetNthPage notebook pageId 
     case mContainer of
       Just container -> 
-        withContainerId (castToContainer container) $ \tabId -> do
+         withContainerId (castToContainer container) $ \tabId -> do
           putStrLn "withCurrentTab"
-          updateMSession msession $ \ session -> 
-            case getTab tabId session of
-            Just tab -> f tab session 
-            Nothing  -> error "Can't find current tab"
+          updateMSession msession $ \ session -> do
+            session' <- case getTab tabId session of
+              Just tab -> f tab tabId session 
+              Nothing  -> error "Can't find current tab"
+            return (session',())
       Nothing -> error "there is no tab with the given ident in the notebook"
 
 replaceViewLocal :: View -> Container -> GladeUI -> TabMeta -> IO ()
@@ -273,14 +308,25 @@ replaceViewCurrent view ui _ = do
     Just container -> 
       withContainerId (castToContainer container) $ \ tabId -> do
       putStrLn "replaceViewCurrent"
+      newURI <- getCurrentURI view 
       meta <- updateMSession (gladeSession ui) $ \ session  -> 
          case getTab tabId session of
           Just tab -> do
             let oldView    = tabView tab
-                session'   = updateTab session (tabMetaIdent$ tabMeta tab) $ \ t -> Just $ t { tabView = view } 
+                history    = tabHistory tab
+                history'   = insertAndForward newURI history 
+                session'   = updateTab session (tabMetaIdent $ tabMeta tab) $ \ t -> Just $ t { tabView = view, tabHistory = history' }
             destroy oldView
             return (session', tabMeta tab)
-          Nothing ->
+          Nothing -> 
             return (session,error "there is no current tab")
       replaceViewLocal view (castToContainer container) ui meta
     Nothing -> return ()
+
+updateAddressBar :: GladeUI -> URI -> IO ()
+updateAddressBar ui uri = 
+  let xml = gladeXML ui 
+  in  do pageURI <- xmlGetWidget xml castToEntry "addressEntry"
+         entrySetText pageURI (uriString uri)
+ where uriString uri = uriToString id uri ""
+ 
