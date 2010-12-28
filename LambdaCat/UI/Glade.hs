@@ -107,60 +107,13 @@ instance UIClass GladeUI TabMeta where
       -}
       pageReload <- xmlGetToolButton xml "reloadButton"
       _ <- onToolButtonClicked pageReload $ do
-        pageId <- notebookGetCurrentPage notebook
-        withNthNotebookTab notebook session pageId $ \ tab ->
+        withCurrentTab ui $ \ tab session -> 
           let view = tabView tab
-          in  getCurrentURI view >>= load view >> return ()
-      {-
-      pageHome <- xmlGetToolButton xml "pageHome"
-      _ <- onToolButtonClicked pageHome $
-              pageAction notebook bid $
-                  loadAction (homeURI lambdaCatConf) bid
-      -}
+          in  getCurrentURI view >>= load view >> return (session,())
+
       widgetShowAll window
       -- start GTK mainloop
       mainGUI
-     {-
-
-     where
-
-        loadAction :: URI -> BrowserId -> TabId -> View -> IO ()
-        loadAction uri bid tid w = do
-            mw' <- pageFromProtocol (update ui bid)
-                                    (uriModifier lambdaCatConf)
-                                    (pageList lambdaCatConf)
-                                    (Just w)
-                                    (Just uri)
-            case mw' of
-                -- TODO call an default error page
-                Nothing -> return ()
-                Just (w', uri') -> do
-                    replacePage ui bid tid w w'
-                    _ <- load w' uri'
-                    return ()
-
-        pageAction :: Notebook -> BrowserId -> (TabId -> View -> IO a) -> IO ()
-        pageAction notebook bid f = do
-            -- TODO select correct page
-            tid <- notebookGetCurrentPage notebook
-            mcontainer <- notebookGetNthPage notebook tid
-            case mcontainer of
-                Just container ->
-                    withContainerId (castToContainer container) $ \ tabId -> do
-                        mPage <- getPageFromBrowser (browsers ui) bid tabId
-                        case mPage of
-                            Just (_, _, p) -> f tabId p >> return ()
-                            Nothing -> return ()
-                Nothing -> do
-                    mp <- newPage bid $ parseURI "about:blank"
-                    case mp of
-                        Just p -> do
-                            -- _ <- f undefined p 
-                            return ()
-                        Nothing ->
-                            return ()
-
-    -}
 
   update ui meta f = f ui meta
 
@@ -284,6 +237,25 @@ withNthNotebookTab notebook msession page f = do
                         return ()
         Nothing ->
             return ()
+
+withCurrentTab :: GladeUI
+               -> (Tab TabMeta -> Session TabId TabMeta -> IO (Session TabId TabMeta,()))
+               -> IO () 
+withCurrentTab ui f =
+  let notebook = viewContainer ui
+      msession = gladeSession ui
+  in  do 
+    pageId <- notebookGetCurrentPage notebook 
+    mContainer <- notebookGetNthPage notebook pageId 
+    case mContainer of
+      Just container -> 
+        withContainerId (castToContainer container) $ \tabId -> do
+          putStrLn "withCurrentTab"
+          updateMSession msession $ \ session -> 
+            case getTab tabId session of
+            Just tab -> f tab session 
+            Nothing  -> error "Can't find current tab"
+      Nothing -> error "there is no tab with the given ident in the notebook"
 
 replaceViewLocal :: View -> Container -> GladeUI -> TabMeta -> IO ()
 replaceViewLocal view container ui meta = do
