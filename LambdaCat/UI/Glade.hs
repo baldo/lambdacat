@@ -128,7 +128,7 @@ instance UIClass GladeUI TabMeta where
                 return (updateTab sess tabId $ const .  Just $ tab { tabHistory = history' })
 
       pageReload <- xmlGetToolButton xml "reloadButton"
-      _ <- onToolButtonClicked pageReload $ do
+      _ <- onToolButtonClicked pageReload $ 
         withCurrentTab ui $ \ tab _ sess -> 
           let view = tabView tab
           in  getCurrentURI view >>= load view >> return sess
@@ -201,7 +201,6 @@ instance UIClass GladeUI TabMeta where
     (labelWidget, img, label) <- tabWidget (do 
               removeTId <- get noteBook (notebookChildPosition scrolledWindow)
               notebookRemovePage noteBook removeTId
-              putStrLn "removeHdl"
               withMSession (gladeSession ui) $ \ session -> 
                 withContainerId scrolledWindow $ \ removeTabId ->
                     destroy . tabView . fromJust $ getTab removeTabId session
@@ -216,7 +215,6 @@ instance UIClass GladeUI TabMeta where
     embed view (embedHandle scrolledWindow) (update ui newMeta)
     startURI <- getCurrentURI view 
     print startURI
-    putStrLn "embedView"
     updateMSession (gladeSession ui) $ \ session ->
         return (newTab tabId view newMeta startURI session,())
     _ <- notebookAppendPageMenu noteBook scrolledWindow labelWidget labelWidget
@@ -257,8 +255,7 @@ withNthNotebookTab notebook msession page f = do
     mContainer <- notebookGetNthPage notebook page
     case mContainer of
         Just container -> 
-            withContainerId (castToContainer container) $ \ tabId -> do
-              putStrLn "withNthNotebookTab"
+            withContainerId (castToContainer container) $ \ tabId -> 
               withMSession msession $ \ session  -> 
                 case getTab tabId session of
                     Just tab -> 
@@ -279,8 +276,7 @@ withCurrentTab ui f =
     mContainer <- notebookGetNthPage notebook pageId 
     case mContainer of
       Just container -> 
-         withContainerId (castToContainer container) $ \tabId -> do
-          putStrLn "withCurrentTab"
+         withContainerId (castToContainer container) $ \tabId -> 
           updateMSession msession $ \ session -> do
             session' <- case getTab tabId session of
               Just tab -> f tab tabId session 
@@ -303,7 +299,6 @@ replaceViewCurrent view ui _ = do
   case mContainer of
     Just container -> 
       withContainerId (castToContainer container) $ \ tabId -> do
-      putStrLn "replaceViewCurrent"
       newURI <- getCurrentURI view 
       meta <- updateMSession (gladeSession ui) $ \ session  -> 
          case getTab tabId session of

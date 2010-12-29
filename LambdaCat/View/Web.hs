@@ -1,4 +1,4 @@
-{-# LANGUAGE DeriveDataTypeable, FlexibleContexts, FlexibleInstances, MultiParamTypeClasses, TemplateHaskell #-}
+{-# LANGUAGE DeriveDataTypeable, FlexibleContexts, FlexibleInstances, MultiParamTypeClasses #-}
 
 module LambdaCat.View.Web
     ( WebView
@@ -159,7 +159,7 @@ newWithPage page cb = do
 instance ViewClass WebView where
     new = do
         widget <- WV.webViewNew
-        return $ WebView { webViewWidget = widget }
+        return WebView { webViewWidget = widget }
 
     embed wV@(WebView { webViewWidget = widget }) embedder callback = do
         -- Setup signal handling
@@ -167,7 +167,7 @@ instance ViewClass WebView where
           muri <- NR.networkRequestGetUri nr
           reason <- NA.webNavigationActionGetReason na
           case muri of 
-            Just uri -> do 
+            Just uri -> 
               case reason of 
                 NA.WebNavigationReasonFormResubmitted -> return False -- this is not handled because of the form data
                 NA.WebNavigationReasonLinkClicked -> do 
