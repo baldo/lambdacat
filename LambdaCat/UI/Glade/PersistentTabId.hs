@@ -6,12 +6,14 @@ module LambdaCat.UI.Glade.PersistentTabId
     , genNewId
     , containerTabId
     , withContainerId
+    , withUnsafeContainerId 
     , setContainerId
     ) where
 
 import Control.Concurrent.MVar (MVar, newMVar, modifyMVar)
 import System.IO.Unsafe (unsafePerformIO)
 import Graphics.UI.Gtk
+import Data.Maybe (fromJust)
 
 newtype TabId = TabId Int
   deriving (Eq, Num, Show, Ord)
@@ -43,3 +45,11 @@ withContainerId container f = do
  case maybeId of
     Just cId -> f cId
     Nothing  -> return ()
+
+withUnsafeContainerId
+    :: (ContainerClass container)
+    => container
+    -> (TabId -> IO a)
+    -> IO a
+withUnsafeContainerId container f = do
+  get (castToContainer container) containerTabId >>= f . fromJust 

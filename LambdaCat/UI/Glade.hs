@@ -68,12 +68,12 @@ instance UIClass GladeUI TabMeta where
 
       -- General / Events ---------------------------------------------------
       _ <- onDestroy window mainQuit
-      _ <- notebook `on`  switchPage $ \ newActive -> 
-        withNthNotebookTab notebook session newActive $ \ tab -> do
-            let view = tabView tab
-            uri <- getCurrentURI view
-            updateAddressBar ui uri
-            changedTitle (tabView tab) ui (tabMeta tab)
+      _ <- notebook `on`  switchPage $ \ newActive -> do 
+        (view,meta) <- withNthNotebookTab notebook session newActive $ 
+          \ tab -> return (tabView tab,tabMeta tab)
+        uri <- getCurrentURI view
+        updateAddressBar ui uri
+        changedTitle view ui meta
      -- Toolbar / Events ---------------------------------------------------
       addTab <- xmlGetToolButton xml "addTabButton"
       let Just defaultURI = parseURI "about:blank"
@@ -104,34 +104,39 @@ instance UIClass GladeUI TabMeta where
       _ <- onActivateLeaf infoItem $ supplyForView (update ui undefined) embedView infoURI
 
       pageBack <- xmlGetToolButton xml "backButton"
-      _ <- onToolButtonClicked pageBack $ 
-        withCurrentTab ui $ \ tab tabId sess -> 
+      _ <- onToolButtonClicked pageBack $ do
+        (view,muri) <- withCurrentTab ui $ \ tab tabId sess -> 
          let history  = tabHistory tab
              history' = if hasBack history
                         then fromJust $ back history
                         else history
              newuri   = current history'
              view     = tabView tab
-         in  do when (hasBack history) $ load view newuri >> return ()
-                return (updateTab sess tabId $ const .  Just $ tab { tabHistory = history' }) 
+         in  return (updateTab sess tabId $ const .  Just $ tab { tabHistory = history' }
+                    ,(view,if hasBack history then Just newuri else Nothing))
+        maybe (return ()) (\uri -> load view uri >> return ()) muri
 
       forwardButton <- xmlGetToolButton xml "forwardButton"
-      _ <- onToolButtonClicked forwardButton $ 
-        withCurrentTab ui $ \ tab tabId sess -> 
+      _ <- onToolButtonClicked forwardButton $ do
+        (view,muri) <- withCurrentTab ui $ \ tab tabId sess -> 
          let history  = tabHistory tab
              history' = if hasForward history
                         then fromJust $ forward (fst . last . getForwards $ history ) history 
                         else history
              newuri   = current history'
              view     = tabView tab
-         in  do when (hasForward history) $ load view newuri >> return ()
-                return (updateTab sess tabId $ const .  Just $ tab { tabHistory = history' })
+         in  return (updateTab sess tabId $ const .  Just $ tab { tabHistory = history' }
+                    ,(view,if hasForward history then Just newuri else Nothing))
+        maybe (return ()) (\uri -> load view uri >> return ()) muri
+
 
       pageReload <- xmlGetToolButton xml "reloadButton"
-      _ <- onToolButtonClicked pageReload $ 
-        withCurrentTab ui $ \ tab _ sess -> 
-          let view = tabView tab
-          in  getCurrentURI view >>= load view >> return sess
+      _ <- onToolButtonClicked pageReload $ do 
+        view <- withCurrentTab ui $ \ tab _ sess -> 
+          return (sess,tabView tab)
+        getCurrentURI view >>= load view
+        return ()
+
 
       widgetShowAll window
       -- start GTK mainloop
@@ -182,16 +187,15 @@ instance UIClass GladeUI TabMeta where
 
   replaceView view ui meta = do 
     replaceViewLocal view (tabMetaContainer meta) ui meta 
-    updateMSession (gladeSession ui) $ \ session -> do 
-      newURI <- getCurrentURI view 
+    newURI <- getCurrentURI view 
+    oldView <- updateMSession (gladeSession ui) $ \ session -> 
       let Just tab   = getTab (tabMetaIdent meta) session
           oldView    = tabView tab
           history    = tabHistory tab
           history'   = insertAndForward newURI history 
           session'   = updateTab session (tabMetaIdent meta) $ \ t -> Just $ t { tabView = view, tabHistory = history' } 
-      destroy oldView
-      
-      return (session', ())
+      in return (session', oldView)
+    destroy oldView
 
   embedView view ui _ = do
     let noteBook = viewContainer ui
@@ -201,9 +205,11 @@ instance UIClass GladeUI TabMeta where
     (labelWidget, img, label) <- tabWidget (do 
               removeTId <- get noteBook (notebookChildPosition scrolledWindow)
               notebookRemovePage noteBook removeTId
-              withMSession (gladeSession ui) $ \ session -> 
-                withContainerId scrolledWindow $ \ removeTabId ->
-                    destroy . tabView . fromJust $ getTab removeTabId session
+              withContainerId scrolledWindow $ \ removeTabId -> do
+                kView <- updateMSession (gladeSession ui) $ \ session -> 
+                  let kv = tabView . fromJust $ getTab removeTabId session
+                  in return (deleteTab removeTabId session,kv)
+                destroy kView
               tabVisibility noteBook
               )
     let newMeta = TabMeta 
@@ -250,24 +256,21 @@ xmlGetToolButton :: GladeXML -> String -> IO ToolButton
 xmlGetToolButton xml = xmlGetWidget xml castToToolButton
 
 withNthNotebookTab :: Notebook -> MSession TabId TabMeta -> Int
-                   -> (Tab TabMeta -> IO ()) -> IO ()
+                   -> (Tab TabMeta -> IO a) -> IO a
 withNthNotebookTab notebook msession page f = do
     mContainer <- notebookGetNthPage notebook page
     case mContainer of
         Just container -> 
-            withContainerId (castToContainer container) $ \ tabId -> 
-              withMSession msession $ \ session  -> 
+            withUnsafeContainerId (castToContainer container) $ \ tabId -> 
+              withMSession msession $ \ session -> 
                 case getTab tabId session of
-                    Just tab -> 
-                        f tab
-                    Nothing -> 
-                        return ()
-        Nothing ->
-            return ()
+                    Just tab -> f tab
+                    Nothing -> error "no tab with such an id"
+        Nothing -> error "no container in here"
 
 withCurrentTab :: GladeUI
-               -> (Tab TabMeta -> TabId -> Session TabId TabMeta -> IO (Session TabId TabMeta))
-               -> IO () 
+               -> (Tab TabMeta -> TabId -> Session TabId TabMeta -> IO (Session TabId TabMeta,a))
+               -> IO a 
 withCurrentTab ui f =
   let notebook = viewContainer ui
       msession = gladeSession ui
@@ -276,12 +279,11 @@ withCurrentTab ui f =
     mContainer <- notebookGetNthPage notebook pageId 
     case mContainer of
       Just container -> 
-         withContainerId (castToContainer container) $ \tabId -> 
-          updateMSession msession $ \ session -> do
-            session' <- case getTab tabId session of
+         withUnsafeContainerId (castToContainer container) $ \tabId -> 
+          updateMSession msession $ \ session -> 
+            case getTab tabId session of
               Just tab -> f tab tabId session 
               Nothing  -> error "Can't find current tab"
-            return (session',())
       Nothing -> error "there is no tab with the given ident in the notebook"
 
 replaceViewLocal :: View -> Container -> GladeUI -> TabMeta -> IO ()
@@ -297,20 +299,20 @@ replaceViewCurrent view ui _ = do
   pageId <- notebookGetCurrentPage notebook
   mContainer <- notebookGetNthPage notebook pageId
   case mContainer of
-    Just container -> 
-      withContainerId (castToContainer container) $ \ tabId -> do
+    Just container -> do 
       newURI <- getCurrentURI view 
-      meta <- updateMSession (gladeSession ui) $ \ session  -> 
-         case getTab tabId session of
+      (meta,oldView) <- withUnsafeContainerId (castToContainer container) $ \ tabId -> do
+        updateMSession (gladeSession ui) $ \ session  ->
+          case getTab tabId session of
           Just tab -> do
             let oldView    = tabView tab
                 history    = tabHistory tab
                 history'   = insertAndForward newURI history 
                 session'   = updateTab session (tabMetaIdent $ tabMeta tab) $ \ t -> Just $ t { tabView = view, tabHistory = history' }
-            destroy oldView
-            return (session', tabMeta tab)
+            return (session',(tabMeta tab,oldView))
           Nothing -> 
             return (session,error "there is no current tab")
+      destroy oldView
       replaceViewLocal view (castToContainer container) ui meta
     Nothing -> return ()
 
