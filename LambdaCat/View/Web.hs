@@ -20,7 +20,7 @@ import Graphics.UI.Gtk.Abstract.Widget
 -- import Graphics.UI.Gtk.WebKit.Download
 import qualified Graphics.UI.Gtk.WebKit.NetworkRequest as NR
 import qualified Graphics.UI.Gtk.WebKit.WebNavigationAction as NA
-import Graphics.UI.Gtk hiding (populatePopup)
+import Graphics.UI.Gtk hiding (populatePopup,widgetDestroy)
 import Network.URI
 -- import System.Directory
 -- import System.FilePath
@@ -184,13 +184,16 @@ instance ViewClass WebView where
           return True
 
         _ <- widget `on` WV.titleChanged $ \ _wf _title -> callback (changedTitle $ View wV)
-        _ <- widget `on` WV.loadFinished $ \ _wf -> callback (changedURI $ View wV) 
+        _ <- widget `on` WV.loadFinished $ \ _wf -> callback (changedURI $ View wV)
+
         -- Embed widget 
         embedder $ castToWidget widget
 
-    destroy WebView { webViewWidget = widget } =
+    destroy WebView { webViewWidget = widget } = do 
         -- TODO: Unref WebKit's WebView.
-        WV.webViewLoadHtmlString widget "text/html" ""
+        WV.webViewLoadUri widget "about:blank"
+        WV.webViewStopLoading widget
+        widgetDestroy widget 
 
     load WebView { webViewWidget = widget } uri = do
         -- TODO: Write module for URI conversion
