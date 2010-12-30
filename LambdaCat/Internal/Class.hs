@@ -39,14 +39,16 @@ class UIClass ui meta | ui -> meta where
     -- should be replaced SHOULD be determind by @meta@.
     replaceView     :: View -> Callback ui meta
   
-    -- | Inform @ui@ that @View@ has changed its URI
+    -- | Inform @ui@ that @View@ has changed its URI.
     changedURI      :: View -> Callback ui meta
 
-    -- | Replace current title with the one from given view
+    -- | Inform @ui@ that @view@ has updated its title.
     changedTitle    :: View -> Callback ui meta 
 
+    -- | Inform @ui@ that @view@ has changed its progress state. 
     changedProgress :: Int -> Callback ui meta 
 
+    -- | Inform @ui@ that @view@ has changes its status.
     changedStatus   :: String -> Callback ui meta 
 
 -- | Class of viewers, which can render and handle content behind a 'URI'.
@@ -54,12 +56,12 @@ class Typeable view => ViewClass view where
     -- | Creates a new view.
     new :: IO view
 
-    -- | Ask the view to embed its widget by calling the given function. 
+    -- | Ask the @view@ to embed its widget by calling the given function. 
     --   And give the callback function to the widget 
     embed :: UIClass ui meta
           => view -> (Widget -> IO ()) -> (Callback ui meta -> IO ()) -> IO ()
 
-    -- | Destructor, allow cleaning up when view is discarded. 
+    -- | Destructor, allow cleaning up when @view@ is discarded. 
     destroy :: view -> IO ()
 
     -- | Ask view to load the given 'URI'
@@ -72,6 +74,7 @@ class Typeable view => ViewClass view where
 
 -- | Class of suppliers, which retrieve content and select appropiate viewers.
 class SupplierClass supplier where
+  -- | Ask @supplier@ for appropriated 'View' for 'URI'
   supplyView :: supplier -> URI -> IO (Maybe View) 
 --  supplyContent :: TODO 
 
@@ -94,6 +97,7 @@ instance ViewClass View where
     getCurrentURI (View view)   = getCurrentURI view
     getCurrentTitle (View view) = getCurrentTitle view
 
+-- | Encapsulates any instance of 'SupplierClass'
 data Supplier = forall supplier . (SupplierClass supplier) => Supplier supplier 
 
 instance SupplierClass Supplier where
