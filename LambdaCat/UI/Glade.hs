@@ -231,7 +231,8 @@ instance UIClass GladeUI TabMeta where
     startURI <- getCurrentURI view 
     print startURI
     updateMSession (gladeSession ui) $ \ session ->
-        return (newTab tabId view newMeta startURI session,())
+        let session' = newTab tabId view newMeta startURI session
+        in  return (session' {sessionTabActive = tabId},())
     _ <- notebookAppendPageMenu noteBook scrolledWindow labelWidget labelWidget
     widgetShowAll noteBook
     return ()
@@ -318,7 +319,7 @@ replaceViewCurrent view ui _ = do
                 history    = tabHistory tab
                 history'   = insertAndForward newURI history 
                 session'   = updateTab session (tabMetaIdent $ tabMeta tab) $ \ t -> Just $ t { tabView = view, tabHistory = history' }
-            return (session',(tabMeta tab,oldView))
+            return (session' {sessionTabActive = Just tabId},(tabMeta tab,oldView))
           Nothing -> 
             return (session,error "there is no current tab")
       destroy oldView
