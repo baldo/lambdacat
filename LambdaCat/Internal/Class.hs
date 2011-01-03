@@ -1,4 +1,4 @@
-{-# LANGUAGE DeriveDataTypeable, ExistentialQuantification, MultiParamTypeClasses, FunctionalDependencies#-}
+{-# LANGUAGE ExistentialQuantification, MultiParamTypeClasses, FunctionalDependencies#-}
 
 module LambdaCat.Internal.Class 
     ( UIClass (..)
@@ -11,7 +11,6 @@ module LambdaCat.Internal.Class
     )
 where
 
-import Data.Typeable
 import Network.URI
 import Graphics.UI.Gtk.Abstract.Widget
 
@@ -53,7 +52,7 @@ class UIClass ui meta | ui -> meta where
     changedStatus   :: String -> Callback ui meta 
 
 -- | Class of viewers, which can render and handle content behind a 'URI'.
-class Typeable view => ViewClass view where
+class ViewClass view where
     -- | Creates a new view.
     new :: IO view
 
@@ -68,9 +67,15 @@ class Typeable view => ViewClass view where
     -- | Ask view to load the given 'URI'
     load :: view -> URI -> IO Bool
 
-    -- | generic informations on a view
+    -- | Ask @view@ for the current uri, if not available 'nullURI'
+    --   must be returned
     getCurrentURI :: view -> IO URI
+
+    -- | Ask @view@ for the current title
     getCurrentTitle :: view -> IO String
+
+    -- | Ask @view@ for the current progress, this must
+    --   return a value between 0 and 100
     getCurrentProgress :: view -> IO Int
 
 -- | Class of suppliers, which retrieve content and select appropiate viewers.
@@ -80,13 +85,7 @@ class SupplierClass supplier where
 --  supplyContent :: TODO 
 
 -- | Encapsulates any instance of 'ViewClass'
-data View = forall view . (Typeable view, ViewClass view) => View view
-
-instance Typeable View where 
-  typeOf (View view) = typeOf view
-
-instance Show View where
-    show (View view) = show $ typeOf view
+data View = forall view . (ViewClass view) => View view
 
 instance ViewClass View where
     new                 = return (error "Can't create existential quantificated datatype")
@@ -104,7 +103,3 @@ data Supplier = forall supplier . (SupplierClass supplier) => Supplier supplier
 
 instance SupplierClass Supplier where
   supplyView (Supplier supplier) = supplyView supplier
-
--- eqType :: (Typeable a, Typeable b) => a -> b -> Bool
--- eqType a b = typeOf a == typeOf b
-
