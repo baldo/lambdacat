@@ -152,8 +152,11 @@ instance UIClass GladeUI TabMeta where
 
   changedURI view ui meta =
      let ident = tabMetaIdent meta 
+         thisTabId = tabMetaIdent meta
      in  do uri <- getCurrentURI view
-            updateAddressBar ui uri 
+            doit <- withCurrentTab ui $ \ _ tabid session -> 
+              return (session,tabid == thisTabId)
+            when doit $ updateAddressBar ui uri 
             updateMSession (gladeSession ui) $ \ session -> return
               (updateTab session ident $ \tab -> 
                 let history = tabHistory tab 
@@ -170,29 +173,33 @@ instance UIClass GladeUI TabMeta where
       set window [ windowTitle := title ]
       return ()
 
-  changedProgress progress ui _meta = do 
+  changedProgress progress ui meta = do 
       let sb = gladeStatBar ui
-      -- TODO check if current tab is equal to the tab which hosts the calling
-      -- view 
-      cntx <- statusbarGetContextId sb "progress"
-      statusbarPop sb cntx
-      _ <- statusbarPush sb cntx $ 
-        if progress < 100 
-           then show progress ++ "%"
-           else "Done" 
-      return ()
+          thisTabId = tabMetaIdent meta
+      doit <- withCurrentTab ui $ \ _ tabid session -> 
+        return (session,tabid == thisTabId)
+      when doit $ do 
+        cntx <- statusbarGetContextId sb "progress"
+        statusbarPop sb cntx
+        _ <- statusbarPush sb cntx $ 
+          if progress < 100 
+             then show progress ++ "%"
+             else "Done" 
+        return ()
 
-  changedStatus status ui _meta = do
+  changedStatus status ui meta = do
       let sb = gladeStatBar ui 
-      -- TODO check if current tab is equal to the tab which hosts the 
-      -- calling view
-      cntx <- statusbarGetContextId sb "status"
-      case status of
-        ""   -> statusbarPop sb cntx
-        stat -> do
-          statusbarPop sb cntx
-          _ <- statusbarPush sb cntx stat
-          return ()
+          thisTabId = tabMetaIdent meta
+      doit <- withCurrentTab ui $ \ _ tabid session -> 
+        return (session,tabid == thisTabId)
+      when doit $ do 
+        cntx <- statusbarGetContextId sb "status"
+        case status of
+          ""   -> statusbarPop sb cntx
+          stat -> do
+            statusbarPop sb cntx
+            _ <- statusbarPush sb cntx stat
+            return ()
 
   replaceView view ui meta = do 
     replaceViewLocal view (tabMetaContainer meta) ui meta 
@@ -232,7 +239,7 @@ instance UIClass GladeUI TabMeta where
     print startURI
     updateMSession (gladeSession ui) $ \ session ->
         let session' = newTab tabId view newMeta startURI session
-        in  return (session' {sessionTabActive = tabId},())
+        in  return (session' {sessionTabActive = Just tabId},())
     _ <- notebookAppendPageMenu noteBook scrolledWindow labelWidget labelWidget
     widgetShowAll noteBook
     return ()
