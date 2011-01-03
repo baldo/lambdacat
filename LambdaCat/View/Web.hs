@@ -191,7 +191,7 @@ instance ViewClass WebView where
 
     destroy WebView { webViewWidget = widget } = do 
         -- TODO: Unref WebKit's WebView.
-        WV.webViewLoadUri widget "about:blank"
+        --WV.webViewLoadUri widget "about:blank"
         WV.webViewStopLoading widget
         widgetDestroy widget 
 
@@ -208,4 +208,4 @@ instance ViewClass WebView where
 
     getCurrentTitle WebView { webViewWidget = widget } = do
         mTitle <- WV.webViewGetTitle widget
-        return $ fromMaybe "http://www.ccc.de" mTitle
+        return $ fromMaybe "(Untitled)" mTitle
