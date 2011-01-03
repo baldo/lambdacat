@@ -229,7 +229,6 @@ instance UIClass GladeUI TabMeta where
           }
     embed view (embedHandle scrolledWindow) (update ui newMeta)
     startURI <- getCurrentURI view 
-    print startURI
     updateMSession (gladeSession ui) $ \ session ->
         let session' = newTab tabId view newMeta startURI session
         in  return (session' {sessionTabActive = Just tabId},())
