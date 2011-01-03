@@ -80,9 +80,8 @@ instance UIClass GladeUI TabMeta where
      -- Toolbar / Events ---------------------------------------------------
       addTab <- xmlGetToolButton xml "addTabButton"
       let Just defaultURI = parseURI "about:blank"
-      _ <- onToolButtonClicked addTab $ do
+      _ <- onToolButtonClicked addTab $
           supplyForView (update ui undefined) embedView defaultURI
-          tabVisibility notebook
 
       homeButton <- xmlGetToolButton xml "homeButton"
       _ <- onToolButtonClicked homeButton $ supplyForView (update ui undefined) replaceViewCurrent $ homeURI lambdaCatConf
@@ -236,6 +235,7 @@ instance UIClass GladeUI TabMeta where
         in  return (session' {sessionTabActive = Just tabId},())
     _ <- notebookAppendPageMenu noteBook scrolledWindow labelWidget labelWidget
     widgetShowAll noteBook
+    tabVisibility noteBook
     return ()
    where embedHandle scrolledWindow widget = do
           containerAdd scrolledWindow widget
