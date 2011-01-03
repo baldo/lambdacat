@@ -1,4 +1,4 @@
-{-# LANGUAGE DeriveDataTypeable, FlexibleContexts, FlexibleInstances, MultiParamTypeClasses #-}
+{-# LANGUAGE FlexibleContexts, FlexibleInstances, MultiParamTypeClasses #-}
 
 module LambdaCat.View.Web
     ( WebView
@@ -12,7 +12,6 @@ import LambdaCat.UI
 import LambdaCat.Supplier
 
 import Data.Maybe
-import Data.Typeable
 import qualified Graphics.UI.Gtk.WebKit.WebView as WV
 import Graphics.UI.Gtk.Abstract.Widget
 -- import Graphics.UI.Gtk.WebKit.WebSettings
@@ -28,7 +27,6 @@ import Network.URI
 
 -- | Data type representing the view. Do not confuse this with WebKit's WebView.
 newtype WebView = WebView { webViewWidget :: WV.WebView }
-  deriving (Eq, Typeable)
 
 webView :: View
 webView = View (WebView undefined)
