@@ -142,8 +142,6 @@ instance UIClass GladeUI TabMeta where
       -- start GTK mainloop
       mainGUI
 
-  update ui meta f = f ui meta
-
   changedURI view ui meta =
      let ident = tabMetaIdent meta 
      in  do uri <- getCurrentURI view
