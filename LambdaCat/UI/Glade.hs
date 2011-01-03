@@ -168,7 +168,10 @@ instance UIClass GladeUI TabMeta where
       -- view 
       cntx <- statusbarGetContextId sb "progress"
       statusbarPop sb cntx
-      _ <- statusbarPush sb cntx $ show progress ++ "%"
+      _ <- statusbarPush sb cntx $ 
+        if progress < 100 
+           then show progress ++ "%"
+           else "Done" 
       return ()
 
   changedStatus status ui _meta = do
