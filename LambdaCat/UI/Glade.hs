@@ -301,9 +301,10 @@ withCurrentTab ui f =
 replaceViewLocal :: View -> Container -> GladeUI -> TabMeta -> IO ()
 replaceViewLocal view container ui meta = do
   mapM_ (containerRemove container) =<< containerGetChildren container
-  embed view (\w -> containerAdd container w >> widgetShowAll w) (update ui meta)
+  embed view (\w -> containerAdd container w >> widgetShowAll w >> widgetGrabFocus w) (update ui meta)
   title <- getCurrentTitle view
   set (tabMetaLabel meta) [ labelLabel := if null title then "(Untitled)" else title ]
+
     
 replaceViewCurrent :: View -> GladeUI -> a -> IO ()
 replaceViewCurrent view ui _ = do
