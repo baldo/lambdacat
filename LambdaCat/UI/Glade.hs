@@ -166,11 +166,10 @@ instance UIClass GladeUI TabMeta where
             return ()
 
   changedTitle view ui meta = do
-      let xml   = gladeXML ui
-          label = tabMetaLabel meta
+      let label  = tabMetaLabel meta
+          window = gladeWindow ui
       title <- getCurrentTitle view
       set label [ labelLabel := if null title then "(Untitled)" else title ]
-      window <- xmlGetWidget xml castToWindow "mainWindow"
       set window [ windowTitle := title ]
       return ()
 
