@@ -25,6 +25,7 @@ data VimUI = VimUI
   { vimWindow     :: Window
   , vimVBox       :: VBox
   , vimTabHolder  :: Container 
+  , vimMode       :: MVar Mode
   , vimTabCurrent :: MVar View
   , vimTabs       :: MVar [View]
   , vimSession    :: MSession TabId TabMeta 
@@ -39,6 +40,9 @@ data TabMeta = TabMeta
   , tabMetaContainer :: Container
   }
 
+data Mode = Command | Insert 
+  deriving Show 
+
 instance UIClass VimUI TabMeta where 
 
   init = do
@@ -48,14 +52,11 @@ instance UIClass VimUI TabMeta where
     vbox   <- vBoxNew False 0
     tabHolder <- hBoxNew False 0
     containerAdd window vbox 
+    mode <- newMVar Command 
 
     -- window settings 
     _ <- onDestroy window mainQuit
-    window `on` keyPressEvent $ tryEvent $ do 
-      keyval <- eventKeyVal
-      kn     <- eventKeyName 
-      -- some kind of key handling is needed
-      liftIO $ putStrLn kn 
+
 
     -- status bar 
     status <- webViewNew 
@@ -64,7 +65,7 @@ instance UIClass VimUI TabMeta where
 
     -- control / input area 
     control <- webViewNew 
-    webViewLoadHtmlString control "<body style=\"color:black;font-weight:bold;font-size:13px;background:white;margin:0;padding:0\">command</body>" ""
+    webViewLoadHtmlString control "<body style=\"color:black;font-weight:bold;font-size:13px;background:white;margin:0;padding:0\"></body>" ""
     widgetSetSizeRequest control (-1) 15 
 
     -- glue the stuff together 
@@ -78,23 +79,42 @@ instance UIClass VimUI TabMeta where
     tabs    <- newMVar [] 
     session <- newMSession
 
-    return $ VimUI 
-      { vimWindow     = window
-      , vimVBox       = vbox
-      , vimTabHolder  = castToContainer tabHolder
-      , vimTabs       = tabs 
-      , vimTabCurrent = current
-      , vimSession    = session
-      , vimStatus     = status
-      , vimControl    = control 
-      }
+    let ui = VimUI { vimWindow     = window
+                  , vimMode       = mode 
+                  , vimVBox       = vbox
+                  , vimTabHolder  = castToContainer tabHolder
+                  , vimTabs       = tabs 
+                  , vimTabCurrent = current
+                  , vimSession    = session
+                  , vimStatus     = status
+                  , vimControl    = control 
+                  }
+
+    -- simple keyboard handling 
+    window `on` keyPressEvent $ tryEvent $ do 
+      keyval <- eventKeyVal
+      kn     <- eventKeyName 
+      liftIO $ putStrLn kn
+      m <- liftIO $ takeMVar mode
+      case m of
+        Command -> case kn of
+                    "i" -> liftIO $ do putMVar mode Insert
+                                       renderControl ui
+                    _   -> liftIO $ putMVar mode m 
+        Insert  -> case kn of
+                    "Escape" -> liftIO $ do putMVar mode Command
+                                            renderControl ui
+                    _        -> do liftIO $ putMVar mode m
+                                   stopEvent
+
+    return ui
 
   mainLoop ui = mainGUI
 
   embedView view ui _ = do
     let tabHold = vimTabHolder ui
         meta    = TabMeta {} 
-      
+    
     embed view (embedHandle tabHold) (update ui meta) 
   
   replaceView view ui meta = do
@@ -122,8 +142,17 @@ renderStatus ui uri =
  let status = vimStatus ui 
  in  do webViewLoadHtmlString status ("<body style=\"color:white;font-weight:bold;font-size:13px;background:black;margin:0;padding:0\">" ++ show uri ++ "</body>") "" 
 
-embedHandle container widget = do 
+renderControl :: VimUI -> IO ()
+renderControl ui = do
+  let status = vimControl ui
+  m <- readMVar $ vimMode ui
+  state <- case m of 
+            Command -> return "" 
+            Insert  -> return " -- INSERT -- "
+  webViewLoadHtmlString status ("<body style=\"color:black;font-size:13px;background:white;margin:0;padding:0\">" ++ state ++ "</body>") "" 
+ 
+
+embedHandle container widget = do
   mapM_ (containerRemove container) =<< containerGetChildren container
   containerAdd container widget 
-  widgetShowAll container 
-
+  widgetShowAll container
