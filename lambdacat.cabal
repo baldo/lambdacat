@@ -59,6 +59,7 @@ Library
         LambdaCat.UI
         LambdaCat.UI.Glade
         LambdaCat.UI.Glade.PersistentTabId
+        LambdaCat.UI.Vim
 
     Other-Modules:
         Paths_lambdacat
