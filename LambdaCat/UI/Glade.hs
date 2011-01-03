@@ -77,16 +77,18 @@ instance UIClass GladeUI TabMeta where
         updateAddressBar ui uri
         updateProgress   ui progress
         changedTitle view ui meta
-     -- Toolbar / Events ---------------------------------------------------
+      -- Toolbar / Events ---------------------------------------------------
+      addressEntry <- xmlGetWidget xml castToEntry "addressEntry"
+
       addTab <- xmlGetToolButton xml "addTabButton"
       let Just defaultURI = parseURI "about:blank"
-      _ <- onToolButtonClicked addTab $
+      _ <- onToolButtonClicked addTab $ do 
           supplyForView (update ui undefined) embedView defaultURI
+          widgetGrabFocus addressEntry 
 
       homeButton <- xmlGetToolButton xml "homeButton"
       _ <- onToolButtonClicked homeButton $ supplyForView (update ui undefined) replaceViewCurrent $ homeURI lambdaCatConf
 
-      addressEntry <- xmlGetWidget xml castToEntry "addressEntry"
       _ <- addressEntry `on` keyPressEvent $ do
           val <- eventKeyVal
           case keyName val of
@@ -104,7 +106,7 @@ instance UIClass GladeUI TabMeta where
 
       addressItem <- xmlGetWidget xml castToToolItem "addressItem"
       addressItem `set` [ toolItemExpand := True ]
-
+ 
       quitItem <- xmlGetWidget xml castToMenuItem "quitItem"
       _ <- onActivateLeaf quitItem mainQuit
 
@@ -231,9 +233,10 @@ instance UIClass GladeUI TabMeta where
     updateMSession (gladeSession ui) $ \ session ->
         let session' = newTab tabId view newMeta startURI session
         in  return (session' {sessionTabActive = Just tabId},())
-    _ <- notebookAppendPageMenu noteBook scrolledWindow labelWidget labelWidget
+    pageId <- notebookAppendPageMenu noteBook scrolledWindow labelWidget labelWidget
     widgetShowAll noteBook
     tabVisibility noteBook
+    notebookSetCurrentPage noteBook pageId
     return ()
    where embedHandle scrolledWindow widget = do
           containerAdd scrolledWindow widget
