@@ -183,8 +183,12 @@ instance ViewClass WebView where
             Nothing  -> return ()  
           return True
 
-        _ <- widget `on` WV.titleChanged $ \ _wf _title -> callback (changedTitle $ View wV)
-        _ <- widget `on` WV.loadFinished $ \ _wf -> callback (changedURI $ View wV)
+        _ <- widget `on` WV.titleChanged  $ \ _wf _title -> callback (changedTitle $ View wV)
+        _ <- widget `on` WV.loadStarted   $ \ _wf -> callback (changedURI $ View wV)
+        _ <- widget `on` WV.loadCommitted $ \ _wf -> callback (changedURI $ View wV)
+        _ <- widget `on` WV.loadFinished  $ \ _wf -> callback (changedURI $ View wV)
+
+        _ <- widget `on` WV.progressChanged  $ \ progress -> callback (changedProgress progress)
 
         -- Embed widget 
         embedder $ castToWidget widget
