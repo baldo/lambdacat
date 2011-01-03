@@ -143,7 +143,7 @@ instance UIClass GladeUI TabMeta where
       _ <- onToolButtonClicked pageReload $ do 
         view <- withCurrentTab ui $ \ tab _ sess -> 
           return (sess,tabView tab)
-        getCurrentURI view >>= load view
+        _ <- getCurrentURI view >>= load view
         return ()
 
 
