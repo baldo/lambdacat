@@ -73,7 +73,9 @@ instance UIClass GladeUI TabMeta where
         (view,meta) <- withNthNotebookTab notebook session newActive $ 
           \ tab -> return (tabView tab,tabMeta tab)
         uri <- getCurrentURI view
+        progress <- getCurrentProgress view
         updateAddressBar ui uri
+        updateProgress   ui progress
         changedTitle view ui meta
      -- Toolbar / Events ---------------------------------------------------
       addTab <- xmlGetToolButton xml "addTabButton"
@@ -174,18 +176,10 @@ instance UIClass GladeUI TabMeta where
       return ()
 
   changedProgress progress ui meta = do 
-      let sb = gladeStatBar ui
-          thisTabId = tabMetaIdent meta
+      let thisTabId = tabMetaIdent meta
       doit <- withCurrentTab ui $ \ _ tabid session -> 
         return (session,tabid == thisTabId)
-      when doit $ do 
-        cntx <- statusbarGetContextId sb "progress"
-        statusbarPop sb cntx
-        _ <- statusbarPush sb cntx $ 
-          if progress < 100 
-             then show progress ++ "%"
-             else "Done" 
-        return ()
+      when doit $ updateProgress ui progress
 
   changedStatus status ui meta = do
       let sb = gladeStatBar ui 
@@ -338,4 +332,15 @@ updateAddressBar ui uri =
   let xml = gladeXML ui 
   in  do pageURI <- xmlGetWidget xml castToEntry "addressEntry"
          entrySetText pageURI (uriToString id uri "")
- 
+
+updateProgress :: GladeUI -> Int -> IO () 
+updateProgress ui progress = do 
+  let sb = gladeStatBar ui
+  cntx <- statusbarGetContextId sb "progress"
+  statusbarPop sb cntx
+  _ <- statusbarPush sb cntx $ 
+    if progress < 100 
+       then show progress ++ "%"
+       else "Done" 
+  return ()
+

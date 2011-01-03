@@ -213,3 +213,11 @@ instance ViewClass WebView where
     getCurrentTitle WebView { webViewWidget = widget } = do
         mTitle <- WV.webViewGetTitle widget
         return $ fromMaybe "(Untitled)" mTitle
+
+    getCurrentProgress WebView { webViewWidget = widget } = do
+        progress <- widget `get` WV.webViewProgress 
+        status   <- widget `get` WV.webViewLoadStatus 
+        case status of 
+          WV.LoadFinished -> return 100
+          WV.LoadFailed   -> return 100
+          _               -> return $ round (progress * 100)

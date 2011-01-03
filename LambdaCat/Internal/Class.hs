@@ -71,7 +71,7 @@ class Typeable view => ViewClass view where
     -- | generic informations on a view
     getCurrentURI :: view -> IO URI
     getCurrentTitle :: view -> IO String
-
+    getCurrentProgress :: view -> IO Int
 
 -- | Class of suppliers, which retrieve content and select appropiate viewers.
 class SupplierClass supplier where
@@ -97,6 +97,7 @@ instance ViewClass View where
 
     getCurrentURI (View view)   = getCurrentURI view
     getCurrentTitle (View view) = getCurrentTitle view
+    getCurrentProgress (View view) = getCurrentProgress view
 
 -- | Encapsulates any instance of 'SupplierClass'
 data Supplier = forall supplier . (SupplierClass supplier) => Supplier supplier 
