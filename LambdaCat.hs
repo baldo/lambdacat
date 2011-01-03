@@ -1,6 +1,7 @@
 module LambdaCat
     ( lambdacat
     , defaultConfig
+    , defaultModifySupplierURI
     , LambdaCatConf (..)
     )
 where
@@ -21,12 +22,16 @@ import System.IO
 
 defaultConfig :: LambdaCatConf
 defaultConfig = LambdaCatConf
-    { supplierList = [ (webSupplier   , ["http:","https:","about:"])
+    { modifySupplierURI = defaultModifySupplierURI
+    , supplierList = [ (webSupplier   , ["http:","https:","about:"])
                      ]
     , viewList     = [ (webView, ["about:","http:", "https:", "file:"], [])
                      ]
     , homeURI      = fromJust $ parseURI "http://www.haskell.org"
     }
+
+defaultModifySupplierURI :: URI -> URI
+defaultModifySupplierURI = id
 
 mainCat :: (Maybe String, LambdaCatConf) -> IO ()
 mainCat (e, cfg) = do
