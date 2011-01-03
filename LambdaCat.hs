@@ -31,7 +31,24 @@ defaultConfig = LambdaCatConf
     }
 
 defaultModifySupplierURI :: URI -> URI
-defaultModifySupplierURI = id
+defaultModifySupplierURI uri@URI
+    { uriScheme    = ""
+    , uriAuthority = Just _
+    } = prepend "http://" uri
+defaultModifySupplierURI uri@URI
+    { uriScheme    = ""
+    , uriAuthority = Nothing
+    , uriPath      = '/' : _
+    } = prepend "file://" uri
+defaultModifySupplierURI uri@URI
+    { uriScheme    = ""
+    , uriAuthority = Nothing
+    , uriPath      = _ : _
+    } = prepend "http://" uri
+defaultModifySupplierURI uri = uri
+
+prepend :: String -> URI -> URI
+prepend prfx uri = maybe nullURI id $ parseURI $ prfx ++ show uri
 
 mainCat :: (Maybe String, LambdaCatConf) -> IO ()
 mainCat (e, cfg) = do
