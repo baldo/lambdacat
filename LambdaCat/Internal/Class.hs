@@ -28,6 +28,7 @@ class UIClass ui meta | ui -> meta where
 
     -- | Function to apply to @View.new@ 
     update          :: ui -> meta -> Callback ui meta -> IO ()
+    update ui meta f = f ui meta
 
     -- | Embed the view into the given browser.
     --   For this function the meta data COULD be undefined
