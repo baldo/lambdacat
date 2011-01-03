@@ -21,6 +21,7 @@ import Graphics.UI.Gtk
 import Graphics.UI.Gtk.Glade
 import Network.URI
 import Control.Monad (when)
+import Control.Monad.Trans
 
 data GladeUI = GladeUI
    { gladeXML      :: GladeXML
@@ -85,13 +86,20 @@ instance UIClass GladeUI TabMeta where
       _ <- onToolButtonClicked homeButton $ supplyForView (update ui undefined) replaceViewCurrent $ homeURI lambdaCatConf
 
       addressEntry <- xmlGetWidget xml castToEntry "addressEntry"
-      _ <- onEntryActivate addressEntry $ do
-          text <- entryGetText addressEntry
-          case parseURIReference text of
-              Just uri -> 
-                  supplyForView (update ui $ error "addressEntry") replaceViewCurrent uri
-              Nothing ->
-                  return ()
+      _ <- addressEntry `on` keyPressEvent $ do
+          val <- eventKeyVal
+          case keyName val of
+              "Return" -> do
+                  text <- liftIO $ entryGetText addressEntry
+                  case parseURIReference text of
+                      Just uri -> do
+                          liftIO $ supplyForView (update ui $ error "addressEntry") replaceViewCurrent uri
+                          return True
+                      Nothing ->
+                          return False -- handle error
+
+              _ ->
+                return False
 
       addressItem <- xmlGetWidget xml castToToolItem "addressItem"
       addressItem `set` [ toolItemExpand := True ]
