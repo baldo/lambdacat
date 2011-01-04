@@ -9,6 +9,7 @@ module LambdaCat.View.Web
 
 import LambdaCat.View
 import LambdaCat.UI 
+import LambdaCat.Utils
 import LambdaCat.Supplier
 
 import Data.Maybe
@@ -46,7 +47,7 @@ instance ViewClass WebView where
               case reason of 
                 NA.WebNavigationReasonFormResubmitted -> return False -- this is not handled because of the form data
                 NA.WebNavigationReasonLinkClicked -> do 
-                  supplyForView callback replaceView (fromJust $ parseURI uri)
+                  supplyForView callback replaceView $ stringToURI uri
                   return True
                 _ -> return False
             Nothing  -> return False
@@ -54,7 +55,7 @@ instance ViewClass WebView where
         _ <- widget `on` WV.newWindowPolicyDecisionRequested $ \ _wf nr _na _wpd -> do
           muri <- NR.networkRequestGetUri nr
           case muri of 
-            Just uri -> supplyForView callback replaceView (fromJust $ parseURI uri)
+            Just uri -> supplyForView callback replaceView $ stringToURI uri
             Nothing  -> return ()  
           return True
 
@@ -81,9 +82,7 @@ instance ViewClass WebView where
 
     getCurrentURI WebView { webViewWidget = widget } = do
         mUriStr <- WV.webViewGetUri widget
-        return $ fromMaybe nullURI $ do
-            uriStr <- mUriStr
-            parseURI uriStr
+        return $ maybe nullURI stringToURI mUriStr
 
     getCurrentTitle WebView { webViewWidget = widget } = do
         mTitle <- WV.webViewGetTitle widget

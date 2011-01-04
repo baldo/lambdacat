@@ -14,11 +14,10 @@ import LambdaCat.Supplier.Web
 import LambdaCat.CmdArgs
 import LambdaCat.View.Web (webView)
 import LambdaCat.UI.Glade as UI
-import LambdaCat.Utils ()
+import LambdaCat.Utils
 
 import Config.Dyre
 import Config.Dyre.Compile
-import Data.Maybe
 import Network.URI
 import System.Exit
 import System.IO
@@ -51,7 +50,7 @@ defaultModifySupplierURI uri@URI
 defaultModifySupplierURI uri = uri
 
 prepend :: String -> URI -> URI
-prepend prfx uri = maybe nullURI id $ parseURI $ prfx ++ show uri
+prepend prfx uri = stringToURI $ prfx ++ show uri
 
 mainCat :: (Maybe String, LambdaCatConf) -> IO ()
 mainCat (e, cfg) = do
@@ -60,12 +59,12 @@ mainCat (e, cfg) = do
     setLCC cfg
     args <- getCmdArgs
 
-    let  uria = map parseURIReference $ uris args
+    let  uria = map stringToURI $ uris args
          us   = if null uria
-                then [Just $ homeURI cfg]
+                then [homeURI cfg]
                 else uria
     ui <- UI.init :: IO GladeUI
-    mapM_ (supplyForView (UI.update ui undefined) embedView . fromJust) us
+    mapM_ (supplyForView (UI.update ui undefined) embedView) us
     mainLoop ui
 
 lambdacat :: LambdaCatConf -> IO ()

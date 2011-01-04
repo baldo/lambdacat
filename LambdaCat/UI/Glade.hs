@@ -13,7 +13,7 @@ import LambdaCat.UI.Glade.PersistentTabId
 import LambdaCat.Session
 import LambdaCat.Supplier
 import LambdaCat.History 
-import LambdaCat.Utils ()
+import LambdaCat.Utils
 
 import Paths_lambdacat
 
@@ -95,11 +95,12 @@ instance UIClass GladeUI TabMeta where
           case keyName val of
               "Return" -> do
                   text <- liftIO $ entryGetText addressEntry
-                  case parseURIReference text of
-                      Just uri -> do
+                  case stringToURI text of
+                      uri
+                        | uri /= nullURI -> do
                           liftIO $ supplyForView (update ui $ error "addressEntry") replaceViewCurrent uri
                           return True
-                      Nothing ->
+                        | otherwise ->
                           return False -- handle error
 
               _ ->
