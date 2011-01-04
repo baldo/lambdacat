@@ -1,3 +1,5 @@
+{-# LANGUAGE OverloadedStrings #-}
+
 module LambdaCat
     ( lambdacat
     , defaultConfig
@@ -12,6 +14,7 @@ import LambdaCat.Supplier.Web
 import LambdaCat.CmdArgs
 import LambdaCat.View.Web (webView)
 import LambdaCat.UI.Glade as UI
+import LambdaCat.Utils ()
 
 import Config.Dyre
 import Config.Dyre.Compile
@@ -27,7 +30,7 @@ defaultConfig = LambdaCatConf
                      ]
     , viewList     = [ (webView, ["about:","http:", "https:", "file:"], [])
                      ]
-    , homeURI      = fromJust $ parseURI "http://www.haskell.org"
+    , homeURI      = "http://www.haskell.org"
     }
 
 defaultModifySupplierURI :: URI -> URI

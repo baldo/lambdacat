@@ -66,6 +66,7 @@ Library
         FunctionalDependencies,
         GeneralizedNewtypeDeriving,
         MultiParamTypeClasses,
+        OverloadedStrings,
         RankNTypes,
         TypeSynonymInstances
 

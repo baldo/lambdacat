@@ -1,4 +1,4 @@
-{-# LANGUAGE MultiParamTypeClasses, FlexibleInstances, TypeSynonymInstances, RankNTypes #-}
+{-# LANGUAGE MultiParamTypeClasses, FlexibleInstances, OverloadedStrings, TypeSynonymInstances, RankNTypes #-}
 
 module LambdaCat.UI.Glade
     ( GladeUI
@@ -13,6 +13,7 @@ import LambdaCat.UI.Glade.PersistentTabId
 import LambdaCat.Session
 import LambdaCat.Supplier
 import LambdaCat.History 
+import LambdaCat.Utils ()
 
 import Paths_lambdacat
 
@@ -81,7 +82,7 @@ instance UIClass GladeUI TabMeta where
       addressEntry <- xmlGetWidget xml castToEntry "addressEntry"
 
       addTab <- xmlGetToolButton xml "addTabButton"
-      let Just defaultURI = parseURI "about:blank"
+      let defaultURI = "about:blank"
       _ <- onToolButtonClicked addTab $ do 
           supplyForView (update ui undefined) embedView defaultURI
           widgetGrabFocus addressEntry 
@@ -110,7 +111,7 @@ instance UIClass GladeUI TabMeta where
       quitItem <- xmlGetWidget xml castToMenuItem "quitItem"
       _ <- onActivateLeaf quitItem mainQuit
 
-      let Just infoURI = parseURI "about:info"
+      let infoURI = "about:info"
       infoItem <- xmlGetWidget xml castToMenuItem "infoItem"
       _ <- onActivateLeaf infoItem $ supplyForView (update ui undefined) embedView infoURI
 
