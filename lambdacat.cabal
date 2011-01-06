@@ -15,6 +15,7 @@ Cabal-Version: >= 1.2.3
 
 Extra-Source-Files:
     README
+    STYLE.md
 
 Data-Files:
     lambdacat.glade
