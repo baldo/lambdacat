@@ -44,7 +44,6 @@ Library
     Exposed-Modules:
         LambdaCat
         LambdaCat.Configure
-        LambdaCat.CmdArgs
         LambdaCat.Supplier
         LambdaCat.Supplier.Web
         LambdaCat.Utils
@@ -54,12 +53,13 @@ Library
         LambdaCat.History 
         LambdaCat.UI
         LambdaCat.UI.Glade
-        LambdaCat.UI.Glade.PersistentTabId
         LambdaCat.UI.Vim
 
     Other-Modules:
         Paths_lambdacat
         LambdaCat.Internal.Class
+        LambdaCat.UI.Glade.PersistentTabId
+        LambdaCat.CmdArgs
 
     Extensions:
         DeriveDataTypeable,
