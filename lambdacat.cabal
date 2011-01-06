@@ -50,6 +50,8 @@ Library
         LambdaCat.Utils
         LambdaCat.View
         LambdaCat.View.Web
+        LambdaCat.Session
+        LambdaCat.History 
         LambdaCat.UI
         LambdaCat.UI.Glade
         LambdaCat.UI.Glade.PersistentTabId
