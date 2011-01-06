@@ -12,7 +12,7 @@ Maintainer:    Andreas Baldeau <andreas@baldeau.net>,
                Daniel Ehlers <danielehlers@mindeye.net>
 Category:      User Interfaces
 Tested-With:   GHC == 6.12.3
-Cabal-Version: >= 1.2.3
+Cabal-Version: >= 1.6
 
 Extra-Source-Files:
     README.md
@@ -26,7 +26,7 @@ Executable lambdacat
     Main-is: Main.hs
 
     Ghc-Options:
-        -O2 -Wall -threaded
+        -Wall -threaded
 
 Library
     Build-Depends:
@@ -41,7 +41,7 @@ Library
         cmdargs == 0.6.*
 
     Ghc-Options:
-        -O2 -Wall
+        -Wall
 
     Exposed-Modules:
         LambdaCat
