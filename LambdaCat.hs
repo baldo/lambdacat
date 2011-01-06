@@ -22,6 +22,7 @@ import Network.URI
 import System.Exit
 import System.IO
 
+-- | lambdacat default configuration
 defaultConfig :: LambdaCatConf
 defaultConfig = LambdaCatConf
     { modifySupplierURI = defaultModifySupplierURI
@@ -34,6 +35,7 @@ defaultConfig = LambdaCatConf
     , defaultTitle = "(Untitled)"
     }
 
+-- | default uri modificator
 defaultModifySupplierURI :: URI -> URI
 defaultModifySupplierURI uri@URI
     { uriScheme    = ""
@@ -54,6 +56,8 @@ defaultModifySupplierURI uri = uri
 prepend :: String -> URI -> URI
 prepend prfx uri = stringToURI $ prfx ++ show uri
 
+-- | real main function
+--   gets called by the dyre stack 
 mainCat :: (Maybe String, LambdaCatConf) -> IO ()
 mainCat (e, cfg) = do
     maybe (return ()) error e
@@ -69,6 +73,8 @@ mainCat (e, cfg) = do
     mapM_ (supplyForView (UI.update ui undefined) embedView) us
     mainLoop ui
 
+-- | lambdacat main function
+--   takes a configuration and startup the lambdacat.
 lambdacat :: LambdaCatConf -> IO ()
 lambdacat cfg = do
     args <- getCmdArgs
@@ -84,6 +90,7 @@ lambdacat cfg = do
                 Nothing -> return ()
         else wrapMain dparams (Nothing, cfg)
 
+-- | dyre configuration 
 dparams :: Params (Maybe String, LambdaCatConf)
 dparams =
     let dps = defaultParams
