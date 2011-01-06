@@ -18,6 +18,8 @@ data LambdaCatConf = LambdaCatConf
     , viewList     :: [(View    , [Protocol], [String])]
     , homeURI      :: URI
     , modifySupplierURI :: URI -> URI  
+    , defaultURI   :: URI
+    , defaultTitle :: String
     }
 
 type Protocol = String

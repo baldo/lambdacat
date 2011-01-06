@@ -82,9 +82,8 @@ instance UIClass GladeUI TabMeta where
       addressEntry <- xmlGetWidget xml castToEntry "addressEntry"
 
       addTab <- xmlGetToolButton xml "addTabButton"
-      let defaultURI = "about:blank"
       _ <- onToolButtonClicked addTab $ do 
-          supplyForView (update ui undefined) embedView defaultURI
+          supplyForView (update ui undefined) embedView $ defaultURI lambdaCatConf
           widgetGrabFocus addressEntry 
 
       homeButton <- xmlGetToolButton xml "homeButton"
@@ -173,7 +172,7 @@ instance UIClass GladeUI TabMeta where
       let label  = tabMetaLabel meta
           window = gladeWindow ui
       title <- getCurrentTitle view
-      set label [ labelLabel := if null title then "(Untitled)" else title ]
+      set label [ labelLabel := if null title then defaultTitle lambdaCatConf else title ]
       set window [ windowTitle := title ]
       return ()
 
@@ -245,7 +244,7 @@ instance UIClass GladeUI TabMeta where
           return () 
          tabWidget closeCallback = do
           hbox  <- hBoxNew False 3
-          label <- labelNew (Just "(Untitled)")
+          label <- labelNew (Just $ defaultTitle lambdaCatConf)
           button <- buttonNew
           widgetSetName button "tab-close-button"
           fav <- imageNewFromStock stockJustifyCenter IconSizeMenu
@@ -305,7 +304,7 @@ replaceViewLocal view container ui meta = do
   mapM_ (containerRemove container) =<< containerGetChildren container
   embed view (\w -> containerAdd container w >> widgetShowAll w >> widgetGrabFocus w) (update ui meta)
   title <- getCurrentTitle view
-  set (tabMetaLabel meta) [ labelLabel := if null title then "(Untitled)" else title ]
+  set (tabMetaLabel meta) [ labelLabel := if null title then defaultTitle lambdaCatConf else title ]
 
     
 replaceViewCurrent :: View -> GladeUI -> a -> IO ()

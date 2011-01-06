@@ -7,6 +7,7 @@ module LambdaCat.View.Web
     , module LambdaCat.View
     ) where
 
+import LambdaCat.Configure
 import LambdaCat.View
 import LambdaCat.UI 
 import LambdaCat.Utils
@@ -86,7 +87,7 @@ instance ViewClass WebView where
 
     getCurrentTitle WebView { webViewWidget = widget } = do
         mTitle <- WV.webViewGetTitle widget
-        return $ fromMaybe "(Untitled)" mTitle
+        return $ fromMaybe (defaultTitle lambdaCatConf) mTitle
 
     getCurrentProgress WebView { webViewWidget = widget } = do
         progress <- widget `get` WV.webViewProgress 

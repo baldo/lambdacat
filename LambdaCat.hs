@@ -30,6 +30,8 @@ defaultConfig = LambdaCatConf
     , viewList     = [ (webView, ["about:","http:", "https:", "file:"], [])
                      ]
     , homeURI      = "http://www.haskell.org"
+    , defaultURI   = "about:blank"
+    , defaultTitle = "(Untitled)"
     }
 
 defaultModifySupplierURI :: URI -> URI
