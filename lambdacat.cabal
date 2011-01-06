@@ -8,7 +8,8 @@ License:       BSD3
 License-File:  LICENSE
 Build-Type:    Simple
 Author:        Andreas Baldeau, Daniel Ehlers
-Maintainer:    Andreas Baldeau, Daniel Ehlers
+Maintainer:    Andreas Baldeau <andreas@baldeau.net>,
+               Daniel Ehlers <danielehlers@mindeye.net>
 Category:      User Interfaces
 Tested-With:   GHC == 6.12.3
 Cabal-Version: >= 1.2.3
