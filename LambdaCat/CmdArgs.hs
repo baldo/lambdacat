@@ -1,32 +1,55 @@
 {-# LANGUAGE DeriveDataTypeable #-}
 
+-- |
+-- Module      : LambdaCat.CmdArgs
+-- Copyright   : Andreas Baldeau, Daniel Ehlers
+-- License     : BSD3
+-- Maintainer  : Andreas Baldeau <andreas@baldeau.net>,
+--               Daniel Ehlers <danielehlers@mindeye.net>
+-- Stability   : Alpha
+-- 
+-- This module is used for command line parsing.
+
 module LambdaCat.CmdArgs
-    ( CmdArgs
+    (
+      -- * Command line argument representation
+      CmdArgs
+
+      -- * Selectors
     , recompile
     , uris
 
+      -- * Retreiving command line arguments
     , getCmdArgs
     )
 where
 
-import Paths_lambdacat
-
 import Data.Version
-import System.Console.CmdArgs hiding (cmdArgs, CmdArgs)
-import qualified System.Console.CmdArgs as CA
-
 import System.Environment
 
+import System.Console.CmdArgs hiding
+    ( CmdArgs
+    , cmdArgs
+    )
+import qualified System.Console.CmdArgs as CA
+
+import Paths_lambdacat
+
+-- | CmdArgs stores the arguments given on the command line.
 data CmdArgs = CmdArgs
-    { recompile :: Bool
-    , ouris     :: [String]
-    , auris     :: [String]
-    -- , rts       :: String -- For future use.
-    , ignoreL   :: [String]
-    , ignoreB   :: Bool
+    { recompile :: Bool      -- ^ If set, recompilation of user configuration
+                             -- is forced.
+    , ouris     :: [String]  -- ^ The URIs given by the @-u@ flags.
+    , auris     :: [String]  -- ^ The URIs specified without any flag.
+    -- , rts       :: String  -- For future use.
+    , ignoreL   :: [String]  -- ^ This is used to allow correct parsing of
+                             -- dyres command line arguments (please ignore).
+    , ignoreB   :: Bool      -- ^ The same as 'ignoreL'.
     }
   deriving (Show, Eq, Data, Typeable)
 
+-- | This value specifies how the command line arguments should be parsed by
+-- the CmdArgs package and what help texts should be displayed.
 cmdArgs :: CmdArgs
 cmdArgs = CmdArgs
     { recompile = def
@@ -64,9 +87,11 @@ cmdArgs = CmdArgs
     &= summary ("lambdacat " ++ showVersion version)
     &= verbosity
 
+-- | Get the String representations of the URIs given on command line.
 uris :: CmdArgs -> [String]
-uris ca = ouris ca ++ auris ca
+uris ca = ouris ca ++ auris ca  -- TODO: Parse the URIs right here...
 
+-- | Get the representation of the given command line arguments.
 getCmdArgs :: IO CmdArgs
 getCmdArgs = do
     _ <- getArgs -- TODO: Get rid of this dirty hack.
