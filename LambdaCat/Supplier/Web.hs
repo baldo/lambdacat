@@ -14,6 +14,7 @@ import LambdaCat.View
 
 data WebSupplier = WebSupplier
 
+-- | configuration constant
 webSupplier :: Supplier
 webSupplier = Supplier WebSupplier
 

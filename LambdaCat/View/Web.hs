@@ -29,6 +29,7 @@ import Network.URI
 -- | Data type representing the view. Do not confuse this with WebKit's WebView.
 newtype WebView = WebView { webViewWidget :: WV.WebView }
 
+-- | Configuration constant
 webView :: View
 webView = View (WebView undefined)
 
