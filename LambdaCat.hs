@@ -1,41 +1,62 @@
 {-# LANGUAGE OverloadedStrings #-}
 
 module LambdaCat
-    ( lambdacat
+    ( 
+      -- * Main entry point 
+      lambdacat
+
+      -- * Configuration
+    , LambdaCatConf (..)
+
     , defaultConfig
     , defaultModifySupplierURI
-    , LambdaCatConf (..)
     )
 where
 
-import LambdaCat.Configure
-import LambdaCat.Supplier
-import LambdaCat.Supplier.Web
-import LambdaCat.CmdArgs
-import LambdaCat.View.Web (webView)
-import LambdaCat.UI.Glade as UI
-import LambdaCat.Utils
-
-import Config.Dyre
-import Config.Dyre.Compile
 import Network.URI
 import System.Exit
 import System.IO
 
--- | lambdacat default configuration
+import Config.Dyre
+import Config.Dyre.Compile
+
+import LambdaCat.CmdArgs
+import LambdaCat.Configure
+import LambdaCat.Supplier
+import LambdaCat.Supplier.Web
+import LambdaCat.UI.Glade as UI
+import LambdaCat.Utils
+import LambdaCat.View.Web
+    ( webView
+    )
+
+-- | Lambdacat's default configuration.
 defaultConfig :: LambdaCatConf
 defaultConfig = LambdaCatConf
     { modifySupplierURI = defaultModifySupplierURI
-    , supplierList = [ (webSupplier   , ["http:","https:","about:"])
-                     ]
-    , viewList     = [ (webView, ["about:","http:", "https:", "file:"], [])
-                     ]
-    , homeURI      = "http://www.haskell.org"
-    , defaultURI   = "about:blank"
-    , defaultTitle = "(Untitled)"
+    , supplierList      = [ ( webSupplier
+                            , [ "http:"
+                              , "https:"
+                              , "about:"
+                              ]
+                            )
+                          ]
+    , viewList          = [ ( webView
+                            , [ "about:"
+                              , "http:"
+                              , "https:"
+                              , "file:"
+                              ]
+                            , []
+                            )
+                          ]
+    , homeURI           = "http://www.haskell.org"
+    , defaultURI        = "about:blank"
+    , defaultTitle      = "(Untitled)"
     }
 
--- | default uri modificator
+-- | The URI modifier used in the default configuration. It tries to add a
+-- proper protocol if none is specified.
 defaultModifySupplierURI :: URI -> URI
 defaultModifySupplierURI uri@URI
     { uriScheme    = ""
@@ -53,29 +74,39 @@ defaultModifySupplierURI uri@URI
     } = prepend "http://" uri
 defaultModifySupplierURI uri = uri
 
+-- | Add a String to the beginning of the given URI.
 prepend :: String -> URI -> URI
 prepend prfx uri = stringToURI $ prfx ++ show uri
 
--- | real main function
---   gets called by the dyre stack 
-mainCat :: (Maybe String, LambdaCatConf) -> IO ()
-mainCat (e, cfg) = do
+-- | This is the real main function. It is called by the dyre stack.
+mainCat
+    :: Maybe String   -- ^ Just the error that occured during the compilation
+                      -- of the user configuration, Nothing if none occured.
+    -> LambdaCatConf  -- ^ The users configuration.
+    -> IO ()
+mainCat e cfg = do
     maybe (return ()) error e
 
     setLCC cfg
     args <- getCmdArgs
 
-    let  uria = map stringToURI $ uris args
-         us   = if null uria
-                then [homeURI cfg]
-                else uria
+    let uria = map stringToURI $ uris args
+        us   = if null uria
+                   then [homeURI cfg]
+                   else uria
+
     ui <- UI.init :: IO GladeUI
     mapM_ (supplyForView (UI.update ui undefined) embedView) us
+
     mainLoop ui
 
--- | lambdacat main function
---   takes a configuration and startup the lambdacat.
-lambdacat :: LambdaCatConf -> IO ()
+-- | Lambdacat's main function. It processes commandline parameters, handles
+-- recompilation of the user configuration and calling the real main function.
+-- Use this as the main function in your user configuration file.
+lambdacat
+    :: LambdaCatConf -- ^ Configuration to use. Just start with
+                     -- 'defaultConfig' and overwrite fields as you wish.
+    -> IO ()
 lambdacat cfg = do
     args <- getCmdArgs
 
@@ -83,20 +114,25 @@ lambdacat cfg = do
         then do
             customCompile dparams
             me <- getErrorString dparams
+
             case me of
-                Just e  -> do
+                Just e -> do
                     hPutStrLn stderr e
                     exitFailure
-                Nothing -> return ()
+
+                Nothing ->
+                    return ()
+
         else wrapMain dparams (Nothing, cfg)
 
--- | dyre configuration 
+-- | Configuration for dyre.
 dparams :: Params (Maybe String, LambdaCatConf)
 dparams =
     let dps = defaultParams
             { projectName = "lambdacat"
-            , realMain    = mainCat
-            , showError   = \ (_, c) s -> (Just s, c)
+            , realMain    = uncurry mainCat
+            , showError   = \(_, c) s -> (Just s, c)
             , statusOut   = putStrLn
             }
     in  dps { ghcOpts = ["-eventlog", "-threaded"] }
+
