@@ -1,5 +1,8 @@
 {-# LANGUAGE OverloadedStrings #-}
 
+-- | This module (re-)exports the most important functions and datatypes you
+-- need, to write your own configuration file. 
+
 module LambdaCat
     ( 
       -- * Main entry point 
@@ -101,7 +104,7 @@ mainCat e cfg = do
     mainLoop ui
 
 -- | Lambdacat's main function. It processes commandline parameters, handles
--- recompilation of the user configuration and calling the real main function.
+-- recompilation of the user configuration and calls the real main function.
 -- Use this as the main function in your user configuration file.
 lambdacat
     :: LambdaCatConf -- ^ Configuration to use. Just start with
