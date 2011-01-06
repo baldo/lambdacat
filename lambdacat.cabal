@@ -14,7 +14,7 @@ Tested-With:   GHC == 6.12.3
 Cabal-Version: >= 1.2.3
 
 Extra-Source-Files:
-    README
+    README.md
     STYLE.md
 
 Data-Files:
