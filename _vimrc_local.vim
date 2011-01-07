@@ -20,5 +20,5 @@ set expandtab
 " Mark tabs, trailing spaces on a line, lambdas with trailing spaces and
 " various missing spaces.
 highlight WarnWhitespace ctermbg=red guibg=red
-match WarnWhitespace /\t\|\s\+$\|\\\s+\|,\S\|--|\|\S\s--/
+match WarnWhitespace /\t\|\s\+$\|\\\s\+\|,\S\|--|\|\S\s--/
 
