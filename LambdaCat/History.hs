@@ -1,102 +1,160 @@
-module LambdaCat.History 
-  ( History
- 
-  , singleton
+-- |
+-- Module      : LambdaCat.History
+-- Copyright   : Andreas Baldeau, Daniel Ehlers
+-- License     : BSD3
+-- Maintainer  : Andreas Baldeau <andreas@baldeau.net>,
+--               Daniel Ehlers <danielehlers@mindeye.net>
+-- Stability   : Alpha
+--
+-- This module provides lambdacat's history functionality. The history is
+-- not stored linear as in other browsers, it is stored as a tree. This way
+-- navigating backwards and then along another path no navigation history is
+-- lost.
 
-  , back
-  , forward
-  , insert
-  , insertAndForward
-  , updateCurrent
-  , current 
+module LambdaCat.History
+    (
+      -- * The data structure
+      History
 
-  , hasBack
-  , hasForward
-  , getForwards
-  )
- where
+      -- * Construction
+    , singleton
 
-import Data.IntMap (IntMap)
+      -- * Navigation
+    , back
+    , forward
+
+      -- * Modification
+    , insert
+    , insertAndForward
+    , updateCurrent
+
+      -- * Query
+    , current
+    , hasBack
+    , hasForward
+    , getForwards
+    )
+where
+
+import Data.IntMap
+    ( IntMap
+    )
 import qualified Data.IntMap as IntMap
-import Network.URI 
-import Data.Maybe (isJust, fromJust)
+import Data.Maybe
+    ( fromJust
+    , isJust
+    )
+import Network.URI
 
--- | Directed tree with 'URI's as weights
+-- | Directed tree with 'URI's as weights.
 type History = DTree URI
 
 -- | Weighted directed tree
-data DTree a = DTree 
-  { dTreeWeight  :: a
-  , dTreeBack    :: Maybe (Int,DTree a)
-  , dTreeForward :: IntMap (DTree a)
-  }
- deriving Show
+data DTree a = DTree
+    { dTreeWeight  :: a                     -- ^ Weight of the node. 
+    , dTreeBack    :: Maybe (Int, DTree a)  -- ^ The nodes parent, if any.
+                                            -- The Int is the number by which
+                                            -- this node can be reached from
+                                            -- its parent.
+    , dTreeForward :: IntMap (DTree a)      -- ^ The numbered childs.
+    }
+  deriving Show
 
--- | A tree with one node
-singleton :: a -> DTree a
-singleton weight = DTree 
-  { dTreeWeight  = weight 
-  , dTreeBack    = Nothing
-  , dTreeForward = IntMap.empty
-  }
+-- | A tree with one node.
+singleton
+    :: a        -- ^ The weight for the node.
+    -> DTree a  -- ^ The new tree.
+singleton weight = DTree
+    { dTreeWeight  = weight
+    , dTreeBack    = Nothing
+    , dTreeForward = IntMap.empty
+    }
 
--- | move back in a tree, return Nothing if can not move back
-back :: DTree a -> Maybe (DTree a)
-back dt = case dTreeBack dt of
-  Just (index,dt') -> 
-              let newDt   = dt { dTreeBack = Nothing }
-                  forwMap = dTreeForward dt'
-              in  Just $ dt' { dTreeForward = IntMap.insert index newDt forwMap }
-  Nothing  -> Nothing
+-- | Move backwards in the tree.
+back
+    :: DTree a          -- ^ Tree to navigate in.
+    -> Maybe (DTree a)  -- ^ Just the parent node or Nothing if none.
+back dt =
+    case dTreeBack dt of
+        Just (index, dt') ->
+            let newDt   = dt { dTreeBack = Nothing }
+                forwMap = dTreeForward dt'
+            in  Just dt' { dTreeForward = IntMap.insert index newDt forwMap }
 
--- | indicated if a back operation on this tree is possible
+        Nothing ->
+            Nothing
+
+-- | Indicates, if a back operation on the tree is possible.
 hasBack :: DTree a -> Bool
-hasBack = isJust . dTreeBack 
+hasBack = isJust . dTreeBack
 
--- | move forward in a tree to select node
-forward :: Int -> DTree a -> Maybe (DTree a)
-forward index dt = 
-  let forwMap = dTreeForward dt
-      (mdt', forwMap') = IntMap.updateLookupWithKey (\ _ -> const Nothing) index forwMap
-      newDt = dt { dTreeForward = forwMap' }
-  in  case mdt' of
-      Just dt' -> Just $ dt' { dTreeBack = Just (index,newDt) }
-      Nothing  -> Nothing
+-- | Move forward in the tree.
+forward
+    :: Int              -- ^ Number of the child node to navigate to.
+    -> DTree a          -- ^ The tree to navigate in.
+    -> Maybe (DTree a)  -- ^ Just the child node or Nothing if not existing.
+forward index dt =
+    case mdt' of
+        Just dt' ->
+            Just $ dt' { dTreeBack = Just (index, newDt) }
 
--- | return the weight of the current node of a tree
-current :: DTree a -> a 
-current = dTreeWeight 
+        Nothing ->
+            Nothing
 
--- | replace weight at the current node
+  where
+    forwMap = dTreeForward dt
+
+    (mdt', forwMap') =
+        IntMap.updateLookupWithKey (\_ -> const Nothing) index forwMap
+
+    newDt = dt { dTreeForward = forwMap' }
+
+-- | Returns the weight of the trees current node.
+current :: DTree a -> a
+current = dTreeWeight
+
+-- | Replace the weight at the current node.
 updateCurrent :: a -> DTree a -> DTree a
 updateCurrent a tree = tree { dTreeWeight = a }
 
--- | indicates if a forward operation on this tree is possible
+-- | Indicates if a forward operation on this tree is possible.
 hasForward :: DTree a -> Bool
-hasForward = not . IntMap.null . dTreeForward 
+hasForward = not . IntMap.null . dTreeForward
 
--- | get a list of possible forward nodes in a tree with weights on this nodes
-getForwards :: DTree a -> [(Int,a)]
-getForwards = map withSnd . IntMap.toList . dTreeForward
-  where withSnd :: (Int,DTree a) -> (Int,a)
-        withSnd (key,dt) = (key,dTreeWeight dt)
+-- | Returns a list of child nodes identified by its numbers and their
+-- weights.
+getForwards :: DTree a -> [(Int, a)]
+getForwards =
+    map withSnd . IntMap.toList . dTreeForward
 
--- | insert a new node into the tree, adjacent to the current node
-insert :: a -> DTree a -> DTree a 
-insert weight dt = 
-    let forwMap = dTreeForward dt
-        newDt   = singleton weight
-    in  dt { dTreeForward = IntMap.insert (newIndex forwMap) newDt forwMap }
+  where
+    withSnd :: (Int, DTree a) -> (Int, a)
+    withSnd (key, dt) = (key, dTreeWeight dt)
 
--- | insert a new node into the tree, adjacent to the current node and then move forward to the new node
+-- | Insert a new child node adjacent to the trees current node.
+insert :: a -> DTree a -> DTree a
+insert weight dt =
+    dt { dTreeForward = IntMap.insert (newIndex forwMap) newDt forwMap }
+
+  where
+    forwMap = dTreeForward dt
+    newDt   = singleton weight
+
+-- | Insert a new child node adjacent to the tress current node and then
+-- move forward to it.
 insertAndForward :: a -> DTree a -> DTree a
-insertAndForward weight dt = 
-    let forwMap = dTreeForward dt
-        newDt   = singleton weight
-        index   = newIndex forwMap
-    in fromJust . forward index $ dt { dTreeForward = IntMap.insert index  newDt forwMap }
+insertAndForward weight dt =
+    fromJust . forward index $
+        dt { dTreeForward = IntMap.insert index newDt forwMap }
 
--- | internal function to generate next free index on a intmap
-newIndex :: IntMap a -> Int 
-newIndex m | IntMap.null m  = 0
-           | otherwise      = 1 + fst (IntMap.findMax m)
+  where
+    forwMap = dTreeForward dt
+    newDt   = singleton weight
+    index   = newIndex forwMap
+
+-- | Internal function to generate the next free index on an IntMap.
+newIndex :: IntMap a -> Int
+newIndex m
+    | IntMap.null m = 0
+    | otherwise     = 1 + fst (IntMap.findMax m)
+
