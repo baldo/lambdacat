@@ -7,13 +7,13 @@
 -- Maintainer  : Andreas Baldeau <andreas@baldeau.net>,
 --               Daniel Ehlers <danielehlers@mindeye.net>
 -- Stability   : Alpha
--- 
+--
 -- This module (re-)exports the most important functions and datatypes you
--- need, to write your own configuration file. 
+-- need, to write your own configuration file.
 
 module LambdaCat
-    ( 
-      -- * Main entry point 
+    (
+      -- * Main entry point
       lambdacat
 
       -- * Configuration

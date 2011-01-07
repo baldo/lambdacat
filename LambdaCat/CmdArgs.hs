@@ -7,7 +7,7 @@
 -- Maintainer  : Andreas Baldeau <andreas@baldeau.net>,
 --               Daniel Ehlers <danielehlers@mindeye.net>
 -- Stability   : Alpha
--- 
+--
 -- This module is used for command line parsing.
 
 module LambdaCat.CmdArgs
