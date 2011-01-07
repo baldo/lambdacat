@@ -145,5 +145,5 @@ dparams =
             , showError   = \(_, c) s -> (Just s, c)
             , statusOut   = putStrLn
             }
-    in  dps { ghcOpts = ["-eventlog", "-threaded"] }
+    in  dps { ghcOpts = ["-eventlog"] }
 
