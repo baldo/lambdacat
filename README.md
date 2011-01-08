@@ -9,7 +9,8 @@ Table of Contents
 
 1. Mission Statement
 2. Release Notes
-3. Configuration
+3. Installation
+4. Configuration
 
 1. Mission Statement
 --------------------
@@ -43,7 +44,18 @@ add further UIs which can be chosen in the configuration.
 
 This release is _not_ for production use. Please be aware of that.
 
-3. Configuration
+3. Installation
+---------------
+
+Lambdacat can be installed from [Hackage](http://hackage.haskell.org) using 
+'cabal'. 
+
+  > cabal update
+  > cabal install lambdacat
+
+You can also checkout the sources from github and compile them yourself.
+
+4. Configuration
 ----------------
 
 A user configuration can be put in:
