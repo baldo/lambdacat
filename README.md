@@ -1,53 +1,61 @@
 LambdaCat - the Haskell online cat viewer
 =========================================
 
-Driven by the frustrating modern browsers cause. We started
-to think about what a browser should be for us. 
+Driven by the frustration modern browsers caused us we started to think about
+how a browser should be.
 
 Table of Contents
 -----------------
 
 1. Mission Statement
 2. Release Notes
-3. Configuration 
+3. Configuration
 
 1. Mission Statement
 --------------------
 
-A browser to use should be fast, configurable, extendable , secure and
-easily useable with keyboard only. 
+To us, a browser should be fast, configurable, extendable, secure and easy to
+use with keyboard only. The most important feature is the ability to
+comfortably display online cat-content.
 
-By extendables and configurable, we mean that we like to change behaviour
-of the application on source level easily. It should be possible
-to engage in nearly every data flow. 
+By extendable and configurable we mean that we like to easily change the
+behaviour of the application in sourcecode. It should be possible to engage in
+nearly every data flow by adopting the configuration.
 
-With security, we mean that every communication interaction with
-the net should be controlable. Every communication should be 
-deniable by default. 
+With security, we mean that every communication and interaction with the net
+should be controllable. Every communication should be deniable by default.
 
-We like to use keyboard only application, since the mouse -> keyboard 
-movement is time intensive and usally breaks any workflow it is not
-acceptable!
+We like to use keyboard only applications since the mouse to keyboard movement
+is time intensive and usually breaks the workflow. This is not acceptable.
 
-2. Release Notes 
+Till now the mission is _not_ yet accomplished.
+
+2. Release Notes
 ----------------
 
 ### 0.1.0 Haskell the Cat
-First code release. Its main purpose is to demonstrate our software
-design to the peoaple. The API is currently not stable and will
-change during the way to version 0.2. 
 
-The used UI is the GladeUI, currently the ui can not be changed in the
-configuration. 
+This is the first code release. Its main purpose is to demonstrate our
+software design. The API is currently not stable and is subject to change.
 
-This release is _not_ for production use. Please be aware of that. 
+For now we only provide a Glade base UI (GladeUI). In the future we plan to
+add further UIs which can be chosen in the configuration.
+
+This release is _not_ for production use. Please be aware of that.
 
 3. Configuration
----------------
+----------------
 
-A user related configuration can be created in 
+A user configuration can be put in:
 
   ~/.config/lambdacat/lambdacat.hs
 
-a good example how this file should look like is the 'Main.hs'.
-For more information look into the lambdacat API.
+This file has to provide a 'main' function that then invokes the function
+'lambdacat'.
+
+A small example how this file might look like is the 'Main.hs'.
+For further information please have a look at the haddock generated API
+documentation.
+
+Meow.
+
