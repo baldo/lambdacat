@@ -44,6 +44,10 @@ add further UIs which can be chosen in the configuration.
 
 This release is _not_ for production use. Please be aware of that.
 
+### 0.1.1 Cleanup Haskell the Cat 
+
+Add some more informations to the cabal file. 
+
 3. Installation
 ---------------
 
