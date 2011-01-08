@@ -1,15 +1,17 @@
 Name:          lambdacat
-Version:       0.1.0
+Version:       0.1.1
 Stability:     Alpha
 Synopsis:      Webkit Browser
 Description:   A Browser based on WebKit, concepted to be easy to use and
-               extendable
+               extendable.
 License:       BSD3
 License-File:  LICENSE
 Build-Type:    Simple
 Author:        Andreas Baldeau, Daniel Ehlers
 Maintainer:    Andreas Baldeau <andreas@baldeau.net>,
                Daniel Ehlers <danielehlers@mindeye.net>
+Homepage:      http://github.com/baldo/lambdacat
+Bug-Reports:   http://github.com/baldo/lambdacat/issues
 Category:      User Interfaces
 Tested-With:   GHC == 6.12.3
 Cabal-Version: >= 1.6
@@ -21,6 +23,10 @@ Extra-Source-Files:
 Data-Files:
     lambdacat.glade
     lambdacat.gtkrc
+
+Source-Repository head
+    Type:     git
+    Location: git://github.com/baldo/lambdacat.git
 
 Executable lambdacat
     Main-is: Main.hs
