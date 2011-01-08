@@ -1,5 +1,5 @@
 Name:          lambdacat
-Version:       0.0
+Version:       0.1.0
 Stability:     Alpha
 Synopsis:      Webkit Browser
 Description:   A Browser based on WebKit, concepted to be easy to use and
@@ -55,7 +55,7 @@ Library
         LambdaCat.History
         LambdaCat.UI
         LambdaCat.UI.Glade
-        LambdaCat.UI.Vim
+        -- LambdaCat.UI.Vim
 
     Other-Modules:
         Paths_lambdacat
@@ -64,13 +64,13 @@ Library
         LambdaCat.CmdArgs
 
     Extensions:
-        DeriveDataTypeable,
-        ExistentialQuantification,
-        FlexibleInstances,
-        FunctionalDependencies,
-        GeneralizedNewtypeDeriving,
-        MultiParamTypeClasses,
-        OverloadedStrings,
-        RankNTypes,
+        DeriveDataTypeable
+        ExistentialQuantification
+        FlexibleContexts
+        FlexibleInstances
+        FunctionalDependencies
+        MultiParamTypeClasses
+        OverloadedStrings
+        RankNTypes
         TypeSynonymInstances
 
