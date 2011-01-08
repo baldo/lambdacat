@@ -3,6 +3,9 @@
   <!-- interface-requires gtk+ 2.16 -->
   <!-- interface-naming-policy project-wide -->
   <widget class="GtkWindow" id="mainWindow">
+    <property name="window_position">mouse</property>
+    <property name="default_width">640</property>
+    <property name="default_height">480</property>
     <child>
       <widget class="GtkVBox" id="verticalContainer">
         <property name="visible">True</property>
@@ -67,8 +70,8 @@
                 <property name="label" translatable="yes">back</property>
                 <property name="use_underline">True</property>
                 <property name="stock_id">gtk-go-back</property>
-                <accelerator key="XF86Back" signal="clicked"/>
                 <accelerator key="Left" signal="clicked" modifiers="GDK_MOD1_MASK"/>
+                <accelerator key="XF86Back" signal="clicked"/>
               </widget>
               <packing>
                 <property name="expand">False</property>
@@ -81,8 +84,8 @@
                 <property name="label" translatable="yes">forward</property>
                 <property name="use_underline">True</property>
                 <property name="stock_id">gtk-go-forward</property>
-                <accelerator key="XF86Forward" signal="clicked"/>
                 <accelerator key="Right" signal="clicked" modifiers="GDK_MOD1_MASK"/>
+                <accelerator key="XF86Forward" signal="clicked"/>
               </widget>
               <packing>
                 <property name="expand">False</property>
@@ -95,8 +98,8 @@
                 <property name="label" translatable="yes">reload</property>
                 <property name="use_underline">True</property>
                 <property name="stock_id">gtk-refresh</property>
-                <accelerator key="r" signal="clicked" modifiers="GDK_CONTROL_MASK"/>
                 <accelerator key="F5" signal="clicked"/>
+                <accelerator key="r" signal="clicked" modifiers="GDK_CONTROL_MASK"/>
               </widget>
               <packing>
                 <property name="expand">False</property>
