@@ -1,6 +1,6 @@
 {-# LANGUAGE ExistentialQuantification
-           , MultiParamTypeClasses
            , FunctionalDependencies
+           , MultiParamTypeClasses
   #-}
 
 -- |
