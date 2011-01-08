@@ -72,10 +72,10 @@ If you have not installed the haskell gtk bindings you should do previous to
 the steps above:
 
     > cabal update
-    > cabal install gtk2hs-buildtools
     > export PATH=$PATH:~/.cabal/bin
-
-
+    > cabal install alex
+    > cabal install happy
+    > cabal install gtk2hs-buildtools
 
 4. Configuration
 ----------------
