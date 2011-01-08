@@ -1,23 +1,46 @@
-{-# LANGUAGE ExistentialQuantification, MultiParamTypeClasses, FunctionalDependencies#-}
+{-# LANGUAGE ExistentialQuantification
+           , MultiParamTypeClasses
+           , FunctionalDependencies
+  #-}
 
-module LambdaCat.Internal.Class 
-    ( UIClass (..)
+-- |
+-- Module      : LambdaCat.Internal.Class
+-- Copyright   : Andreas Baldeau, Daniel Ehlers
+-- License     : BSD3
+-- Maintainer  : Andreas Baldeau <andreas@baldeau.net>,
+--               Daniel Ehlers <danielehlers@mindeye.net>
+-- Stability   : Alpha
+--
+-- This module provides the basic type classes and data types that cannot be
+-- put into other modules due to cyclic dependencies.
+--
+-- All the classes are reexported by other modules, so there is no need to
+-- expose this module.
+
+module LambdaCat.Internal.Class
+    (
+      -- * Type classes
+      UIClass (..)
     , ViewClass (..)
     , SupplierClass (..)
+
+      -- * The @Callback@ type
     , Callback
 
-    , View (..) 
+      -- * Wrapper types for the type classes
+    , View (..)
     , Supplier (..)
     )
 where
 
 import Network.URI
+
 import Graphics.UI.Gtk.Abstract.Widget
 
+-- | Datatype for callback functions.
 type Callback ui meta = ui -> meta -> IO ()
 
-
--- | Class of user interfaces for lambdacat 
+-- | Class of user interfaces for lambdacat.
 class UIClass ui meta | ui -> meta where
     -- | Initializes the UI and returns an UI handle.
     init :: IO ui
@@ -25,81 +48,89 @@ class UIClass ui meta | ui -> meta where
     -- | The main loop for the UI.
     mainLoop :: ui -> IO ()
 
-    -- | Function to apply to @View.new@ 
-    update          :: ui -> meta -> Callback ui meta -> IO ()
+    -- | Function to give to 'embed'.
+    update :: ui -> meta -> Callback ui meta -> IO ()
     update ui meta f = f ui meta
 
-    -- | Embed the view into the given browser.
-    --   For this function the meta data COULD be undefined
-    --   and is here to have a unique function interface
-    --   for the supplier 
-    embedView       :: View -> Callback ui meta 
+    -- | Embed the view into the given UI.
+    --
+    -- For this function the meta data COULD be undefined but is here to have
+    -- a unique function interface for the supplier.
+    embedView       :: View -> Callback ui meta
 
-    -- | Replace view with new view. The 'View' that
-    -- should be replaced SHOULD be determind by @meta@.
+    -- | Replace one view with a new view. The view that should be replaced
+    -- SHOULD be determind by @meta@. The type of the new view is determined
+    -- by the first argument.
     replaceView     :: View -> Callback ui meta
-  
-    -- | Inform @ui@ that @View@ has changed its URI.
+
+    -- | Inform the @ui@ that the view has changed its URI.
     changedURI      :: View -> Callback ui meta
 
-    -- | Inform @ui@ that @view@ has updated its title.
-    changedTitle    :: View -> Callback ui meta 
+    -- | Inform the @ui@ that @view@ has updated its title.
+    changedTitle    :: View -> Callback ui meta
 
-    -- | Inform @ui@ that @view@ has changed its progress state. 
-    changedProgress :: Int -> Callback ui meta 
+    -- | Inform the @ui@ that @view@ has changed its progress state.
+    changedProgress :: Int -> Callback ui meta
 
-    -- | Inform @ui@ that @view@ has changes its status.
-    changedStatus   :: String -> Callback ui meta 
+    -- | Inform the @ui@ that @view@ has changes its status.
+    changedStatus   :: String -> Callback ui meta
 
--- | Class of viewers, which can render and handle content behind a 'URI'.
+-- | Class of viewers, that can render and handle content behind an 'URI'.
 class ViewClass view where
     -- | Creates a new view.
     new :: IO view
 
-    -- | Ask the @view@ to embed its widget by calling the given function. 
-    --   And give the callback function to the widget 
+    -- | Ask the view to embed its widget by calling the given function.
+    -- Also give the callback function to the widget.
     embed :: UIClass ui meta
-          => view -> (Widget -> IO ()) -> (Callback ui meta -> IO ()) -> IO ()
+          => view                         -- ^ The view to embed.
+          -> (Widget -> IO ())            -- ^ Function to embed the widget.
+          -> (Callback ui meta -> IO ())
+          -> IO ()
 
-    -- | Destructor, allow cleaning up when @view@ is discarded. 
+    -- | Destructor, allow cleaning up when the view is discarded.
     destroy :: view -> IO ()
 
-    -- | Ask view to load the given 'URI'
+    -- | Ask the view to load the given URI.
     load :: view -> URI -> IO Bool
 
-    -- | Ask @view@ for the current uri, if not available 'nullURI'
-    --   must be returned
+    -- | Ask the view for the current URI. If no URI is available, 'nullURI'
+    -- must be returned.
     getCurrentURI :: view -> IO URI
 
-    -- | Ask @view@ for the current title
+    -- | Ask the view for the current title.
     getCurrentTitle :: view -> IO String
 
-    -- | Ask @view@ for the current progress, this must
-    --   return a value between 0 and 100
+    -- | Ask the view for the current progress. This must return a value
+    -- between 0 and 100
     getCurrentProgress :: view -> IO Int
 
 -- | Class of suppliers, which retrieve content and select appropiate viewers.
 class SupplierClass supplier where
-  -- | Ask @supplier@ for appropriated 'View' for 'URI'
-  supplyView :: supplier -> URI -> IO (Maybe View) 
---  supplyContent :: TODO 
+    -- | Ask the supplier for an appropriated view for the URI.
+    supplyView :: supplier -> URI -> IO (Maybe View)
 
--- | Encapsulates any instance of 'ViewClass'
-data View = forall view . (ViewClass view) => View view
+    -- supplyContent :: TODO
+
+-- | Encapsulates any instance of ViewClass.
+data View = forall view . ViewClass view => View view
 
 instance ViewClass View where
-    new                 = return (error "Can't create existential quantificated datatype")
-    embed (View view) = embed view
-    destroy (View view) = destroy view
+    new = return (error "Can't create existential quantificated datatype")
 
-    load (View view) = load view
+    embed              (View view) = embed view
+    destroy            (View view) = destroy view
 
-    getCurrentURI (View view)   = getCurrentURI view
-    getCurrentTitle (View view) = getCurrentTitle view
+    load               (View view) = load view
+
+    getCurrentURI      (View view) = getCurrentURI view
+    getCurrentTitle    (View view) = getCurrentTitle view
     getCurrentProgress (View view) = getCurrentProgress view
 
--- | Encapsulates any instance of 'SupplierClass'
-data Supplier = forall supplier . (SupplierClass supplier) => Supplier supplier 
+-- | Encapsulates any instance of SupplierClass.
+data Supplier = forall supplier . SupplierClass supplier
+                               => Supplier supplier
 
 instance SupplierClass Supplier where
-  supplyView (Supplier supplier) = supplyView supplier
+    supplyView (Supplier supplier) = supplyView supplier
+
