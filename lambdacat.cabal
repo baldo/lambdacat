@@ -52,7 +52,7 @@ Library
         LambdaCat.View
         LambdaCat.View.Web
         LambdaCat.Session
-        LambdaCat.History 
+        LambdaCat.History
         LambdaCat.UI
         LambdaCat.UI.Glade
         LambdaCat.UI.Vim
