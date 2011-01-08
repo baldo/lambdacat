@@ -29,16 +29,16 @@ import Control.Monad.Trans
 import Network.URI
 
 import Graphics.UI.Gtk
-import Graphics.UI.Gtk.WebKit.WebView
-    ( WebView
-    )
+-- import Graphics.UI.Gtk.WebKit.WebView
+--    ( WebView
+--    )
 import Graphics.UI.Gtk.WebKit.WebView as WebView
 
-import LambdaCat.Configure
-    ( LambdaCatConf (..)
-    , lambdaCatConf
-    )
-import LambdaCat.History
+-- import LambdaCat.Configure
+--     ( LambdaCatConf (..)
+--     , lambdaCatConf
+--     )
+-- import LambdaCat.History
 import LambdaCat.Session
 import LambdaCat.Supplier
 import LambdaCat.UI
@@ -59,11 +59,11 @@ data VimUI = VimUI
 
 -- | Metadata to store with tab.
 data TabMeta = TabMeta
-    { tabMetaIdent     :: TabId
+    {- tabMetaIdent     :: TabId
     , tabMetaLabel     :: Label
     , tabMetaImage     :: Image
     , tabMetaContainer :: Container
-    }
+    -}
 
 -- | Modes of operation.
 data Mode = Command
@@ -126,9 +126,9 @@ instance UIClass VimUI TabMeta where
                       }
 
         -- simple keyboard handling
-        window `on` keyPressEvent $ tryEvent $ do
-            keyval <- eventKeyVal
-            kn     <- eventKeyName
+        _ <- window `on` keyPressEvent $ tryEvent $ do
+            _keyval <- eventKeyVal
+            kn      <- eventKeyName
             liftIO $ putStrLn kn
             m <- liftIO $ takeMVar mode
             case m of
@@ -155,7 +155,7 @@ instance UIClass VimUI TabMeta where
 
         return ui
 
-    mainLoop ui = mainGUI
+    mainLoop _ui = mainGUI
 
     embedView view ui _ = do
         let tabHold = vimTabHolder ui
@@ -163,7 +163,7 @@ instance UIClass VimUI TabMeta where
 
         embed view (embedHandle tabHold) (update ui meta)
 
-    replaceView view ui meta = do
+    replaceView view ui _meta = do
         let tabHold  = vimTabHolder ui
             meta     = TabMeta {}
             currentM = vimTabCurrent ui
@@ -172,15 +172,15 @@ instance UIClass VimUI TabMeta where
         putMVar currentM view
         embed view (embedHandle tabHold) (update ui meta)
 
-    changedURI view ui meta = do
+    changedURI view ui _meta = do
         uri <- getCurrentURI view
         renderStatus ui uri
 
-    changedTitle view ui meta = return ()
+    changedTitle _view _ui _meta = return ()
 
-    changedProgress percent ui meta = return ()
+    changedProgress _percent _ui _meta = return ()
 
-    changedStatus status ui meta = return ()
+    changedStatus _status _ui _meta = return ()
 
 renderStatus :: VimUI -> URI -> IO ()
 renderStatus ui uri = do
@@ -208,6 +208,8 @@ renderControl ui = do
        ++ "margin:0;padding:0\">" ++ state ++ "</body>"
         ) ""
 
+embedHandle :: (ContainerClass container, WidgetClass widget)
+            => container -> widget -> IO ()
 embedHandle container widget = do
     cs <- containerGetChildren container
     mapM_ (containerRemove container) cs
