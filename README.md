@@ -50,8 +50,8 @@ This release is _not_ for production use. Please be aware of that.
 Lambdacat can be installed from [Hackage](http://hackage.haskell.org) using 
 'cabal'. 
 
-  > cabal update
-  > cabal install lambdacat
+> cabal update
+> cabal install lambdacat
 
 You can also checkout the sources from github and compile them yourself.
 
