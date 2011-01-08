@@ -55,6 +55,24 @@ Lambdacat can be installed from [Hackage](http://hackage.haskell.org) using
 
 You can also checkout the sources from github and compile them yourself.
 
+After that the binary of lambdacat can be found in 
+
+    ~/.cabal/bin
+
+For everyday use you should include this path into your PATH enviroment
+variable.
+
+### Installing gtk2hs
+
+If you have not installed the haskell gtk bindings you should do previous to 
+the steps above:
+
+    > cabal update
+    > cabal install gtk2hs-buildtools
+    > export PATH=$PATH:~/.cabal/bin
+
+
+
 4. Configuration
 ----------------
 
