@@ -2,7 +2,7 @@
 " Feel free to imporve it.
 
 " You can use this file by installing the localvimrc plugin:
-" http://www.vim.org/scripts/script.php?script_id=441
+" http://lh-vim.googlecode.com/svn/misc/trunk/plugin/local_vimrc.vim
 
 " Lines have a maximum length of 78 characters.
 set textwidth=78
