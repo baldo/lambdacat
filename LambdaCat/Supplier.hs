@@ -13,7 +13,6 @@ module LambdaCat.Supplier
     (
       -- * Class and wrapper
       SupplierClass (..)
-    , Supplier (..)
 
       -- * Callback type
     , Callback
@@ -44,12 +43,12 @@ supplyForView callbackHdl embedHdl uri = do
     let suppliers = supplierList lambdaCatConf
         uri'      = modifySupplierURI lambdaCatConf uri
         protocol  = uriScheme uri'
-        mSupply   = find (\(_s, ps) -> isJust $ find (== protocol) ps)
+        mSupply   = find (\(SupplierSpec _ ps) -> isJust $ find (== protocol) ps)
                          suppliers
 
     case mSupply of
-        Just (supply, _) -> do
-            mView <- supplyView supply uri'
+        Just (SupplierSpec conf _) -> do
+            mView <- supplyView conf uri'
 
             case mView of
                 Just view ->

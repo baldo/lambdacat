@@ -16,6 +16,7 @@ module LambdaCat.Configure
       -- * The configuration data structure
       LambdaCatConf (..)
     , ViewSpec (..)
+    , SupplierSpec (..)
     , Protocol
 
       -- * Global access
@@ -30,20 +31,24 @@ import System.IO.Unsafe
 
 import LambdaCat.Internal.Class
     ( ViewClass (..)
-    , Supplier (..)
+    , SupplierClass (..)
     )
 
 -- | Encapsulate specification of a view.
 data ViewSpec = forall view . ViewClass view
               => ViewSpec (ViewConf view) [Protocol] [String]
 
+-- | Encapsulate specifiaction of a supplier.
+data SupplierSpec = forall supplier . SupplierClass supplier
+                  => SupplierSpec supplier [Protocol]
+
 -- | Lambdacat's configuration datatype.
 data LambdaCatConf = LambdaCatConf
     { supplierList
-        :: [(Supplier, [Protocol])]        -- ^ Suppliers with supported
+        :: [SupplierSpec]                  -- ^ Suppliers with supported
                                            -- protocols.
     , viewList
-        :: [ViewSpec]  -- ^ Views with supported
+        :: [ViewSpec]                      -- ^ Views with supported
                                            -- protocols.
     , homeURI
         :: URI                             -- ^ URI of the home page.

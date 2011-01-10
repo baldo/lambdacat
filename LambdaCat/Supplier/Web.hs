@@ -12,7 +12,7 @@
 module LambdaCat.Supplier.Web
     (
       -- * Supplier
-      webSupplier
+      WebSupplier (..)
 
       -- * Module exports
     , module LambdaCat.Supplier
@@ -31,12 +31,8 @@ import LambdaCat.Configure
 import LambdaCat.Supplier
 import LambdaCat.View
 
--- | The WebSupplier datatype.
-data WebSupplier = WebSupplier
-
--- | Type specification constant to use in configuration.
-webSupplier :: Supplier
-webSupplier = Supplier WebSupplier
+-- | The WebSupplier configuration datatype.
+data WebSupplier = WebSupplierConf
 
 instance SupplierClass WebSupplier where
     supplyView _ uri =

@@ -30,7 +30,6 @@ module LambdaCat.Internal.Class
 
       -- * Wrapper types for the type classes
     , View (..)
-    , Supplier (..)
     )
 where
 
@@ -110,9 +109,9 @@ class ViewClass view where
     getCurrentProgress :: view -> IO Int
 
 -- | Class of suppliers, which retrieve content and select appropiate viewers.
-class SupplierClass supplier where
+class SupplierClass conf where
     -- | Ask the supplier for an appropriated view for the URI.
-    supplyView :: supplier -> URI -> IO (Maybe View)
+    supplyView :: conf -> URI -> IO (Maybe View)
 
     -- supplyContent :: TODO
 
@@ -131,11 +130,3 @@ instance ViewClass View where
     getCurrentURI      (View view) = getCurrentURI view
     getCurrentTitle    (View view) = getCurrentTitle view
     getCurrentProgress (View view) = getCurrentProgress view
-
--- | Encapsulates any instance of SupplierClass.
-data Supplier = forall supplier . SupplierClass supplier
-                               => Supplier supplier
-
-instance SupplierClass Supplier where
-    supplyView (Supplier supplier) = supplyView supplier
-

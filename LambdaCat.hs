@@ -43,12 +43,12 @@ import LambdaCat.View.Web
 defaultConfig :: LambdaCatConf
 defaultConfig = LambdaCatConf
     { modifySupplierURI = defaultModifySupplierURI
-    , supplierList      = [ ( webSupplier
-                            , [ "http:"
-                              , "https:"
-                              , "about:"
-                              ]
-                            )
+    , supplierList      = [ SupplierSpec
+                                WebSupplierConf
+                                [ "http:"
+                                , "https:"
+                                , "about:"
+                                ]
                           ]
     , viewList          = [ ViewSpec
                                 webViewConf
