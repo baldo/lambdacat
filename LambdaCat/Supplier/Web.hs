@@ -43,10 +43,11 @@ instance SupplierClass WebSupplier where
         let viewers    = viewList lambdaCatConf
             protocol   = uriScheme uri
             mViewConst =
-                find (\(_vc, ps, _) -> isJust $ find (== protocol) ps) viewers
+               find (\(ViewSpec _ ps _) -> isJust $
+                    find (== protocol) ps) viewers
 
         in  case mViewConst of
-                Just (vc, _, _) -> do
+                Just (ViewSpec vc _ _) -> do
                     view <- createView vc
 
                     _status <- load view uri

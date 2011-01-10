@@ -26,13 +26,8 @@ import LambdaCat.Internal.Class
 
 -- | Create a view.
 --
--- Its type is specified by the first parameter. This should be a view of the
--- same type or one of the constants exported in the corresponding
--- @LambdaCat.View.*@ modules.
-createView :: View -> IO View
-createView (View v) = return . View =<< createView_ v
-
--- | Helper function that assures the view of the correct type is created.
-createView_ :: (ViewClass view) => view -> IO view
-createView_ _ = new
-
+-- Its type its specified by the configuration supplied.
+createView :: ViewClass view => ViewConf view -> IO View
+createView conf = do
+    view <- new conf
+    return $ View view

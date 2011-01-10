@@ -1,6 +1,7 @@
 {-# LANGUAGE FlexibleContexts
            , FlexibleInstances
            , MultiParamTypeClasses
+           , TypeFamilies
   #-}
 
 -- |
@@ -17,10 +18,7 @@ module LambdaCat.View.Web
     (
       -- * The View
       WebView
-    , webView
-
-      -- * Module exports
-    , module LambdaCat.View
+    , webViewConf
     )
 where
 
@@ -48,18 +46,19 @@ import LambdaCat.UI
 import LambdaCat.Utils
 import LambdaCat.View
 
+-- |  Default WebView configuration.
+webViewConf :: ViewConf WebView
+webViewConf = WebViewConf
+
 -- | Data type representing the view. Do not confuse this with WebKit's
 -- WebView!
 newtype WebView = WebView
     { webViewWidget :: WV.WebView  -- ^ The widget for the view.
     }
 
--- | Type specification constant for use with 'createView'.
-webView :: View
-webView = View (WebView undefined)
-
 instance ViewClass WebView where
-    new = do
+    data ViewConf WebView = WebViewConf
+    new _ = do
         widget <- WV.webViewNew
         return WebView { webViewWidget = widget }
 

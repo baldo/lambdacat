@@ -1,6 +1,7 @@
 {-# LANGUAGE ExistentialQuantification
            , FunctionalDependencies
            , MultiParamTypeClasses
+           , TypeFamilies
   #-}
 
 -- |
@@ -77,8 +78,11 @@ class UIClass ui meta | ui -> meta where
 
 -- | Class of viewers, that can render and handle content behind an 'URI'.
 class ViewClass view where
+    -- | Configuration datatype.
+    data ViewConf view :: *
+
     -- | Creates a new view.
-    new :: IO view
+    new :: ViewConf view -> IO view
 
     -- | Ask the view to embed its widget by calling the given function.
     -- Also give the callback function to the widget.
@@ -116,7 +120,8 @@ class SupplierClass supplier where
 data View = forall view . ViewClass view => View view
 
 instance ViewClass View where
-    new = return (error "Can't create existential quantificated datatype")
+    data ViewConf View
+    new _ = return (error "Can't create existential quantificated datatype")
 
     embed              (View view) = embed view
     destroy            (View view) = destroy view

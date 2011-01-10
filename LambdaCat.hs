@@ -38,8 +38,6 @@ import LambdaCat.Supplier.Web
 import LambdaCat.UI.Glade as UI
 import LambdaCat.Utils
 import LambdaCat.View.Web
-    ( webView
-    )
 
 -- | Lambdacat's default configuration.
 defaultConfig :: LambdaCatConf
@@ -52,14 +50,14 @@ defaultConfig = LambdaCatConf
                               ]
                             )
                           ]
-    , viewList          = [ ( webView
-                            , [ "about:"
-                              , "http:"
-                              , "https:"
-                              , "file:"
-                              ]
-                            , []
-                            )
+    , viewList          = [ ViewSpec
+                                webViewConf
+                                [ "about:"
+                                , "http:"
+                                , "https:"
+                                , "file:"
+                                ]
+                                []
                           ]
     , homeURI           = "http://www.haskell.org"
     , defaultURI        = "about:blank"

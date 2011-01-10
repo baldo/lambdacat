@@ -1,3 +1,4 @@
+{-# LANGUAGE ExistentialQuantification #-}
 -- |
 -- Module      : LambdaCat.Configure
 -- Copyright   : Andreas Baldeau, Daniel Ehlers
@@ -14,6 +15,7 @@ module LambdaCat.Configure
     (
       -- * The configuration data structure
       LambdaCatConf (..)
+    , ViewSpec (..)
     , Protocol
 
       -- * Global access
@@ -27,9 +29,13 @@ import Network.URI
 import System.IO.Unsafe
 
 import LambdaCat.Internal.Class
-    ( View (..)
+    ( ViewClass (..)
     , Supplier (..)
     )
+
+-- | Encapsulate specification of a view.
+data ViewSpec = forall view . ViewClass view
+              => ViewSpec (ViewConf view) [Protocol] [String]
 
 -- | Lambdacat's configuration datatype.
 data LambdaCatConf = LambdaCatConf
@@ -37,7 +43,7 @@ data LambdaCatConf = LambdaCatConf
         :: [(Supplier, [Protocol])]        -- ^ Suppliers with supported
                                            -- protocols.
     , viewList
-        :: [(View, [Protocol], [String])]  -- ^ Views with supported
+        :: [ViewSpec]  -- ^ Views with supported
                                            -- protocols.
     , homeURI
         :: URI                             -- ^ URI of the home page.
@@ -71,4 +77,3 @@ lambdaCatConf = unsafePerformIO $ readIORef cfgIORef
 -- function and is only for internal use.
 setLCC :: LambdaCatConf -> IO ()
 setLCC = writeIORef cfgIORef
-
