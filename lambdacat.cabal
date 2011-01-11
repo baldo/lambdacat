@@ -78,6 +78,6 @@ Library
         MultiParamTypeClasses
         OverloadedStrings
         RankNTypes
-        TypeSynonymInstances
         TypeFamilies
+        TypeSynonymInstances
 
