@@ -79,4 +79,5 @@ Library
         OverloadedStrings
         RankNTypes
         TypeSynonymInstances
+        TypeFamilies
 
