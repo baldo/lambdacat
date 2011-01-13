@@ -104,7 +104,7 @@ mainCat e cfg = do
                    then [homeURI cfg]
                    else uria
 
-    ui <- UI.init :: IO GladeUI
+    ui <- UI.init UI.gladeUIConf
     mapM_ (supplyForView (UI.update ui undefined) embedView) us
 
     mainLoop ui

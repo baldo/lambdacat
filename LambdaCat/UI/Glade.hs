@@ -3,6 +3,7 @@
            , OverloadedStrings
            , RankNTypes
            , TypeSynonymInstances
+           , TypeFamilies
   #-}
 
 -- |
@@ -19,6 +20,7 @@ module LambdaCat.UI.Glade
     (
       -- * The UI type
       GladeUI
+    , gladeUIConf 
 
       -- * Module exports
     , module LambdaCat.UI
@@ -66,8 +68,14 @@ data TabMeta = TabMeta
     , tabMetaContainer :: Container  -- ^ The container that holds the view.
     }
 
+gladeUIConf :: UIConf GladeUI
+gladeUIConf = GladeConf 
+
 instance UIClass GladeUI TabMeta where
-    init = do
+
+    data UIConf GladeUI = GladeConf
+
+    init _ = do
         _ <- initGUI
 
         spath    <- getDataFileName "lambdacat.gtkrc"

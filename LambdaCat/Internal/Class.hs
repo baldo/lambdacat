@@ -42,8 +42,11 @@ type Callback ui meta = ui -> meta -> IO ()
 
 -- | Class of user interfaces for lambdacat.
 class UIClass ui meta | ui -> meta where
+    -- | Configuration datatype.
+    data UIConf ui :: *
+
     -- | Initializes the UI and returns an UI handle.
-    init :: IO ui
+    init :: UIConf ui -> IO ui
 
     -- | The main loop for the UI.
     mainLoop :: ui -> IO ()
