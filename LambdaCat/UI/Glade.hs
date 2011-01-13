@@ -20,7 +20,7 @@ module LambdaCat.UI.Glade
     (
       -- * The UI type
       GladeUI
-    , gladeUIConf 
+    , gladeUIConf
 
       -- * Module exports
     , module LambdaCat.UI
@@ -68,12 +68,12 @@ data TabMeta = TabMeta
     , tabMetaContainer :: Container  -- ^ The container that holds the view.
     }
 
-gladeUIConf :: UIConf GladeUI
-gladeUIConf = GladeConf 
+gladeUIConf :: UIConf GladeUI TabMeta
+gladeUIConf = GladeConf
 
 instance UIClass GladeUI TabMeta where
 
-    data UIConf GladeUI = GladeConf
+    data UIConf GladeUI TabMeta = GladeConf
 
     init _ = do
         _ <- initGUI

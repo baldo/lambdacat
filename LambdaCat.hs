@@ -62,6 +62,7 @@ defaultConfig = LambdaCatConf
     , homeURI           = "http://www.haskell.org"
     , defaultURI        = "about:blank"
     , defaultTitle      = "(Untitled)"
+    , uiConfiguration   = UISpec gladeUIConf
     }
 
 -- | The URI modifier used in the default configuration. It tries to add a
@@ -103,18 +104,18 @@ mainCat e cfg = do
         us   = if null uria
                    then [homeURI cfg]
                    else uria
-
-    ui <- UI.init UI.gladeUIConf
-    mapM_ (supplyForView (UI.update ui undefined) embedView) us
-
-    mainLoop ui
+    case (uiConfiguration lambdaCatConf) of
+        UISpec uiconf -> do
+            ui <- UI.init uiconf
+            mapM_ (supplyForView (UI.update ui undefined) embedView) us
+            mainLoop ui
 
 -- | Lambdacat's main function. It processes commandline parameters, handles
 -- recompilation of the user configuration and calls the real main function.
 -- Use this as the main function in your user configuration file.
 lambdacat
-    :: LambdaCatConf -- ^ Configuration to use. Just start with
-                     -- 'defaultConfig' and overwrite fields as you wish.
+    :: LambdaCatConf  -- ^ Configuration to use. Just start with
+                      -- 'defaultConfig' and overwrite fields as you wish.
     -> IO ()
 lambdacat cfg = do
     args <- getCmdArgs

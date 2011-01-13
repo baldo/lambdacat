@@ -17,6 +17,7 @@ module LambdaCat.Configure
       LambdaCatConf (..)
     , ViewSpec (..)
     , SupplierSpec (..)
+    , UISpec (..)
     , Protocol
 
       -- * Global access
@@ -32,6 +33,7 @@ import System.IO.Unsafe
 import LambdaCat.Internal.Class
     ( ViewClass (..)
     , SupplierClass (..)
+    , UIClass (..)
     )
 
 -- | Encapsulate specification of a view.
@@ -41,6 +43,10 @@ data ViewSpec = forall view . ViewClass view
 -- | Encapsulate specifiaction of a supplier.
 data SupplierSpec = forall supplier . SupplierClass supplier
                   => SupplierSpec supplier [Protocol]
+
+-- | Encapsulate specifiaction of a ui.
+data UISpec = forall ui meta . UIClass ui meta
+            => UISpec (UIConf ui meta)
 
 -- | Lambdacat's configuration datatype.
 data LambdaCatConf = LambdaCatConf
@@ -62,6 +68,9 @@ data LambdaCatConf = LambdaCatConf
     , defaultTitle
         :: String                          -- ^ Default title for views that
                                            -- don't (yet) have a title.
+    , uiConfiguration
+        :: UISpec                          -- ^ Configuration of ui which
+                                           -- should be launched at startup.
     }
 
 -- | Type for protocols. A protocol is a uri schema of the form "<name>:"
