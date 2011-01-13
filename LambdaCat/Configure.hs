@@ -70,7 +70,7 @@ type Protocol = String
 -- | This IORef holds the global configuration. It can be accessed through
 -- 'lambdaCatConf'.
 cfgIORef :: IORef LambdaCatConf
-cfgIORef = unsafePerformIO $ newIORef (undefined :: LambdaCatConf)
+cfgIORef = unsafePerformIO $ newIORef (error "Configuration is not set!")
 
 -- | Global value that provides access to the global configuration.
 lambdaCatConf :: LambdaCatConf
