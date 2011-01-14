@@ -95,19 +95,19 @@ instance ViewClass WebView where
                 return True
 
         _ <- widget `on` WV.titleChanged  $ \_wf _title ->
-            callback (changedTitle $ View wV)
+            callback (updateView (View wV) TitleChanged)
 
         _ <- widget `on` WV.loadStarted   $ \_wf ->
-            callback (changedURI $ View wV)
+            callback (updateView (View wV) URIChanged)
 
         _ <- widget `on` WV.loadCommitted $ \_wf ->
-            callback (changedURI $ View wV)
+            callback (updateView (View wV) URIChanged)
 
         _ <- widget `on` WV.loadFinished  $ \_wf ->
-            callback (changedURI $ View wV)
+            callback (updateView (View wV) URIChanged)
 
         _ <- widget `on` WV.progressChanged $ \progress ->
-            callback (changedProgress progress)
+            callback (updateView (View wV) (ProgressChanged progress))
 
         -- Embed widget
         embedder $ castToWidget widget

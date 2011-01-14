@@ -47,6 +47,7 @@ import LambdaCat.Supplier
 import LambdaCat.UI
 import LambdaCat.UI.Glade.PersistentTabId
 import LambdaCat.Utils
+import LambdaCat.View
 import Paths_lambdacat
 
 -- | Datatype storing all the relevant information about the UI.
@@ -117,7 +118,7 @@ instance UIClass GladeUI TabMeta where
 
             updateAddressBar ui uri
             updateProgress ui progress
-            changedTitle view ui meta
+            updateView view TitleChanged ui meta
 
         -- Toolbar / Events --------------------------------------------------
 
@@ -222,62 +223,41 @@ instance UIClass GladeUI TabMeta where
         -- start GTK mainloop
         mainGUI
 
-    changedURI view ui meta = do
-        let ident     = tabMetaIdent meta  -- TODO: Check this.
-            thisTabId = tabMetaIdent meta
-
-        uri <- getCurrentURI view
-
-        doit <- withCurrentTab ui $ \_ tabid session ->
-                    return (session, tabid == thisTabId)
-        when doit $ updateAddressBar ui uri
-
-        updateMSession (gladeSession ui) $ \session ->
-            return ( updateTab session ident $ \tab ->
-                     let history = tabHistory tab
-                     in  Just $ tab { tabHistory = updateCurrent uri history }
-                   , ()
-                   )  -- TODO: Cleanup
-
-        return ()
-
-    changedTitle view ui meta = do
-        let label  = tabMetaLabel meta
-            window = gladeWindow ui
-
-        title <- getCurrentTitle view
-
-        set label [ labelLabel := if null title
-                                      then defaultTitle lambdaCatConf
-                                      else title
-                  ]
-        set window [ windowTitle := title ]
-
-        return ()
-
-    changedProgress progress ui meta = do
-        let thisTabId = tabMetaIdent meta
-
-        doit <- withCurrentTab ui $ \_ tabid session ->
-            return (session, tabid == thisTabId)
-        when doit $ updateProgress ui progress
-
-    changedStatus status ui meta = do
-        let sb        = gladeStatBar ui
-            thisTabId = tabMetaIdent meta
-
-        doit <- withCurrentTab ui $ \_ tabid session ->
-            return (session, tabid == thisTabId)
-        when doit $ do
-            cntx <- statusbarGetContextId sb "status"
-
-            case status of
-                "" ->
-                    statusbarPop sb cntx
-                stat -> do
-                    statusbarPop sb cntx
-                    _ <- statusbarPush sb cntx stat
-                    return ()
+    updateView view event ui meta = do
+        let viewTabId = tabMetaIdent meta
+        isCurrentTab <- withCurrentTab ui $ \_ tabid session ->
+            return (session, tabid == viewTabId)
+        case event of
+            URIChanged -> when isCurrentTab $ do
+                uri <- getCurrentURI view
+                updateAddressBar ui uri
+                updateMSession (gladeSession ui) $ \session ->
+                    let session' = updateTab session viewTabId $ \tab ->
+                         let history  = tabHistory tab
+                             history' = updateCurrent uri history
+                         in  Just $ tab { tabHistory = history' }
+                    in  return (session' , ())
+            TitleChanged -> do
+                let label  = tabMetaLabel meta
+                    window = gladeWindow ui
+                title <- getCurrentTitle view
+                let newtitle = if null title
+                                   then defaultTitle lambdaCatConf
+                                   else title
+                set label [ labelLabel := newtitle ]
+                set window [ windowTitle := newtitle ]
+                return ()
+            ProgressChanged progress -> when isCurrentTab $ do
+                updateProgress ui progress
+            StatusChanged status -> when isCurrentTab $ do
+                let sb        = gladeStatBar ui
+                cntx <- statusbarGetContextId sb "status"
+                case status of
+                    ""   -> statusbarPop sb cntx
+                    stat -> do
+                        statusbarPop sb cntx
+                        _ <- statusbarPush sb cntx stat
+                        return ()
 
     replaceView view ui meta = do
         replaceViewLocal view (tabMetaContainer meta) ui meta

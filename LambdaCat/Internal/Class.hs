@@ -28,6 +28,9 @@ module LambdaCat.Internal.Class
       -- * The @Callback@ type
     , Callback
 
+      -- * Event reporting
+    , ViewEvent (..)
+
       -- * Wrapper types for the type classes
     , View (..)
     )
@@ -39,6 +42,12 @@ import Graphics.UI.Gtk.Abstract.Widget
 
 -- | Datatype for callback functions.
 type Callback ui meta = ui -> meta -> IO ()
+
+-- | Datatype for reporting view events to the ui
+data ViewEvent = URIChanged
+               | TitleChanged
+               | ProgressChanged Int
+               | StatusChanged String
 
 -- | Class of user interfaces for lambdacat.
 class UIClass ui meta | ui -> meta where
@@ -66,17 +75,8 @@ class UIClass ui meta | ui -> meta where
     -- by the first argument.
     replaceView     :: View -> Callback ui meta
 
-    -- | Inform the @ui@ that the view has changed its URI.
-    changedURI      :: View -> Callback ui meta
-
-    -- | Inform the @ui@ that @view@ has updated its title.
-    changedTitle    :: View -> Callback ui meta
-
-    -- | Inform the @ui@ that @view@ has changed its progress state.
-    changedProgress :: Int -> Callback ui meta
-
-    -- | Inform the @ui@ that @view@ has changes its status.
-    changedStatus   :: String -> Callback ui meta
+    -- | Inform the @ui@ that an event has happen in a 'View'
+    updateView      :: View -> ViewEvent -> Callback ui meta
 
 -- | Class of viewers, that can render and handle content behind an 'URI'.
 class ViewClass view where

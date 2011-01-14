@@ -19,6 +19,9 @@ module LambdaCat.View
 
       -- * Callback type
     , Callback
+
+      -- * Wrapper types for the type classes
+    , ViewEvent (..)
     )
 where
 
