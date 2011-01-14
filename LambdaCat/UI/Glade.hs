@@ -68,6 +68,7 @@ data TabMeta = TabMeta
     , tabMetaContainer :: Container  -- ^ The container that holds the view.
     }
 
+-- | Default 'GladeUI' configuration.
 gladeUIConf :: UIConf GladeUI TabMeta
 gladeUIConf = GladeConf
 
