@@ -114,9 +114,20 @@ class ViewClass view where
 -- | Class of suppliers, which retrieve content and select appropiate viewers.
 class SupplierClass conf where
     -- | Ask the supplier for an appropriated view for the URI.
+    -- This function is optional, the default always return Nothing.
     supplyView :: conf -> URI -> IO (Maybe View)
+    supplyView _ _ = return Nothing
 
     -- supplyContent :: TODO
+
+    -- | Ask the supplier to handle a download of the given uri. If the
+    -- supplier decides to handle this download he must return True, otherwise
+    -- False. This function is optional, the default implementation
+    -- always returns False.
+    -- TODO Add callback function as parameter and define a transfer manager
+    -- class.
+    supplyDownload :: conf -> URI -> IO Bool
+    supplyDownload _ _ = return False
 
 -- | Encapsulates any instance of ViewClass.
 data View = forall view . ViewClass view => View view
