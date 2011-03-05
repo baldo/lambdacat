@@ -1,2 +1,6 @@
 *.swp
 /dist
+.hsproject
+.project
+.checkstyle
+/.dist-scion
