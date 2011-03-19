@@ -35,7 +35,7 @@ import LambdaCat.Configure
 import LambdaCat.Supplier
 import LambdaCat.Supplier.Web
 import LambdaCat.UI.Vim as UI
-import LambdaCat.Utils
+import LambdaCat.Utils.URI
 import LambdaCat.View.Web
 
 -- | Lambdacat's default configuration.
