@@ -73,7 +73,8 @@ data LambdaCatConf = LambdaCatConf
                                            -- should be launched at startup.
     }
 
--- | Type for protocols. A protocol is a uri schema of the form "<name>:"
+-- | Type for protocols. A protocol is a uri schema of the form
+-- @\"protocol:\"@
 type Protocol = String
 
 -- | This IORef holds the global configuration. It can be accessed through
