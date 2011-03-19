@@ -16,14 +16,14 @@
 -- This module is a first proof of concept for an Vim like UI.
 
 module LambdaCat.UI.Vim
-  (
-    -- * Datatype
-    VimUI
-  , vimUIConf
+    (
+      -- * Datatype
+      VimUI
+    , vimUIConf
 
-    -- * Module exports
-  , module LambdaCat.UI
-  )
+      -- * Module exports
+    , module LambdaCat.UI
+    )
 where
 
 import Control.Concurrent.MVar
@@ -31,16 +31,8 @@ import Control.Monad.Trans
 import Network.URI
 
 import Graphics.UI.Gtk
--- import Graphics.UI.Gtk.WebKit.WebView
---    ( WebView
---    )
 import Graphics.UI.Gtk.WebKit.WebView as WebView
 
--- import LambdaCat.Configure
---     ( LambdaCatConf (..)
---     , lambdaCatConf
---     )
--- import LambdaCat.History
 import LambdaCat.Session
 import LambdaCat.Supplier
 import LambdaCat.UI
@@ -123,16 +115,16 @@ instance UIClass VimUI TabMeta where
         tabs    <- newMVar []
         session <- newMSession
 
-        let ui = VimUI { vimWindow    = window
-                      , vimMode       = mode
-                      , vimVBox       = vbox
-                      , vimTabHolder  = castToContainer tabHolder
-                      , vimTabs       = tabs
-                      , vimTabCurrent = current
-                      , vimSession    = session
-                      , vimStatus     = status
-                      , vimControl    = control
-                      }
+        let ui = VimUI { vimWindow     = window
+                       , vimMode       = mode
+                       , vimVBox       = vbox
+                       , vimTabHolder  = castToContainer tabHolder
+                       , vimTabs       = tabs
+                       , vimTabCurrent = current
+                       , vimSession    = session
+                       , vimStatus     = status
+                       , vimControl    = control
+                       }
 
         -- simple keyboard handling
         _ <- window `on` keyPressEvent $ tryEvent $ do
