@@ -3,7 +3,7 @@
   #-}
 
 -- |
--- Module      : LambdaCat.Utils
+-- Module      : LambdaCat.Utils.URI
 -- Copyright   : Andreas Baldeau, Daniel Ehlers
 -- License     : BSD3
 -- Maintainer  : Andreas Baldeau <andreas@baldeau.net>,
@@ -11,12 +11,17 @@
 -- Stability   : Alpha
 --
 -- This module provides a bunch of functions and instances that are pretty
--- usefull.
+-- usefull when working with 'URI's.
 
-module LambdaCat.Utils
+module LambdaCat.Utils.URI
     (
-      -- * URI
-      stringToURI
+      -- * The URI type
+      URI (..)
+    , nullURI
+
+      -- * Conversion
+    , IsString
+    , stringToURI
     , showURI
     )
 where

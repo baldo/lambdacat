@@ -23,7 +23,6 @@ module LambdaCat.View.Web
 where
 
 import Data.Maybe
-import Network.URI
 -- import System.Directory
 -- import System.FilePath
 
@@ -43,7 +42,7 @@ import qualified Graphics.UI.Gtk.WebKit.WebView as WV
 import LambdaCat.Configure
 import LambdaCat.Supplier
 import LambdaCat.UI
-import LambdaCat.Utils
+import LambdaCat.Utils.URI
 import LambdaCat.View
 
 -- |  Default WebView configuration.
