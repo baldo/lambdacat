@@ -18,6 +18,7 @@ module LambdaCat.UI.Vim
   (
     -- * Datatype
     VimUI
+  , vimUIConf
 
     -- * Module exports
   , module LambdaCat.UI
@@ -65,12 +66,19 @@ data TabMeta = TabMeta
     , tabMetaContainer :: Container
     -}
 
+-- | Default 'VimUI' configuration.
+vimUIConf :: UIConf VimUI TabMeta
+vimUIConf = VimConf
+
 -- | Modes of operation.
 data Mode = Command
           | Insert
   deriving Show
 
 instance UIClass VimUI TabMeta where
+
+    data UIConf VimUI TabMeta = VimConf
+
     init _uiConf = do
         _ <- initGUI
 
