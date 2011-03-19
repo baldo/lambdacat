@@ -46,7 +46,7 @@ import LambdaCat.Session
 import LambdaCat.Supplier
 import LambdaCat.UI
 import LambdaCat.UI.Glade.PersistentTabId
-import LambdaCat.Utils
+import LambdaCat.Utils.URI
 import Paths_lambdacat
 
 -- | Datatype storing all the relevant information about the UI.

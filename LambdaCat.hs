@@ -24,7 +24,6 @@ module LambdaCat
     )
 where
 
-import Network.URI
 import System.Exit
 import System.IO
 
