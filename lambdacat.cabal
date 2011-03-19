@@ -61,7 +61,6 @@ Library
         LambdaCat.History
         LambdaCat.UI
         LambdaCat.UI.Glade
-        -- LambdaCat.UI.Vim
 
     Other-Modules:
         Paths_lambdacat
