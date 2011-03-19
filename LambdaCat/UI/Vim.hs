@@ -1,6 +1,7 @@
 {-# LANGUAGE FlexibleInstances
            , MultiParamTypeClasses
            , RankNTypes
+           , TypeFamilies
            , TypeSynonymInstances
   #-}
 
