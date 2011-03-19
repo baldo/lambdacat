@@ -5,7 +5,7 @@
   #-}
 
 -- |
--- Module      : LambdaCat.View.Web
+-- Module      : LambdaCat.View.Vim
 -- Copyright   : Andreas Baldeau, Daniel Ehlers
 -- License     : BSD3
 -- Maintainer  : Andreas Baldeau <andreas@baldeau.net>,
@@ -71,7 +71,7 @@ data Mode = Command
   deriving Show
 
 instance UIClass VimUI TabMeta where
-    init = do
+    init _uiConf = do
         _ <- initGUI
 
         window <- windowNew
@@ -172,15 +172,15 @@ instance UIClass VimUI TabMeta where
         putMVar currentM view
         embed view (embedHandle tabHold) (update ui meta)
 
-    changedURI view ui _meta = do
+    updateView view URIChanged ui _meta = do
         uri <- getCurrentURI view
         renderStatus ui uri
-
-    changedTitle _view _ui _meta = return ()
-
-    changedProgress _percent _ui _meta = return ()
-
-    changedStatus _status _ui _meta = return ()
+    updateView _view TitleChanged _ui _meta =
+        return ()
+    updateView _view (ProgressChanged _percent) _ui _meta =
+        return ()
+    updateView _view (StatusChanged _status) _ui _meta =
+        return ()
 
 renderStatus :: VimUI -> URI -> IO ()
 renderStatus ui uri = do
