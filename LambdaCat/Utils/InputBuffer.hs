@@ -15,8 +15,8 @@ module LambdaCat.Utils.InputBuffer
 
     , empty
 
-    , before
-    , after
+    , beforeCursor
+    , afterCursor
 
       -- * Conversion
     , fromString
@@ -35,7 +35,7 @@ module LambdaCat.Utils.InputBuffer
 
       -- * Deletion
     , delete
-    , backspace
+    , backSpace
 
       -- * Completion
     , complete
@@ -50,18 +50,18 @@ data InputBuffer = InputBuffer
 
 instance Show InputBuffer where
     showsPrec _ buffer = showChar '<'
-                       . shows (before buffer)
+                       . shows (beforeCursor buffer)
                        . showChar '|'
-                       . shows (after buffer)
+                       . shows (afterCursor buffer)
                        . showChar '>'
 
 -- | Gives the String before the cursor.
-before :: InputBuffer -> String
-before = reverse . _before
+beforeCursor :: InputBuffer -> String
+beforeCursor = reverse . _before
 
 -- | Gives the String after the cursor.
-after :: InputBuffer -> String
-after = _after
+afterCursor :: InputBuffer -> String
+afterCursor = _after
 
 -- | Creates an empty InputBuffer.
 empty :: InputBuffer
@@ -145,10 +145,10 @@ delete buffer@InputBuffer { _after = _ : as } =
 
 -- | Deletes the Char before the cursor if possible. Otherwise the
 -- InputBuffer stays unchanged.
-backspace :: InputBuffer -> InputBuffer
-backspace buffer@InputBuffer { _before = "" } =
+backSpace :: InputBuffer -> InputBuffer
+backSpace buffer@InputBuffer { _before = "" } =
     buffer
-backspace buffer@InputBuffer { _before = _ : bs } =
+backSpace buffer@InputBuffer { _before = _ : bs } =
     buffer
         { _before = bs
         }
