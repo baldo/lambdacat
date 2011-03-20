@@ -5,6 +5,8 @@
            , TypeSynonymInstances
   #-}
 
+{-# OPTIONS_GHC -fno-warn-overlapping-patterns #-}
+
 -- |
 -- Module      : LambdaCat.View.Vim
 -- Copyright   : Andreas Baldeau, Daniel Ehlers
@@ -27,7 +29,7 @@ module LambdaCat.UI.Vim
 where
 
 import Control.Concurrent.MVar
-import Control.Monad.Trans
+import Control.Monad.Reader
 import Network.URI
 
 import Graphics.UI.Gtk
@@ -37,6 +39,7 @@ import LambdaCat.Session
 import LambdaCat.Supplier
 import LambdaCat.UI
 import LambdaCat.UI.Glade.PersistentTabId
+import LambdaCat.Utils.InputBuffer
 
 -- | The VimUI datatype.
 data VimUI = VimUI
@@ -64,8 +67,9 @@ vimUIConf :: UIConf VimUI TabMeta
 vimUIConf = VimConf
 
 -- | Modes of operation.
-data Mode = Command
+data Mode = Command InputBuffer
           | Insert
+          | Normal
   deriving Show
 
 instance UIClass VimUI TabMeta where
@@ -81,7 +85,7 @@ instance UIClass VimUI TabMeta where
 
         containerAdd window vbox
 
-        mode <- newMVar Command
+        mode <- newMVar Normal
 
         -- window settings
         _ <- onDestroy window mainQuit
@@ -89,19 +93,10 @@ instance UIClass VimUI TabMeta where
 
         -- status bar
         status <- webViewNew
-        webViewLoadHtmlString status
-             ( "<body style=\"color:white;font-weight:bold;font-size:13px;"
-            ++ "background:black;margin:0;padding:0\">"
-            ++ "http://www.ccc.de</body>"
-             ) ""
         widgetSetSizeRequest status (-1) 15
 
         -- control / input area
         control <- webViewNew
-        webViewLoadHtmlString control
-             ( "<body style=\"color:black;font-weight:bold;font-size:13px;"
-            ++ "background:white;margin:0;padding:0\"></body>"
-             ) ""
         widgetSetSizeRequest control (-1) 15
 
         -- glue the stuff together
@@ -126,33 +121,21 @@ instance UIClass VimUI TabMeta where
                        , vimControl    = control
                        }
 
+        -- initial rendering
+        renderStatus ui nullURI
+        renderControl ui
+
         -- simple keyboard handling
         _ <- window `on` keyPressEvent $ tryEvent $ do
-            _keyval <- eventKeyVal
-            kn      <- eventKeyName
-            liftIO $ putStrLn kn
-            m <- liftIO $ takeMVar mode
-            case m of
-                Command ->
-                    case kn of
-                        "i" ->
-                            liftIO $ do
-                                putMVar mode Insert
-                                renderControl ui
-
-                        _ ->
-                            liftIO $ putMVar mode m
-
-                Insert ->
-                    case kn of
-                        "Escape" ->
-                            liftIO $ do
-                                putMVar mode Command
-                                renderControl ui
-
-                        _ -> do
-                            liftIO $ putMVar mode m
-                            stopEvent
+            kv <- eventKeyVal
+            let kn  = keyName kv
+            let mkc = keyToChar kv
+            liftIO $ do
+                putStrLn $ kn ++ " -> " ++ show mkc
+                m <- takeMVar mode
+                m' <- handleKeyPress m $ maybe kn (:[]) mkc
+                putMVar mode m'
+                renderControl ui
 
         return ui
 
@@ -183,6 +166,38 @@ instance UIClass VimUI TabMeta where
     updateView _view (StatusChanged _status) _ui _meta =
         return ()
 
+handleKeyPress :: Mode -> String -> IO Mode
+handleKeyPress (Command _buffer) "Escape" =
+    return Normal
+
+handleKeyPress (Command buffer)  "Left" =
+    return $ Command $ left buffer
+handleKeyPress (Command buffer) "Right" =
+    return $ Command $ right buffer
+handleKeyPress (Command buffer) "Home" =
+    return $ Command $ home buffer
+handleKeyPress (Command buffer) "End" =
+    return $ Command $ end buffer
+
+handleKeyPress (Command buffer) "Delete" =
+    return $ Command $ delete buffer
+handleKeyPress (Command buffer) "BackSpace" =
+    return $ Command $ backSpace buffer
+
+handleKeyPress (Command buffer) [c] =
+    return $ Command $ insert c buffer
+
+handleKeyPress Insert "Escape" =
+    return Normal
+
+handleKeyPress Normal ":" =
+    return $ Command empty
+handleKeyPress Normal "i" =
+    return Insert
+
+handleKeyPress m _kn =
+    return m
+
 renderStatus :: VimUI -> URI -> IO ()
 renderStatus ui uri = do
     let status = vimStatus ui
@@ -198,8 +213,22 @@ renderControl ui = do
     m <- readMVar $ vimMode ui
 
     state <- case m of
-                 Command ->
+                 Normal ->
                      return ""
+
+                 Command buffer -> do
+                     let (cursor, ac) =
+                             case afterCursor buffer of
+                                 ""     -> ("&nbsp;", "")
+                                 c : cs -> ([c], cs)
+                     return
+                         ( ':' : beforeCursor buffer
+                        ++ "<span style=\"color:white;"
+                        ++ "background-color:black\">"
+                        ++ cursor
+                        ++ "</span>"
+                        ++ ac
+                         )
 
                  Insert ->
                      return " -- INSERT -- "
