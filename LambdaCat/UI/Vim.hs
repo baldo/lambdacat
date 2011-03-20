@@ -171,7 +171,7 @@ handleKeyPress (Command _buffer) "Escape" =
     return Normal
 
 handleKeyPress (Command buffer) "Return" = do
-    putStrLn $ toString buffer
+    eval $ toString buffer
     return Normal
 
 handleKeyPress (Command buffer)  "Left" =
@@ -263,4 +263,16 @@ embedHandle container widget = do
     mapM_ (containerRemove container) cs
     containerAdd container widget
     widgetShowAll container
+
+eval :: String -> IO ()
+eval cmd =
+    case words cmd of
+        "q" : _ ->
+            mainQuit
+        "quit" : _ ->
+            mainQuit
+
+        _ -> do
+            putStrLn $ "Unknown command: " ++ show cmd
+            return ()
 
