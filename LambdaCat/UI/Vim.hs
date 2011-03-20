@@ -170,6 +170,10 @@ handleKeyPress :: Mode -> String -> IO Mode
 handleKeyPress (Command _buffer) "Escape" =
     return Normal
 
+handleKeyPress (Command buffer) "Return" = do
+    putStrLn $ toString buffer
+    return Normal
+
 handleKeyPress (Command buffer)  "Left" =
     return $ Command $ left buffer
 handleKeyPress (Command buffer) "Right" =
@@ -217,17 +221,16 @@ renderControl ui = do
                      return ""
 
                  Command buffer -> do
-                     let (cursor, ac) =
+                     let (onCrsr, aftrCrsr) =
                              case afterCursor buffer of
-                                 ""     -> ("&nbsp;", "")
-                                 c : cs -> ([c], cs)
+                                 "" ->
+                                     ("&nbsp;", "")
+                                 c : cs ->
+                                     (htmlEncode c, cs)
                      return
-                         ( ':' : beforeCursor buffer
-                        ++ "<span style=\"color:white;"
-                        ++ "background-color:black\">"
-                        ++ cursor
-                        ++ "</span>"
-                        ++ ac
+                         ( ':' : htmlEncodeString (beforeCursor buffer)
+                        ++ renderCursor onCrsr
+                        ++ htmlEncodeString aftrCrsr
                          )
 
                  Insert ->
@@ -235,8 +238,23 @@ renderControl ui = do
 
     webViewLoadHtmlString status
         ( "<body style=\"color:black;font-size:13px;background:white;"
-       ++ "margin:0;padding:0\">" ++ state ++ "</body>"
+       ++ "font-family:monospace;margin:0;padding:0\">"
+       ++ state
+       ++ "</body>"
         ) ""
+
+htmlEncodeString :: String -> String
+htmlEncodeString = concatMap htmlEncode
+
+htmlEncode :: Char -> String
+htmlEncode ' ' = "&nbsp;"
+htmlEncode '&' = "&amp;"
+htmlEncode '<' = "&lt;"
+htmlEncode c   = [c]
+
+renderCursor :: String -> String
+renderCursor str =
+    "<span style=\"color:white;background-color:black\">" ++ str ++ "</span>"
 
 embedHandle :: (ContainerClass container, WidgetClass widget)
             => container -> widget -> IO ()
