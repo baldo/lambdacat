@@ -40,6 +40,7 @@ import LambdaCat.Supplier
 import LambdaCat.UI
 import LambdaCat.UI.Glade.PersistentTabId
 import LambdaCat.Utils.InputBuffer
+import LambdaCat.Utils.URI
 
 -- | The VimUI datatype.
 data VimUI = VimUI
@@ -133,7 +134,7 @@ instance UIClass VimUI TabMeta where
             liftIO $ do
                 putStrLn $ kn ++ " -> " ++ show mkc
                 m <- takeMVar mode
-                m' <- handleKeyPress m $ maybe kn (:[]) mkc
+                m' <- handleKeyPress m (maybe kn (:[]) mkc) ui
                 putMVar mode m'
                 renderControl ui
 
@@ -166,40 +167,40 @@ instance UIClass VimUI TabMeta where
     updateView _view (StatusChanged _status) _ui _meta =
         return ()
 
-handleKeyPress :: Mode -> String -> IO Mode
-handleKeyPress (Command _buffer) "Escape" =
+handleKeyPress :: Mode -> String -> VimUI -> IO Mode
+handleKeyPress (Command _buffer) "Escape" = \_ ->
     return Normal
 
-handleKeyPress (Command buffer) "Return" = do
-    eval $ toString buffer
+handleKeyPress (Command buffer) "Return" = \ui -> do
+    eval ui $ toString buffer
     return Normal
 
-handleKeyPress (Command buffer)  "Left" =
+handleKeyPress (Command buffer)  "Left" = \_ ->
     return $ Command $ left buffer
-handleKeyPress (Command buffer) "Right" =
+handleKeyPress (Command buffer) "Right" = \_ ->
     return $ Command $ right buffer
-handleKeyPress (Command buffer) "Home" =
+handleKeyPress (Command buffer) "Home" = \_ ->
     return $ Command $ home buffer
-handleKeyPress (Command buffer) "End" =
+handleKeyPress (Command buffer) "End" = \_ ->
     return $ Command $ end buffer
 
-handleKeyPress (Command buffer) "Delete" =
+handleKeyPress (Command buffer) "Delete" = \_ ->
     return $ Command $ delete buffer
-handleKeyPress (Command buffer) "BackSpace" =
+handleKeyPress (Command buffer) "BackSpace" = \_ ->
     return $ Command $ backSpace buffer
 
-handleKeyPress (Command buffer) [c] =
+handleKeyPress (Command buffer) [c] = \_ ->
     return $ Command $ insert c buffer
 
-handleKeyPress Insert "Escape" =
+handleKeyPress Insert "Escape" = \_ ->
     return Normal
 
-handleKeyPress Normal ":" =
+handleKeyPress Normal ":" = \_ ->
     return $ Command empty
-handleKeyPress Normal "i" =
+handleKeyPress Normal "i" = \_ ->
     return Insert
 
-handleKeyPress m _kn =
+handleKeyPress m _kn = \_ ->
     return m
 
 renderStatus :: VimUI -> URI -> IO ()
@@ -264,13 +265,28 @@ embedHandle container widget = do
     containerAdd container widget
     widgetShowAll container
 
-eval :: String -> IO ()
-eval cmd =
+open :: VimUI -> String -> IO ()
+open ui uriString =
+    case stringToURI uriString of
+        uri
+          | uri /= nullURI -> do
+            supplyForView (update ui $ error "open") embedView uri
+
+          | otherwise ->
+            return ()  -- TODO: handle error
+
+eval :: VimUI -> String -> IO ()
+eval ui cmd =
     case words cmd of
         "q" : _ ->
             mainQuit
         "quit" : _ ->
             mainQuit
+
+        "o" : uri : [] ->
+            open ui uri
+        "open" : uri : [] ->
+            open ui uri
 
         _ -> do
             putStrLn $ "Unknown command: " ++ show cmd
