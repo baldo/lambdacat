@@ -43,7 +43,14 @@ defaultConfig :: LambdaCatConf
 defaultConfig = LambdaCatConf
     { modifySupplierURI = defaultModifySupplierURI
     , supplierList      = [ SupplierSpec
-                                WebSupplierConf
+                                (WebSupplierConf "")
+                                [ "http:"
+                                , "https:"
+                                , "about:"
+                                ]
+                          ]
+    , downloadHook      = [ SupplierSpec
+                                (WebSupplierConf "/tmp")
                                 [ "http:"
                                 , "https:"
                                 , "about:"
