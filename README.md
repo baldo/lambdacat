@@ -44,22 +44,22 @@ add further UIs which can be chosen in the configuration.
 
 This release is _not_ for production use. Please be aware of that.
 
-### 0.1.1 Cleanup Haskell the Cat 
+### 0.1.1 Cleanup Haskell the Cat
 
-Add some more informations to the cabal file. 
+Add some more informations to the cabal file.
 
 3. Installation
 ---------------
 
-Lambdacat can be installed from [Hackage](http://hackage.haskell.org) using 
-'cabal'. 
+Lambdacat can be installed from [Hackage](http://hackage.haskell.org) using
+'cabal'.
 
     > cabal update
     > cabal install lambdacat
 
 You can also checkout the sources from github and compile them yourself.
 
-After that the binary of lambdacat can be found in 
+After that the binary of lambdacat can be found in
 
     ~/.cabal/bin
 
@@ -68,7 +68,7 @@ variable.
 
 ### Installing gtk2hs
 
-If you have not installed the haskell gtk bindings you should do previous to 
+If you have not installed the haskell gtk bindings you should do previous to
 the steps above:
 
     > cabal update

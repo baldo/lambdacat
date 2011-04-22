@@ -22,5 +22,6 @@ import LambdaCat.Internal.Class
 import LambdaCat.View
     ( ViewClass (..)
     , View (..)
+    , ViewEvent (..)
     )
 
