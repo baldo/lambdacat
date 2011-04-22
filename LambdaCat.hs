@@ -34,7 +34,7 @@ import LambdaCat.CmdArgs
 import LambdaCat.Configure
 import LambdaCat.Supplier
 import LambdaCat.Supplier.Web
-import LambdaCat.UI.Glade as UI
+import LambdaCat.UI.Vim as UI
 import LambdaCat.Utils.URI
 import LambdaCat.View.Web
 
@@ -61,7 +61,7 @@ defaultConfig = LambdaCatConf
     , homeURI           = "http://www.haskell.org"
     , defaultURI        = "about:blank"
     , defaultTitle      = "(Untitled)"
-    , uiConfiguration   = UISpec gladeUIConf
+    , uiConfiguration   = UISpec vimUIConf
     }
 
 -- | The URI modifier used in the default configuration. It tries to add a

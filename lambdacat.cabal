@@ -54,13 +54,15 @@ Library
         LambdaCat.Configure
         LambdaCat.Supplier
         LambdaCat.Supplier.Web
+        LambdaCat.Utils.InputBuffer
         LambdaCat.Utils.URI
         LambdaCat.View
         LambdaCat.View.Web
         LambdaCat.Session
         LambdaCat.History
         LambdaCat.UI
-        LambdaCat.UI.Glade
+        -- LambdaCat.UI.Glade
+        LambdaCat.UI.Vim
 
     Other-Modules:
         Paths_lambdacat
