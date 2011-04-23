@@ -14,6 +14,7 @@ module LambdaCat.Utils.InputBuffer
       InputBuffer
 
     , empty
+    , new
 
     , beforeCursor
     , afterCursor
@@ -65,6 +66,16 @@ empty :: InputBuffer
 empty = InputBuffer
     { _before = ""
     , _after  = ""
+    }
+
+-- | Creates a new InputBuffer.
+new
+    :: String       -- ^ String before the cursor
+    -> String       -- ^ String after the cursor
+    -> InputBuffer  -- ^ The new InputBuffer
+new bs as = InputBuffer
+    { _before = reverse bs
+    , _after  = as
     }
 
 -- | Generates an InputBuffer holding the given String. The cursor is placed
