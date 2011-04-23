@@ -55,6 +55,7 @@ Library
         LambdaCat.Supplier
         LambdaCat.Supplier.Web
         LambdaCat.Utils.InputBuffer
+        LambdaCat.Utils.InputBuffer.Completion
         LambdaCat.Utils.URI
         LambdaCat.View
         LambdaCat.View.Web

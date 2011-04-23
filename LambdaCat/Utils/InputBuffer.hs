@@ -36,9 +36,6 @@ module LambdaCat.Utils.InputBuffer
       -- * Deletion
     , delete
     , backSpace
-
-      -- * Completion
-    , complete
     )
 where
 
@@ -152,17 +149,4 @@ backSpace buffer@InputBuffer { _before = _ : bs } =
     buffer
         { _before = bs
         }
-
--- | Completes the InputBuffer with the result of the given function. The
--- completion is done at the cursor's current position. The cursor is placed
--- after the completed part.
---
--- This function can be used e.g. for tab-completion.
-complete
-    :: (InputBuffer -> String)  -- ^ Function that gives the String to be
-                                --   inserted depending on the contents of the
-                                --   InputBuffer.
-    -> InputBuffer              -- ^ InputBuffer to complete.
-    -> InputBuffer              -- ^ Completed InputBuffer.
-complete f buffer = insertString (f buffer) buffer
 
