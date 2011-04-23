@@ -28,8 +28,10 @@ module LambdaCat.UI.Vim
     )
 where
 
+import Control.Arrow (first)
 import Control.Concurrent.MVar
 import Control.Monad.Reader
+import Data.Maybe
 import Network.URI
 
 import Graphics.UI.Gtk
@@ -265,8 +267,8 @@ embedHandle container widget = do
     containerAdd container widget
     widgetShowAll container
 
-open :: VimUI -> String -> IO ()
-open ui uriString =
+open :: Command
+open ui [uriString] =
     case stringToURI uriString of
         uri
           | uri /= nullURI -> do
@@ -274,21 +276,60 @@ open ui uriString =
 
           | otherwise ->
             return ()  -- TODO: handle error
+open _ _ = return ()  -- TODO: handle error
+
+quit :: Command
+quit _ [] = mainQuit
+quit _ _  = return ()  -- TODO: handle error
 
 eval :: VimUI -> String -> IO ()
-eval ui cmd =
-    case words cmd of
-        "q" : _ ->
-            mainQuit
-        "quit" : _ ->
-            mainQuit
+eval ui input =
+    case matches of
+        (Just args, cmd) : _ ->
+            cmd ui args
 
-        "o" : uri : [] ->
-            open ui uri
-        "open" : uri : [] ->
-            open ui uri
+        _ ->
+            return ()  -- TODO: handle error
+  where
+    ws      = words input
+    matches = filter (isJust . fst) $ map (first (match ws)) commands
 
-        _ -> do
-            putStrLn $ "Unknown command: " ++ show cmd
-            return ()
+type Command = VimUI -> [String] -> IO ()
+
+data Argument = AIdent String
+              | AString
+  deriving Show
+
+infixr 5 .>
+
+(.>) :: String -> [Argument] -> [Argument]
+ident .> args = (AIdent ident) : args
+
+string :: Argument
+string = AString
+
+match :: [String] -> [Argument] -> Maybe [String]
+match [] [] =
+    Just []
+match (ident : parts) ((AIdent aIdent) : args)
+  | aIdent == ident = match parts args
+
+match (w : ws) (AString : args) = do
+    mWords <- match ws args
+    return $ w : mWords
+
+match _ _ = Nothing
+
+commands :: [([Argument], Command)]
+commands =
+    [ ( "open" .> string : []
+      , open
+      )
+    , ( "q" .> []
+      , quit
+      )
+    , ( "quit" .> []
+      , quit
+      )
+    ]
 
