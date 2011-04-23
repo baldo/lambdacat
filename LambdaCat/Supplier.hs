@@ -19,6 +19,7 @@ module LambdaCat.Supplier
 
       -- * Supplying for views
     , supplyForView
+    , supplyForDownload
     )
 where
 
@@ -60,3 +61,19 @@ supplyForView callbackHdl embedHdl uri = do
         Nothing ->
             putStrLn $ "Can't find a supplier for protocol:" ++ protocol
 
+
+supplyForDownload :: URI -> IO Bool
+supplyForDownload uri = do
+     let suppliers = downloadHook lambdaCatConf
+         uri'      = modifySupplierURI lambdaCatConf uri
+         protocol  = uriScheme uri'
+     findDownloadSupplier protocol suppliers
+  where
+    findDownloadSupplier _        [] = return False
+    findDownloadSupplier protocol ((SupplierSpec conf ps):suppliers) = do
+                if (isJust $ find (== protocol) ps)
+                    then do accept <- supplyDownload conf uri
+                            if accept
+                                then return True
+                                else findDownloadSupplier protocol suppliers
+                    else findDownloadSupplier protocol suppliers

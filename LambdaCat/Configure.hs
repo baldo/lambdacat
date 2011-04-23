@@ -56,6 +56,9 @@ data LambdaCatConf = LambdaCatConf
     , viewList
         :: [ViewSpec]                      -- ^ Views with supported
                                            -- protocols.
+    , downloadHook :: [SupplierSpec]       -- ^ Supplier with supported
+                                           -- protocols, which should
+                                           -- used for downloading.
     , homeURI
         :: URI                             -- ^ URI of the home page.
     , modifySupplierURI
