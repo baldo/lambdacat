@@ -25,7 +25,6 @@ module LambdaCat.CmdArgs
 where
 
 import Data.Version
-import System.Environment
 
 import System.Console.CmdArgs hiding
     ( CmdArgs
@@ -33,6 +32,7 @@ import System.Console.CmdArgs hiding
     )
 import qualified System.Console.CmdArgs as CA
 
+import LambdaCat.Utils.URI
 import Paths_lambdacat
 
 -- | CmdArgs stores the arguments given on the command line.
@@ -88,12 +88,10 @@ cmdArgs = CmdArgs
     &= verbosity
 
 -- | Get the String representations of the URIs given on command line.
-uris :: CmdArgs -> [String]
-uris ca = ouris ca ++ auris ca  -- TODO: Parse the URIs right here...
+uris :: CmdArgs -> [URI]
+uris ca = concatMap (map failingStringToURI) [ouris ca, auris ca]
 
 -- | Get the representation of the given command line arguments.
 getCmdArgs :: IO CmdArgs
-getCmdArgs = do
-    _ <- getArgs -- TODO: Get rid of this dirty hack.
-    CA.cmdArgs cmdArgs
+getCmdArgs = CA.cmdArgs cmdArgs
 

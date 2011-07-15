@@ -22,6 +22,7 @@ module LambdaCat.Utils.URI
       -- * Conversion
     , IsString
     , stringToURI
+    , failingStringToURI
     , showURI
     )
 where
@@ -53,6 +54,16 @@ stringToURI =
         case p str of
             Just r  -> r
             Nothing -> tryParsers ps e str
+
+-- | Like 'stringToURI', but fails if parsing results in a 'nullURI' instead
+-- of return it.
+failingStringToURI :: String -> URI
+failingStringToURI uriString =
+    if uri /= nullURI
+        then uri
+        else error $ "Invalid URI: " ++ uriString
+  where
+    uri = stringToURI uriString
 
 -- | Convert a given URI into a String representation.
 --

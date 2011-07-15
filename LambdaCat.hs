@@ -99,14 +99,14 @@ mainCat
     :: Maybe String   -- ^ Just the error that occured during the compilation
                       -- of the user configuration, Nothing if none occured.
     -> LambdaCatConf  -- ^ The users configuration.
+    -> CmdArgs        -- ^ The commandline arguments.
     -> IO ()
-mainCat e cfg = do
+mainCat e cfg args = do
     maybe (return ()) error e
 
     setLCC cfg
-    args <- getCmdArgs
 
-    let uria = map stringToURI $ uris args
+    let uria = uris args
         us   = if null uria
                    then [homeURI cfg]
                    else uria
@@ -139,15 +139,19 @@ lambdacat cfg = do
                 Nothing ->
                     return ()
 
-        else wrapMain dparams (Nothing, cfg)
+        else wrapMain dparams (Nothing, cfg, args)
+
+-- | Like 'uncurry', only for 3-tuples.
+uncurry3 :: (a -> b -> c -> d) -> (a, b, c) -> d
+uncurry3 f (a, b, c) = f a b c
 
 -- | Configuration for dyre.
-dparams :: Params (Maybe String, LambdaCatConf)
+dparams :: Params (Maybe String, LambdaCatConf, CmdArgs)
 dparams =
     let dps = defaultParams
             { projectName = "lambdacat"
-            , realMain    = uncurry mainCat
-            , showError   = \(_, c) s -> (Just s, c)
+            , realMain    = uncurry3 mainCat
+            , showError   = \(_, c, a) s -> (Just s, c, a)
             , statusOut   = putStrLn
             }
     in  dps { ghcOpts = ["-eventlog"] }
