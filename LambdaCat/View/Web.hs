@@ -37,6 +37,7 @@ import qualified Graphics.UI.Gtk.WebKit.NetworkRequest as NR
 import qualified Graphics.UI.Gtk.WebKit.WebNavigationAction as NA
 -- import Graphics.UI.Gtk.WebKit.WebSettings
 import qualified Graphics.UI.Gtk.WebKit.WebView as WV
+import qualified Graphics.UI.Gtk.WebKit.Download as DL
 -- import System.Glib.GError
 
 import LambdaCat.Configure
@@ -107,6 +108,14 @@ instance ViewClass WebView where
 
         _ <- widget `on` WV.progressChanged $ \progress ->
             callback (updateView (View wV) (ProgressChanged progress))
+
+        _ <- widget `on` WV.downloadRequested $ \download -> do
+            muri <- DL.downloadGetUri download
+            case muri of
+                Just uri -> do
+                    _ <- supplyForDownload $ stringToURI uri
+                    return False
+                Nothing -> return False
 
         -- Embed widget
         embedder $ castToWidget widget
