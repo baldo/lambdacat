@@ -113,7 +113,7 @@ instance ViewClass WebView where
             muri <- DL.downloadGetUri download
             case muri of
                 Just uri -> do
-                    supplyForDownload $ stringToURI uri
+                    _ <- supplyForDownload $ stringToURI uri
                     return False
                 Nothing -> return False
 
