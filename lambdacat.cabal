@@ -13,8 +13,8 @@ Maintainer:    Andreas Baldeau <andreas@baldeau.net>,
 Homepage:      http://github.com/baldo/lambdacat
 Bug-Reports:   http://github.com/baldo/lambdacat/issues
 Category:      User Interfaces
-Tested-With:   GHC == 6.12.3
-Cabal-Version: >= 1.6
+Tested-With:   GHC == 7.0.3
+Cabal-Version: >= 1.10
 
 Extra-Source-Files:
     README.md
@@ -31,20 +31,37 @@ Source-Repository head
 Executable lambdacat
     Main-is: Main.hs
 
+    Default-Language:
+        Haskell2010
+
+    Build-Depends:
+        base == 4.*,
+        containers == 0.4.*,
+        cmdargs == 0.7,
+        dyre >= 0.8.6 && < 0.9,
+        glade == 0.12.*,
+        gtk == 0.12.*,
+        mtl == 2.0.*,
+        network == 2.3.*,
+        webkit == 0.12.1
+
     Ghc-Options:
         -Wall
 
 Library
+    Default-Language:
+        Haskell2010
+
     Build-Depends:
-        base >= 4 && < 5,
-        mtl == 2.*,
-        gtk == 0.12.*,
-        glade == 0.12.*,
-        webkit >= 0.12.1 && < 0.13,
-        network == 2.3.*,
+        base == 4.*,
+        cmdargs == 0.7,
         containers == 0.4.*,
         dyre >= 0.8.6 && < 0.9,
-        cmdargs >= 0.6.8 && < 0.7
+        glade == 0.12.*,
+        gtk == 0.12.*,
+        mtl == 2.0.*,
+        network == 2.3.*,
+        webkit == 0.12.1
 
     Ghc-Options:
         -Wall
@@ -67,16 +84,4 @@ Library
         LambdaCat.Internal.Class
         LambdaCat.UI.Glade.PersistentTabId
         LambdaCat.CmdArgs
-
-    Extensions:
-        DeriveDataTypeable
-        ExistentialQuantification
-        FlexibleContexts
-        FlexibleInstances
-        FunctionalDependencies
-        MultiParamTypeClasses
-        OverloadedStrings
-        RankNTypes
-        TypeFamilies
-        TypeSynonymInstances
 
